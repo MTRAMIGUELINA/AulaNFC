@@ -1,5 +1,5 @@
 const URL_APPS_SCRIPT =
-  "https://script.google.com/macros/s/AKfycbzEmz6mm_N6L0RyNTqpQdZn0SIFdrWQNjgwLv9liTdi2WaT68i-jK__Lr4EOdL0M3qcrg/exec";
+  "https://script.google.com/macros/s/AKfycby93u65Cl9bVCXjrxHaeKQvp90DC_ajvZq5UD2tC4_fseOEKbMZyJgoLJd-x0cj9pB2Pg/exec";
 const botonesModulos =
   document.querySelectorAll(".modulo");
 
