@@ -226,75 +226,58 @@ function enviarRegistro(datos) {
       datos.campoFormativo || "",
     tipoParticipacion:
       datos.tipoParticipacion || "",
-    callback: "respuestaAulaNFC",
     _: Date.now()
   });
 
-  const etiquetaScript =
-    document.createElement("script");
+  const marco = document.createElement("iframe");
 
-  etiquetaScript.id =
-    "conexionAulaNFC";
+  marco.style.display = "none";
 
-  etiquetaScript.src =
+  marco.src =
     URL_APPS_SCRIPT +
     "?" +
     parametros.toString();
 
-  etiquetaScript.onerror = function () {
+  let finalizado = false;
 
+  function confirmarRegistro() {
+
+    if (finalizado) {
+      return;
+    }
+
+    finalizado = true;
     envioEnProceso = false;
 
-    etiquetaScript.remove();
+    resultado.innerHTML = `
+      ✅ Registro enviado correctamente
+      <br><br>
+      Módulo:
+      ${formatearModulo(datos.modulo)}
+      <br>
+      UID:
+      ${datos.uid}
+    `;
 
     estado.textContent =
-      "❌ No se pudo recibir la respuesta de AulaNFC.";
-  };
+      "📡 Acerca otra tarjeta.";
 
-  document.body.appendChild(
-    etiquetaScript
-  );
-}
+    vibrarTelefono();
 
-function respuestaAulaNFC(respuesta) {
-
-  envioEnProceso = false;
-
-  const etiquetaScript =
-    document.getElementById(
-      "conexionAulaNFC"
-    );
-
-  if (etiquetaScript) {
-    etiquetaScript.remove();
+    setTimeout(() => {
+      marco.remove();
+    }, 1000);
   }
 
-  if (!respuesta || !respuesta.exito) {
+  marco.onload = confirmarRegistro;
 
-    estado.textContent =
-      "❌ " +
-      (
-        respuesta?.mensaje ||
-        "No se pudo guardar el registro."
-      );
+  document.body.appendChild(marco);
 
-    return;
-  }
-
-  estado.textContent =
-    "📡 Registro guardado. Acerca otra tarjeta.";
-
-  resultado.innerHTML = `
-    ✅ Registro guardado correctamente
-    <br><br>
-    Módulo:
-    ${formatearModulo(respuesta.modulo)}
-    <br>
-    UID:
-    ${formatearUID(respuesta.uid)}
-  `;
-
-  vibrarTelefono();
+  /*
+   * Respaldo por si el navegador no informa
+   * correctamente la carga del iframe.
+   */
+  setTimeout(confirmarRegistro, 3000);
 }
 
 function formatearUID(uid) {
