@@ -205,7 +205,7 @@ function vibrarTelefono() {
 
 let envioEnProceso = false;
 
-function enviarRegistro(datos) {
+async function enviarRegistro(datos) {
 
   if (envioEnProceso) {
     return;
@@ -234,21 +234,21 @@ function enviarRegistro(datos) {
     "?" +
     parametros.toString();
 
-  const peticion =
-    new Image();
+  console.log("URL enviada:", url);
 
-  peticion.style.display = "none";
+  try {
 
-  peticion.onload =
-  peticion.onerror = function () {
-
-    envioEnProceso = false;
+    await fetch(url, {
+      method: "GET",
+      mode: "no-cors",
+      cache: "no-store"
+    });
 
     estado.textContent =
       "📡 Registro enviado. Acerca otra tarjeta.";
 
     resultado.innerHTML = `
-      ✅ Registro enviado
+      ✅ Solicitud enviada
       <br><br>
       Módulo:
       ${formatearModulo(datos.modulo)}
@@ -259,26 +259,24 @@ function enviarRegistro(datos) {
 
     vibrarTelefono();
 
-    peticion.remove();
-  };
+  } catch (error) {
 
-  peticion.src = url;
+    console.error(
+      "Error enviando registro:",
+      error
+    );
 
-  document.body.appendChild(peticion);
+    estado.textContent =
+      "❌ No se pudo enviar el registro.";
 
-  setTimeout(() => {
+    resultado.innerHTML =
+      "Revisa la conexión a internet e intenta nuevamente.";
 
-    if (envioEnProceso) {
+  } finally {
 
-      envioEnProceso = false;
+    envioEnProceso = false;
 
-      estado.textContent =
-        "📡 Solicitud enviada. Revisa Google Sheets.";
-
-      peticion.remove();
-    }
-
-  }, 5000);
+  }
 }
 
 function formatearUID(uid) {
