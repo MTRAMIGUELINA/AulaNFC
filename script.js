@@ -1,5 +1,5 @@
 const URL_APPS_SCRIPT =
-  "https://script.google.com/macros/s/AKfycbwFS992F1sKOWPE0Tv_kXtM-YPoAas8d9rUW4qKnxtwecNYDa0tQw_ykq0eUZcjuZbv7Q/exec";
+  "https://script.google.com/macros/s/AKfycbzEmz6mm_N6L0RyNTqpQdZn0SIFdrWQNjgwLv9liTdi2WaT68i-jK__Lr4EOdL0M3qcrg/exec";
 const botonesModulos =
   document.querySelectorAll(".modulo");
 
@@ -203,88 +203,98 @@ function vibrarTelefono() {
 
 }
 
+let envioEnProceso = false;
+
 function enviarRegistro(datos) {
+
+  if (envioEnProceso) {
+    return;
+  }
+
+  envioEnProceso = true;
+
   estado.textContent =
     "⏳ Guardando registro...";
 
   resultado.innerHTML = "";
 
-  const callback =
-    "respuestaAulaNFC_" + Date.now();
+  const parametros = new URLSearchParams({
+    accion: "registrarNFC",
+    uid: datos.uid,
+    modulo: datos.modulo,
+    campoFormativo:
+      datos.campoFormativo || "",
+    tipoParticipacion:
+      datos.tipoParticipacion || "",
+    callback: "respuestaAulaNFC",
+    _: Date.now()
+  });
 
-  const parametros =
-    new URLSearchParams({
-      accion: "registrarNFC",
-      uid: datos.uid,
-      modulo: datos.modulo,
-      campoFormativo:
-        datos.campoFormativo || "",
-      tipoParticipacion:
-        datos.tipoParticipacion || "",
-      callback: callback
-    });
-
-  const script =
+  const etiquetaScript =
     document.createElement("script");
 
-  const temporizador =
-    setTimeout(() => {
-      limpiar();
+  etiquetaScript.id =
+    "conexionAulaNFC";
 
-      estado.textContent =
-        "❌ El servidor tardó demasiado en responder.";
-    }, 15000);
-
-  function limpiar() {
-    clearTimeout(temporizador);
-    script.remove();
-    delete window[callback];
-  }
-
-  window[callback] = function (
-    respuesta
-  ) {
-    limpiar();
-
-    if (!respuesta.exito) {
-      estado.textContent =
-        "❌ " + respuesta.mensaje;
-      return;
-    }
-
-    estado.textContent =
-      "📡 Escáner activo. Acerca otra tarjeta.";
-
-    resultado.innerHTML = `
-      ✅ Registro guardado
-      <br><br>
-      Módulo:
-      ${formatearModulo(
-        respuesta.modulo
-      )}
-      <br>
-      UID:
-      ${formatearUID(
-        respuesta.uid
-      )}
-    `;
-
-    vibrarTelefono();
-  };
-
-  script.onerror = function () {
-    limpiar();
-
-    estado.textContent =
-      "❌ No se pudo conectar con AulaNFC.";
-  };
-
-  script.src =
+  etiquetaScript.src =
     URL_APPS_SCRIPT +
     "?" +
     parametros.toString();
 
-  document.body.appendChild(script);
+  etiquetaScript.onerror = function () {
+
+    envioEnProceso = false;
+
+    etiquetaScript.remove();
+
+    estado.textContent =
+      "❌ No se pudo recibir la respuesta de AulaNFC.";
+  };
+
+  document.body.appendChild(
+    etiquetaScript
+  );
+}
+
+function respuestaAulaNFC(respuesta) {
+
+  envioEnProceso = false;
+
+  const etiquetaScript =
+    document.getElementById(
+      "conexionAulaNFC"
+    );
+
+  if (etiquetaScript) {
+    etiquetaScript.remove();
+  }
+
+  if (!respuesta || !respuesta.exito) {
+
+    estado.textContent =
+      "❌ " +
+      (
+        respuesta?.mensaje ||
+        "No se pudo guardar el registro."
+      );
+
+    return;
+  }
+
+  estado.textContent =
+    "📡 Registro guardado. Acerca otra tarjeta.";
+
+  resultado.innerHTML = `
+    ✅ Registro guardado correctamente
+    <br><br>
+    Módulo:
+    ${formatearModulo(respuesta.modulo)}
+    <br>
+    UID:
+    ${formatearUID(respuesta.uid)}
+  `;
+
+  vibrarTelefono();
 }
 
 function formatearUID(uid) {
