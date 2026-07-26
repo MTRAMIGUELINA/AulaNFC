@@ -1,3 +1,5 @@
+const URL_APPS_SCRIPT =
+  "https://script.google.com/macros/s/AKfycbwFS992F1sKOWPE0Tv_kXtM-YPoAas8d9rUW4qKnxtwecNYDa0tQw_ykq0eUZcjuZbv7Q/exec";
 const botonesModulos =
   document.querySelectorAll(".modulo");
 
@@ -172,25 +174,11 @@ function procesarTarjeta(evento) {
   }
 
   console.log(
-    "Registro preparado:",
-    datosRegistro
-  );
+  "Registro preparado:",
+  datosRegistro
+);
 
-  resultado.innerHTML = `
-    ✅ Tarjeta leída correctamente
-    <br><br>
-    Módulo: ${formatearModulo(
-      moduloSeleccionado
-    )}
-    <br>
-    UID: ${uid}
-  `;
-
-  estado.textContent =
-    "Puedes acercar otra tarjeta.";
-
-  vibrarTelefono();
-
+enviarRegistro(datosRegistro);
 }
 
 function formatearModulo(modulo) {
@@ -213,4 +201,96 @@ function vibrarTelefono() {
     navigator.vibrate(180);
   }
 
+}
+
+function enviarRegistro(datos) {
+  estado.textContent =
+    "⏳ Guardando registro...";
+
+  resultado.innerHTML = "";
+
+  const callback =
+    "respuestaAulaNFC_" + Date.now();
+
+  const parametros =
+    new URLSearchParams({
+      accion: "registrarNFC",
+      uid: datos.uid,
+      modulo: datos.modulo,
+      campoFormativo:
+        datos.campoFormativo || "",
+      tipoParticipacion:
+        datos.tipoParticipacion || "",
+      callback: callback
+    });
+
+  const script =
+    document.createElement("script");
+
+  const temporizador =
+    setTimeout(() => {
+      limpiar();
+
+      estado.textContent =
+        "❌ El servidor tardó demasiado en responder.";
+    }, 15000);
+
+  function limpiar() {
+    clearTimeout(temporizador);
+    script.remove();
+    delete window[callback];
+  }
+
+  window[callback] = function (
+    respuesta
+  ) {
+    limpiar();
+
+    if (!respuesta.exito) {
+      estado.textContent =
+        "❌ " + respuesta.mensaje;
+      return;
+    }
+
+    estado.textContent =
+      "📡 Escáner activo. Acerca otra tarjeta.";
+
+    resultado.innerHTML = `
+      ✅ Registro guardado
+      <br><br>
+      Módulo:
+      ${formatearModulo(
+        respuesta.modulo
+      )}
+      <br>
+      UID:
+      ${formatearUID(
+        respuesta.uid
+      )}
+    `;
+
+    vibrarTelefono();
+  };
+
+  script.onerror = function () {
+    limpiar();
+
+    estado.textContent =
+      "❌ No se pudo conectar con AulaNFC.";
+  };
+
+  script.src =
+    URL_APPS_SCRIPT +
+    "?" +
+    parametros.toString();
+
+  document.body.appendChild(script);
+}
+
+function formatearUID(uid) {
+  return String(uid || "")
+    .replace(
+      /(.{2})(?=.)/g,
+      "$1:"
+    );
 }
