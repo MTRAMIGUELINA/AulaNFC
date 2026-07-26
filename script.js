@@ -205,7 +205,7 @@ function vibrarTelefono() {
 
 let envioEnProceso = false;
 
-function enviarRegistro(datos) {
+async function enviarRegistro(datos) {
 
   if (envioEnProceso) {
     return;
@@ -214,7 +214,7 @@ function enviarRegistro(datos) {
   envioEnProceso = true;
 
   estado.textContent =
-    "⏳ Guardando registro...";
+    "⏳ Enviando registro...";
 
   resultado.innerHTML = "";
 
@@ -229,28 +229,24 @@ function enviarRegistro(datos) {
     _: Date.now()
   });
 
-  const marco = document.createElement("iframe");
-
-  marco.style.display = "none";
-
-  marco.src =
+  const url =
     URL_APPS_SCRIPT +
     "?" +
     parametros.toString();
 
-  let finalizado = false;
+  try {
 
-  function confirmarRegistro() {
+    await fetch(url, {
+      method: "GET",
+      mode: "no-cors",
+      cache: "no-store"
+    });
 
-    if (finalizado) {
-      return;
-    }
-
-    finalizado = true;
-    envioEnProceso = false;
+    estado.textContent =
+      "📡 Registro enviado. Acerca otra tarjeta.";
 
     resultado.innerHTML = `
-      ✅ Registro enviado correctamente
+      ✅ Registro enviado
       <br><br>
       Módulo:
       ${formatearModulo(datos.modulo)}
@@ -259,25 +255,22 @@ function enviarRegistro(datos) {
       ${datos.uid}
     `;
 
-    estado.textContent =
-      "📡 Acerca otra tarjeta.";
-
     vibrarTelefono();
 
-    setTimeout(() => {
-      marco.remove();
-    }, 1000);
+  } catch (error) {
+
+    estado.textContent =
+      "❌ No se pudo enviar el registro.";
+
+    resultado.innerHTML =
+      error.message;
+
+  } finally {
+
+    envioEnProceso = false;
+
   }
 
-  marco.onload = confirmarRegistro;
-
-  document.body.appendChild(marco);
-
-  /*
-   * Respaldo por si el navegador no informa
-   * correctamente la carga del iframe.
-   */
-  setTimeout(confirmarRegistro, 3000);
 }
 
 function formatearUID(uid) {
