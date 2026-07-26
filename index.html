@@ -1,37 +1,158 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <meta charset="UTF-8">
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-<title>AulaNFC</title>
+  <title>AulaNFC</title>
 
-<link rel="stylesheet" href="style.css">
-
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div class="contenedor">
+  <main class="contenedor">
 
-<h1>📚 AulaNFC</h1>
+    <header class="encabezado">
+      <h1>📚 AulaNFC</h1>
+      <p>Panel móvil de registro</p>
+    </header>
 
-<h2>Escáner NFC</h2>
+    <section class="seccion">
 
-<div id="estado">
-Esperando...
-</div>
+      <h2>¿Qué deseas registrar?</h2>
 
-<button id="btnEscanear">
-Activar lector NFC
-</button>
+      <div class="modulos">
 
-<div id="resultado"></div>
+        <button
+          class="modulo asistencia"
+          data-modulo="asistencia"
+        >
+          <span>🟢</span>
+          Asistencia
+        </button>
 
-</div>
+        <button
+          class="modulo tareas"
+          data-modulo="tareas"
+        >
+          <span>🟡</span>
+          Tareas
+        </button>
 
-<script src="script.js"></script>
+        <button
+          class="modulo participacion"
+          data-modulo="participacion"
+        >
+          <span>🔵</span>
+          Participación
+        </button>
+
+        <button
+          class="modulo conducta"
+          data-modulo="conducta"
+        >
+          <span>🟣</span>
+          Conducta
+        </button>
+
+        <button
+          class="modulo lectura"
+          data-modulo="lectura"
+        >
+          <span>🟠</span>
+          Lectura
+        </button>
+
+      </div>
+
+    </section>
+
+    <section class="seleccion">
+
+      <p>Módulo seleccionado</p>
+
+      <div id="moduloActivo">
+        Ninguno
+      </div>
+
+    </section>
+
+    <section
+      id="opcionesParticipacion"
+      class="opciones oculto"
+    >
+
+      <h2>Campo formativo</h2>
+
+      <select id="campoFormativo">
+        <option value="">
+          Selecciona un campo
+        </option>
+
+        <option value="Lenguajes">
+          Lenguajes
+        </option>
+
+        <option value="Saberes y Pensamiento Científico">
+          Saberes y Pensamiento Científico
+        </option>
+
+        <option value="Ética, Naturaleza y Sociedad">
+          Ética, Naturaleza y Sociedad
+        </option>
+
+        <option value="De lo Humano a lo Comunitario">
+          De lo Humano a lo Comunitario
+        </option>
+      </select>
+
+      <h2>Tipo de participación</h2>
+
+      <select id="tipoParticipacion">
+        <option value="">
+          Selecciona una opción
+        </option>
+
+        <option value="Participó">
+          Participó
+        </option>
+
+        <option value="Excelente participación">
+          Excelente participación
+        </option>
+
+        <option value="Apoyo al equipo">
+          Apoyo al equipo
+        </option>
+      </select>
+
+    </section>
+
+    <section class="lector">
+
+      <div id="estado">
+        Selecciona un módulo para comenzar.
+      </div>
+
+      <button
+        id="btnEscanear"
+        disabled
+      >
+        Activar lector NFC
+      </button>
+
+      <div id="resultado"></div>
+
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
 
 </body>
 </html>
