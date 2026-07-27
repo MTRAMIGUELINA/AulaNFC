@@ -203,9 +203,7 @@ function vibrarTelefono() {
 
 }
 
-let envioEnProceso = false;
-
-async function enviarRegistro(datos) {
+function enviarRegistro(datos) {
 
   if (envioEnProceso) {
     return;
@@ -230,11 +228,44 @@ async function enviarRegistro(datos) {
   });
 
   const url =
+    URL_APPS_SCRIPT +
+    "?" +
+    parametros.toString();
+
+  console.log("URL enviada:", url);
+
+  const peticion = new Image();
+
+  peticion.onload = finalizarEnvio;
+  peticion.onerror = finalizarEnvio;
+
+  peticion.src = url;
+
+  function finalizarEnvio() {
+
+    estado.textContent =
+      "📡 Registro enviado. Acerca otra tarjeta.";
+
+    resultado.innerHTML = `
+      ✅ Solicitud enviada
+      <br><br>
+      Módulo:
+      ${formatearModulo(datos.modulo)}
+      <br>
+      UID:
+      ${datos.uid}
+    `;
+
+    vibrarTelefono();
+
+    envioEnProceso = false;
+  }
+}
+
+  const url =
   URL_APPS_SCRIPT +
   "?" +
   parametros.toString();
-
-alert(url);
 
 try {
 
