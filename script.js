@@ -288,7 +288,7 @@ function procesarTarjeta(evento) {
    ENVIAR REGISTRO A APPS SCRIPT
 ========================================== */
 
-function enviarRegistro(datos) {
+async function enviarRegistro(datos) {
 
   if (envioEnProceso) {
     return;
@@ -301,167 +301,74 @@ function enviarRegistro(datos) {
 
   resultado.innerHTML = "";
 
-  const parametros =
-    new URLSearchParams({
-      accion: "registrarNFC",
-      uid: datos.uid,
-      modulo: datos.modulo,
-      campoFormativo:
-        datos.campoFormativo || "",
-      tipoParticipacion:
-        datos.tipoParticipacion || "",
-      t: Date.now()
-    });
+  const parametros = new URLSearchParams({
+    accion: "registrarNFC",
+    uid: datos.uid,
+    modulo: datos.modulo,
+    campoFormativo:
+      datos.campoFormativo || "",
+    tipoParticipacion:
+      datos.tipoParticipacion || "",
+    t: Date.now()
+  });
 
   const url =
     URL_APPS_SCRIPT +
     "?" +
     parametros.toString();
 
-  console.log(
-    "URL enviada:",
-    url
-  );
+  console.log("URL enviada:", url);
 
-  /*
-   * Se carga Apps Script dentro de una
-   * página invisible. Es equivalente a
-   * abrir manualmente la dirección.
-   */
-  const marco =
-    document.createElement("iframe");
+  try {
 
-  marco.style.position = "absolute";
-  marco.style.width = "1px";
-  marco.style.height = "1px";
-  marco.style.border = "0";
-  marco.style.opacity = "0";
-  marco.style.pointerEvents = "none";
-  marco.setAttribute(
-    "aria-hidden",
-    "true"
-  );
-
-  let finalizado = false;
-
-  const temporizador =
-    setTimeout(() => {
-
-      if (finalizado) {
-        return;
-      }
-
-      finalizado = true;
-
-      eliminarMarco();
-
-      estado.textContent =
-        "⚠️ El servidor tardó demasiado.";
-
-      resultado.innerHTML = `
-        No se pudo confirmar el envío.
-        <br><br>
-        Revisa las hojas
-        <strong>RegistrosNFC</strong>
-        y
-        <strong>ASISTENCIAS</strong>.
-      `;
-
-      envioEnProceso = false;
-
-    }, 15000);
-
-  marco.onload = function () {
-
-    if (finalizado) {
-      return;
-    }
-
-    finalizado = true;
-
-    clearTimeout(temporizador);
-
-    /*
-     * Espera breve para que Apps Script
-     * termine de escribir en Sheets.
-     */
-    setTimeout(() => {
-
-      eliminarMarco();
-
-      estado.textContent =
-        "📡 Petición procesada. Acerca otra tarjeta.";
-
-      resultado.innerHTML = `
-        ✅ Registro enviado al servidor
-        <br><br>
-        Módulo:
-        <strong>
-          ${formatearModulo(
-            datos.modulo
-          )}
-        </strong>
-        <br>
-        UID:
-        <strong>
-          ${formatearUID(
-            datos.uid
-          )}
-        </strong>
-      `;
-
-      vibrarTelefono();
-
-      envioEnProceso = false;
-
-    }, 1200);
-
-  };
-
-  marco.onerror = function () {
-
-    if (finalizado) {
-      return;
-    }
-
-    finalizado = true;
-
-    clearTimeout(temporizador);
-
-    eliminarMarco();
+    await fetch(url, {
+      method: "GET",
+      mode: "no-cors",
+      cache: "no-store",
+      redirect: "follow"
+    });
 
     estado.textContent =
-      "❌ No se pudo abrir Apps Script.";
+      "📡 Solicitud enviada. Acerca otra tarjeta.";
 
     resultado.innerHTML = `
-      La petición no pudo enviarse.
+      ✅ Solicitud enviada a Apps Script
       <br><br>
-      Revisa la conexión a Internet.
+      Módulo:
+      <strong>
+        ${formatearModulo(datos.modulo)}
+      </strong>
+      <br>
+      UID:
+      <strong>
+        ${formatearUID(datos.uid)}
+      </strong>
     `;
+
+    vibrarTelefono();
+
+  } catch (error) {
+
+    console.error(
+      "Error al enviar:",
+      error
+    );
+
+    estado.textContent =
+      "❌ No se pudo enviar la solicitud.";
+
+    resultado.innerHTML = `
+      Error de conexión:
+      <br>
+      ${error.message}
+    `;
+
+  } finally {
 
     envioEnProceso = false;
 
-  };
-
-  function eliminarMarco() {
-
-    if (marco.parentNode) {
-      marco.parentNode.removeChild(
-        marco
-      );
-    }
-
   }
-
-  /*
-   * Primero se asigna la dirección
-   * y después se agrega el iframe.
-   */
-  marco.src = url;
-
-  document.body.appendChild(marco);
 }
-
 /* ==========================================
    FUNCIONES AUXILIARES
 ========================================== */
