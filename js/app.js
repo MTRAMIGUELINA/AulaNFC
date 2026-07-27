@@ -1,5 +1,5 @@
-import { sendRegistration } from "./api.js";
-import { isScannerActive, startScanner, stopScanner } from "./scanner.js";
+import { sendRegistration } from "./api.js?v=3.0.1";
+import { isScannerActive, startScanner, stopScanner } from "./scanner.js?v=3.0.1";
 import {
   addHistoryRecord,
   formatModule,
@@ -12,7 +12,7 @@ import {
   setSelectedModule,
   setStatus,
   vibrate
-} from "./ui.js";
+} from "./ui.js?v=3.0.1";
 
 const elements = getElements();
 let selectedModule = "";
@@ -87,13 +87,14 @@ async function activateScanner() {
 }
 
 function deactivateScanner() {
+  clearFeedbackTimer();
   stopScanner();
   lockConfiguration(false);
   setScannerState(false);
-  setScannerButton({ disabled: !selectedModule, text: "▶ ACTIVAR LECTOR" });
-  setStatus("Lector NFC desactivado. No se registrarán tarjetas.");
+  setScannerButton({ disabled: !selectedModule, text: "▶ ACTIVAR LECTOR", active: false });
+  setStatus("⛔ Lector NFC desactivado. Las tarjetas serán ignoradas.");
   setResult("");
-  clearFeedbackTimer();
+  vibrate(80);
 }
 
 async function processCard(uid) {
