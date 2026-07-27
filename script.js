@@ -1,3 +1,4 @@
+alert("SCRIPT NUEVO CARGADO");
 const URL_APPS_SCRIPT =
   "https://script.google.com/macros/s/AKfycbyxSbdzdXQxvVxsPQ8ZA34HoH5U7mR8TpLxYo0sC64X98yAG0POgda76cJq-9YLI46FCg/exec";
 
