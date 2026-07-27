@@ -1,6 +1,10 @@
 const URL_APPS_SCRIPT =
   "https://script.google.com/macros/s/AKfycbyxSbdzdXQxvVxsPQ8ZA34HoH5U7mR8TpLxYo0sC64X98yAG0POgda76cJq-9YLI46FCg/exec";
 
+/* ==========================================
+   ELEMENTOS DE LA PÁGINA
+========================================== */
+
 const botonesModulos =
   document.querySelectorAll(".modulo");
 
@@ -22,17 +26,29 @@ const opcionesParticipacion =
   );
 
 const campoFormativo =
-  document.getElementById("campoFormativo");
+  document.getElementById(
+    "campoFormativo"
+  );
 
 const tipoParticipacion =
   document.getElementById(
     "tipoParticipacion"
   );
 
+/* ==========================================
+   VARIABLES DEL SISTEMA
+========================================== */
+
 let moduloSeleccionado = "";
 let lectorNFC = null;
 let lectorActivo = false;
 let envioEnProceso = false;
+let ultimoUID = "";
+let momentoUltimoEscaneo = 0;
+
+/* ==========================================
+   SELECCIÓN DE MÓDULO
+========================================== */
 
 botonesModulos.forEach((boton) => {
 
@@ -45,14 +61,21 @@ botonesModulos.forEach((boton) => {
     boton.classList.add("activo");
 
     moduloSeleccionado =
-      boton.dataset.modulo;
+      boton.dataset.modulo || "";
 
     moduloActivo.textContent =
-      formatearModulo(moduloSeleccionado);
+      formatearModulo(
+        moduloSeleccionado
+      );
 
     resultado.innerHTML = "";
 
-    botonEscanear.disabled = false;
+    if (!lectorActivo) {
+      botonEscanear.disabled = false;
+
+      botonEscanear.textContent =
+        "Activar lector NFC";
+    }
 
     estado.textContent =
       "Módulo listo. Activa el lector NFC.";
@@ -74,6 +97,10 @@ botonesModulos.forEach((boton) => {
 
 });
 
+/* ==========================================
+   ACTIVAR LECTOR NFC
+========================================== */
+
 botonEscanear.addEventListener(
   "click",
   iniciarNFC
@@ -84,6 +111,7 @@ async function iniciarNFC() {
   if (!moduloSeleccionado) {
     estado.textContent =
       "❌ Primero selecciona un módulo.";
+
     return;
   }
 
@@ -98,6 +126,7 @@ async function iniciarNFC() {
     ) {
       estado.textContent =
         "❌ Selecciona el campo formativo y el tipo de participación.";
+
       return;
     }
 
@@ -106,12 +135,14 @@ async function iniciarNFC() {
   if (!("NDEFReader" in window)) {
     estado.textContent =
       "❌ Este dispositivo no es compatible con Web NFC.";
+
     return;
   }
 
   if (lectorActivo) {
     estado.textContent =
       "📡 El lector NFC ya está activo.";
+
     return;
   }
 
@@ -131,37 +162,107 @@ async function iniciarNFC() {
     estado.textContent =
       "📡 Escáner activo. Acerca una tarjeta.";
 
-    lectorNFC.onreading = procesarTarjeta;
+    lectorNFC.onreading =
+      procesarTarjeta;
 
     lectorNFC.onreadingerror = () => {
+
       estado.textContent =
         "❌ No se pudo leer la tarjeta. Intenta nuevamente.";
+
     };
 
   } catch (error) {
 
+    console.error(
+      "Error al activar NFC:",
+      error
+    );
+
+    lectorActivo = false;
+
+    botonEscanear.disabled = false;
+
+    botonEscanear.textContent =
+      "Activar lector NFC";
+
     estado.textContent =
-      "❌ " + error.message;
+      "❌ " +
+      (
+        error.message ||
+        "No se pudo activar el lector NFC."
+      );
 
   }
 
 }
 
+/* ==========================================
+   PROCESAR TARJETA
+========================================== */
+
 function procesarTarjeta(evento) {
 
-  const uid =
-    evento.serialNumber || "";
+  const uid = String(
+    evento.serialNumber || ""
+  ).trim();
 
   if (!uid) {
     resultado.innerHTML =
-      "Tarjeta detectada, pero no se encontró el UID.";
+      "❌ Tarjeta detectada, pero no se encontró el UID.";
+
+    return;
+  }
+
+  /*
+   * Evita registrar varias veces la misma
+   * tarjeta en pocos segundos.
+   */
+  const ahora = Date.now();
+
+  if (
+    uid === ultimoUID &&
+    ahora - momentoUltimoEscaneo < 3000
+  ) {
+    return;
+  }
+
+  ultimoUID = uid;
+  momentoUltimoEscaneo = ahora;
+
+  if (envioEnProceso) {
+    estado.textContent =
+      "⏳ Espera a que termine el registro anterior.";
+
+    return;
+  }
+
+  if (!moduloSeleccionado) {
+    estado.textContent =
+      "❌ Primero selecciona un módulo.";
+
+    return;
+  }
+
+  if (
+    moduloSeleccionado ===
+    "participacion" &&
+    (
+      !campoFormativo.value ||
+      !tipoParticipacion.value
+    )
+  ) {
+    estado.textContent =
+      "❌ Selecciona el campo formativo y el tipo de participación.";
+
     return;
   }
 
   const datosRegistro = {
     uid: uid,
     modulo: moduloSeleccionado,
-    fecha: new Date().toISOString()
+    campoFormativo: "",
+    tipoParticipacion: ""
   };
 
   if (
@@ -183,6 +284,10 @@ function procesarTarjeta(evento) {
   enviarRegistro(datosRegistro);
 }
 
+/* ==========================================
+   ENVIAR REGISTRO A APPS SCRIPT
+========================================== */
+
 function enviarRegistro(datos) {
 
   if (envioEnProceso) {
@@ -196,144 +301,170 @@ function enviarRegistro(datos) {
 
   resultado.innerHTML = "";
 
-  const nombreCallback =
-    "respuestaAulaNFC_" + Date.now();
-
-  const parametros = new URLSearchParams({
-    accion: "registrarNFC",
-    uid: datos.uid,
-    modulo: datos.modulo,
-    campoFormativo:
-      datos.campoFormativo || "",
-    tipoParticipacion:
-      datos.tipoParticipacion || "",
-    callback: nombreCallback,
-    t: Date.now()
-  });
+  const parametros =
+    new URLSearchParams({
+      accion: "registrarNFC",
+      uid: datos.uid,
+      modulo: datos.modulo,
+      campoFormativo:
+        datos.campoFormativo || "",
+      tipoParticipacion:
+        datos.tipoParticipacion || "",
+      t: Date.now()
+    });
 
   const url =
     URL_APPS_SCRIPT +
     "?" +
     parametros.toString();
 
-  console.log("URL enviada:", url);
+  console.log(
+    "URL enviada:",
+    url
+  );
 
-  const scriptJSONP =
-    document.createElement("script");
+  /*
+   * Se carga Apps Script dentro de una
+   * página invisible. Es equivalente a
+   * abrir manualmente la dirección.
+   */
+  const marco =
+    document.createElement("iframe");
 
-  let respuestaRecibida = false;
+  marco.style.position = "absolute";
+  marco.style.width = "1px";
+  marco.style.height = "1px";
+  marco.style.border = "0";
+  marco.style.opacity = "0";
+  marco.style.pointerEvents = "none";
+  marco.setAttribute(
+    "aria-hidden",
+    "true"
+  );
 
-  const temporizador = setTimeout(() => {
+  let finalizado = false;
 
-    if (respuestaRecibida) {
+  const temporizador =
+    setTimeout(() => {
+
+      if (finalizado) {
+        return;
+      }
+
+      finalizado = true;
+
+      eliminarMarco();
+
+      estado.textContent =
+        "⚠️ El servidor tardó demasiado.";
+
+      resultado.innerHTML = `
+        No se pudo confirmar el envío.
+        <br><br>
+        Revisa las hojas
+        <strong>RegistrosNFC</strong>
+        y
+        <strong>ASISTENCIAS</strong>.
+      `;
+
+      envioEnProceso = false;
+
+    }, 15000);
+
+  marco.onload = function () {
+
+    if (finalizado) {
       return;
     }
 
-    limpiarPeticion();
-
-    estado.textContent =
-      "❌ Apps Script no respondió.";
-
-    resultado.innerHTML = `
-      No se recibió confirmación del servidor.
-      <br><br>
-      Revisa la implementación de Apps Script.
-    `;
-
-    envioEnProceso = false;
-
-  }, 15000);
-
-  window[nombreCallback] = function (
-    respuesta
-  ) {
-
-    respuestaRecibida = true;
+    finalizado = true;
 
     clearTimeout(temporizador);
 
-    limpiarPeticion();
+    /*
+     * Espera breve para que Apps Script
+     * termine de escribir en Sheets.
+     */
+    setTimeout(() => {
 
-    console.log(
-      "Respuesta de Apps Script:",
-      respuesta
-    );
-
-    if (respuesta.exito) {
+      eliminarMarco();
 
       estado.textContent =
-        "📡 Registro guardado. Acerca otra tarjeta.";
+        "📡 Petición procesada. Acerca otra tarjeta.";
 
       resultado.innerHTML = `
-        ✅ ${respuesta.mensaje}
+        ✅ Registro enviado al servidor
         <br><br>
-        Alumno:
-        ${respuesta.alumno || ""}
+        Módulo:
+        <strong>
+          ${formatearModulo(
+            datos.modulo
+          )}
+        </strong>
         <br>
         UID:
-        ${respuesta.uid || datos.uid}
+        <strong>
+          ${formatearUID(
+            datos.uid
+          )}
+        </strong>
       `;
 
       vibrarTelefono();
 
-    } else {
+      envioEnProceso = false;
 
-      estado.textContent =
-        "❌ No se guardó el registro.";
+    }, 1200);
 
-      resultado.innerHTML = `
-        ${respuesta.mensaje ||
-          "El servidor rechazó el registro."}
-        <br><br>
-        UID:
-        ${respuesta.uid || datos.uid}
-      `;
-
-    }
-
-    envioEnProceso = false;
   };
 
-  scriptJSONP.onerror = function () {
+  marco.onerror = function () {
 
-    if (respuestaRecibida) {
+    if (finalizado) {
       return;
     }
 
+    finalizado = true;
+
     clearTimeout(temporizador);
 
-    limpiarPeticion();
+    eliminarMarco();
 
     estado.textContent =
-      "❌ No se pudo conectar con Apps Script.";
+      "❌ No se pudo abrir Apps Script.";
 
     resultado.innerHTML = `
-      La petición no llegó correctamente
-      al servidor.
+      La petición no pudo enviarse.
+      <br><br>
+      Revisa la conexión a Internet.
     `;
 
     envioEnProceso = false;
+
   };
 
-  function limpiarPeticion() {
+  function eliminarMarco() {
 
-    if (scriptJSONP.parentNode) {
-      scriptJSONP.parentNode.removeChild(
-        scriptJSONP
+    if (marco.parentNode) {
+      marco.parentNode.removeChild(
+        marco
       );
     }
 
-    try {
-      delete window[nombreCallback];
-    } catch (error) {
-      window[nombreCallback] = undefined;
-    }
   }
 
-  scriptJSONP.src = url;
+  /*
+   * Primero se asigna la dirección
+   * y después se agrega el iframe.
+   */
+  marco.src = url;
 
-  document.body.appendChild(scriptJSONP);
+  document.body.appendChild(marco);
 }
+
+/* ==========================================
+   FUNCIONES AUXILIARES
+========================================== */
 
 function formatearModulo(modulo) {
 
@@ -358,9 +489,19 @@ function vibrarTelefono() {
 
 function formatearUID(uid) {
 
-  return String(uid || "")
-    .replace(
-      /(.{2})(?=.)/g,
-      "$1:"
-    );
+  const limpio = String(uid || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^0-9A-F]/g, "");
+
+  if (!limpio) {
+    return "";
+  }
+
+  const partes =
+    limpio.match(/.{1,2}/g);
+
+  return partes
+    ? partes.join(":")
+    : limpio;
 }
