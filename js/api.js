@@ -12,6 +12,7 @@ export function sendRegistration(data) {
       modulo: data.modulo,
       campoFormativo: data.campoFormativo || "",
       tipoParticipacion: data.tipoParticipacion || "",
+      actividadLectura: data.actividadLectura || "",
       callback: callbackName,
       t: Date.now()
     });
@@ -29,10 +30,7 @@ export function sendRegistration(data) {
     };
 
     const finish = (handler, value) => {
-      if (finished) {
-        return;
-      }
-
+      if (finished) return;
       finished = true;
       window.clearTimeout(timeoutId);
       cleanup();
@@ -50,10 +48,7 @@ export function sendRegistration(data) {
     };
 
     const timeoutId = window.setTimeout(() => {
-      finish(
-        reject,
-        new Error("La solicitud superó el tiempo máximo de espera.")
-      );
+      finish(reject, new Error("La solicitud superó el tiempo máximo de espera."));
     }, CONFIG.API_TIMEOUT_MS);
 
     document.head.appendChild(script);
