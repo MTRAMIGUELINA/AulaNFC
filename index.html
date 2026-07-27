@@ -4,43 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AulaNFC v2.0</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=3.0.0">
 </head>
 <body>
   <main class="contenedor">
     <header class="encabezado">
       <h1>📚 AulaNFC</h1>
-      <p>Panel móvil de registro</p>
+      <p>Registro rápido para el aula</p>
     </header>
 
     <section class="seccion">
       <h2>¿Qué deseas registrar?</h2>
-
       <div class="modulos">
-        <button class="modulo asistencia" data-modulo="asistencia">
-          <span>🟢</span>
-          Asistencia
-        </button>
-
-        <button class="modulo tareas" data-modulo="tareas">
-          <span>🟡</span>
-          Tareas
-        </button>
-
-        <button class="modulo participacion" data-modulo="participacion">
-          <span>🔵</span>
-          Participación
-        </button>
-
-        <button class="modulo conducta" data-modulo="conducta">
-          <span>🟣</span>
-          Conducta
-        </button>
-
-        <button class="modulo lectura" data-modulo="lectura">
-          <span>🟠</span>
-          Lectura
-        </button>
+        <button class="modulo asistencia" data-modulo="asistencia"><span>🟢</span>Asistencia</button>
+        <button class="modulo tareas" data-modulo="tareas"><span>🟡</span>Tareas</button>
+        <button class="modulo participacion" data-modulo="participacion"><span>🔵</span>Participación</button>
+        <button class="modulo conducta" data-modulo="conducta"><span>🟣</span>Conducta</button>
+        <button class="modulo lectura" data-modulo="lectura"><span>🟠</span>Lectura</button>
       </div>
     </section>
 
@@ -50,37 +30,46 @@
     </section>
 
     <section id="opcionesParticipacion" class="opciones oculto">
-      <h2>Campo formativo</h2>
+      <label for="campoFormativo">Campo formativo</label>
       <select id="campoFormativo">
         <option value="">Selecciona un campo</option>
         <option value="Lenguajes">Lenguajes</option>
-        <option value="Saberes y Pensamiento Científico">
-          Saberes y Pensamiento Científico
-        </option>
-        <option value="Ética, Naturaleza y Sociedad">
-          Ética, Naturaleza y Sociedad
-        </option>
-        <option value="De lo Humano a lo Comunitario">
-          De lo Humano a lo Comunitario
-        </option>
+        <option value="Saberes y Pensamiento Científico">Saberes y Pensamiento Científico</option>
+        <option value="Ética, Naturaleza y Sociedad">Ética, Naturaleza y Sociedad</option>
+        <option value="De lo Humano a lo Comunitario">De lo Humano a lo Comunitario</option>
       </select>
 
-      <h2>Tipo de participación</h2>
+      <label for="tipoParticipacion">Tipo de participación</label>
       <select id="tipoParticipacion">
         <option value="">Selecciona una opción</option>
         <option value="Participó">Participó</option>
         <option value="Excelente participación">Excelente participación</option>
         <option value="Apoyo al equipo">Apoyo al equipo</option>
       </select>
+      <p id="configBloqueada" class="aviso-bloqueo oculto">🔒 Configuración bloqueada mientras el lector está activo.</p>
     </section>
 
     <section class="lector">
+      <div class="estado-lector">
+        <span>Estado del lector</span>
+        <strong id="indicadorLector" class="apagado">⚪ APAGADO</strong>
+      </div>
+      <button id="btnEscanear" disabled>▶ ACTIVAR LECTOR</button>
       <div id="estado">Selecciona un módulo para comenzar.</div>
-      <button id="btnEscanear" disabled>Activar lector NFC</button>
-      <div id="resultado"></div>
+      <div id="resultado" aria-live="polite"></div>
+    </section>
+
+    <section class="historial">
+      <div class="historial-encabezado">
+        <h2>Últimos registros</h2>
+        <strong id="contadorRegistros">Registros: 0</strong>
+      </div>
+      <div id="listaRegistros" class="lista-registros">
+        <p class="sin-registros">Todavía no hay registros en esta sesión.</p>
+      </div>
     </section>
   </main>
 
-  <script type="module" src="js/app.js?v=2.0.0"></script>
+  <script type="module" src="js/app.js?v=3.0.0"></script>
 </body>
 </html>
