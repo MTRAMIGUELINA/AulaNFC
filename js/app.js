@@ -1,12 +1,14 @@
 import { sendRegistration } from "./api.js";
-import { isScannerActive, startScanner } from "./scanner.js";
+import { isScannerActive, startScanner, stopScanner } from "./scanner.js";
 import {
+  addHistoryRecord,
   formatModule,
-  formatUid,
   getElements,
   getParticipationData,
+  lockConfiguration,
   setResult,
   setScannerButton,
+  setScannerState,
   setSelectedModule,
   setStatus,
   vibrate
@@ -15,25 +17,25 @@ import {
 const elements = getElements();
 let selectedModule = "";
 let sending = false;
-let readyTimer = null;
+let feedbackTimer = null;
+
+setScannerState(false);
 
 elements.moduleButtons.forEach((button) => {
   button.addEventListener("click", () => selectModule(button.dataset.modulo || ""));
 });
 
-elements.scanButton.addEventListener("click", activateScanner);
+elements.scanButton.addEventListener("click", toggleScanner);
 
 function selectModule(moduleName) {
+  if (isScannerActive()) return;
+
   selectedModule = moduleName;
   setSelectedModule(moduleName);
-  clearReadyTimer();
-
-  if (!isScannerActive()) {
-    setScannerButton({ disabled: false, text: "Activar lector NFC" });
-    setStatus("Módulo listo. Activa el lector NFC.");
-  } else {
-    setStatus("📡 Escáner activo. Acerca una tarjeta.");
-  }
+  clearFeedbackTimer();
+  setResult("");
+  setScannerButton({ disabled: false, text: "▶ ACTIVAR LECTOR" });
+  setStatus("Configura el registro y activa el lector NFC.");
 }
 
 function validateSelection() {
@@ -54,55 +56,61 @@ function validateSelection() {
   return true;
 }
 
-async function activateScanner() {
-  if (!validateSelection()) {
+async function toggleScanner() {
+  if (isScannerActive()) {
+    deactivateScanner();
     return;
   }
 
-  if (isScannerActive()) {
-    setStatus("📡 El lector NFC ya está activo.");
-    return;
-  }
+  await activateScanner();
+}
+
+async function activateScanner() {
+  if (!validateSelection()) return;
 
   try {
     await startScanner({
       onReading: processCard,
       onReadingError: (message) => setStatus(`❌ ${message}`)
     });
-    setScannerButton({ disabled: true, text: "Lector NFC activo" });
-    setStatus("📡 Escáner activo. Acerca una tarjeta.");
+
+    lockConfiguration(true);
+    setScannerState(true);
+    setScannerButton({ disabled: false, text: "■ DESACTIVAR LECTOR", active: true });
+    setStatus("📡 Lector activo. Acerca una tarjeta.");
   } catch (error) {
     console.error("Error al activar NFC:", error);
-    setScannerButton({ disabled: false, text: "Activar lector NFC" });
+    setScannerState(false);
+    setScannerButton({ disabled: false, text: "▶ ACTIVAR LECTOR" });
     setStatus(`❌ ${error.message || "No se pudo activar el lector NFC."}`);
   }
 }
 
+function deactivateScanner() {
+  stopScanner();
+  lockConfiguration(false);
+  setScannerState(false);
+  setScannerButton({ disabled: !selectedModule, text: "▶ ACTIVAR LECTOR" });
+  setStatus("Lector NFC desactivado. No se registrarán tarjetas.");
+  setResult("");
+  clearFeedbackTimer();
+}
+
 async function processCard(uid) {
-  if (sending) {
-    setStatus("⏳ Espera a que termine el registro anterior.");
-    return;
-  }
-
-  if (!validateSelection()) {
-    return;
-  }
-
-  clearReadyTimer();
+  if (!isScannerActive() || sending) return;
+  if (!validateSelection()) return;
 
   const participation = getParticipationData();
   const registration = {
     uid,
     modulo: selectedModule,
-    campoFormativo:
-      selectedModule === "participacion" ? participation.campoFormativo : "",
-    tipoParticipacion:
-      selectedModule === "participacion" ? participation.tipoParticipacion : ""
+    campoFormativo: selectedModule === "participacion" ? participation.campoFormativo : "",
+    tipoParticipacion: selectedModule === "participacion" ? participation.tipoParticipacion : ""
   };
 
   sending = true;
-  setStatus("⏳ Registrando tarjeta...");
-  setResult("");
+  clearFeedbackTimer();
+  setStatus("⏳ Registrando...");
 
   try {
     const response = await sendRegistration(registration);
@@ -112,54 +120,39 @@ async function processCard(uid) {
       throw new Error(response.mensaje || "Apps Script rechazó el registro.");
     }
 
-    const studentName = escapeHtml(response.nombre || response.alumno || "");
+    const studentName = escapeHtml(response.nombre || response.alumno || "Alumno");
     const grade = escapeHtml(response.grado || "");
     const group = escapeHtml(response.grupo || "");
-    const message = escapeHtml(
-      response.mensaje || `${formatModule(registration.modulo)} registrada`
-    );
-    const time = escapeHtml(
-      response.hora || new Date().toLocaleTimeString("es-MX")
-    );
+    const time = escapeHtml(response.hora || new Date().toLocaleTimeString("es-MX"));
     const schoolData = [grade, group].filter(Boolean).join(" ");
+    const detail = selectedModule === "participacion"
+      ? `${escapeHtml(participation.campoFormativo)} · ${escapeHtml(participation.tipoParticipacion)}`
+      : formatModule(selectedModule);
 
-    setStatus("✅ Registro confirmado.");
-    setResult(`
-      ${studentName ? `<div>👤 <strong>${studentName}</strong></div>` : ""}
-      ${schoolData ? `<div>${schoolData}</div><br>` : "<br>"}
-      <div>✅ ${message}</div>
-      <div>Módulo: <strong>${escapeHtml(
-        response.modulo || formatModule(registration.modulo)
-      )}</strong></div>
-      <div>UID: <strong>${escapeHtml(formatUid(registration.uid))}</strong></div>
-      <div>🕒 ${time}</div>
-    `);
+    setStatus(`✅ ${studentName}${schoolData ? ` — ${schoolData}` : ""}`);
+    setResult(`<span class="confirmacion-rapida">Registro confirmado</span>`);
+    addHistoryRecord({ name: studentName, time, detail });
     vibrate();
-    scheduleReadyMessage();
+
+    feedbackTimer = window.setTimeout(() => {
+      if (isScannerActive()) {
+        setStatus("📡 Listo. Acerca la siguiente tarjeta.");
+        setResult("");
+      }
+    }, 650);
   } catch (error) {
     console.error("Error al registrar:", error);
-    setStatus("❌ No se confirmó el registro.");
-    setResult(`
-      <div>❌ ${escapeHtml(error.message || "Error de conexión.")}</div>
-      <div>UID: <strong>${escapeHtml(formatUid(registration.uid))}</strong></div>
-    `);
-    scheduleReadyMessage(3500);
+    setStatus(`❌ ${error.message || "No se pudo registrar."}`);
+    setResult(`<span class="confirmacion-error">Acerca nuevamente la tarjeta.</span>`);
   } finally {
     sending = false;
   }
 }
 
-function scheduleReadyMessage(delay = 2500) {
-  clearReadyTimer();
-  readyTimer = window.setTimeout(() => {
-    setStatus("📡 Listo. Acerca la siguiente tarjeta.");
-  }, delay);
-}
-
-function clearReadyTimer() {
-  if (readyTimer) {
-    window.clearTimeout(readyTimer);
-    readyTimer = null;
+function clearFeedbackTimer() {
+  if (feedbackTimer) {
+    window.clearTimeout(feedbackTimer);
+    feedbackTimer = null;
   }
 }
 
