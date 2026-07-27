@@ -230,20 +230,19 @@ async function enviarRegistro(datos) {
   });
 
   const url =
-    URL_APPS_SCRIPT +
-    "?" +
-    parametros.toString();
+  URL_APPS_SCRIPT +
+  "?" +
+  parametros.toString();
 
-  console.log("URL enviada:", url);
-  alert(url);
+alert(url);
 
-  try {
+try {
 
-    await fetch(url, {
-      method: "GET",
-      mode: "no-cors",
-      cache: "no-store"
-    });
+  await fetch(url, {
+    method: "GET",
+    mode: "no-cors",
+    cache: "no-store"
+  });
 
     estado.textContent =
       "📡 Registro enviado. Acerca otra tarjeta.";
