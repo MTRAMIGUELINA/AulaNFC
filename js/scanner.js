@@ -1,6 +1,7 @@
 import { CONFIG } from "./config.js";
 
 let reader = null;
+let controller = null;
 let active = false;
 let lastUid = "";
 let lastScanAt = 0;
@@ -18,11 +19,14 @@ export async function startScanner({ onReading, onReadingError }) {
     return;
   }
 
+  controller = new AbortController();
   reader = new NDEFReader();
-  await reader.scan();
+  await reader.scan({ signal: controller.signal });
   active = true;
 
   reader.onreading = (event) => {
+    if (!active) return;
+
     const uid = String(event.serialNumber || "").trim();
 
     if (!uid) {
@@ -44,6 +48,26 @@ export async function startScanner({ onReading, onReadingError }) {
   };
 
   reader.onreadingerror = () => {
-    onReadingError?.("No se pudo leer la tarjeta. Intenta nuevamente.");
+    if (active) {
+      onReadingError?.("No se pudo leer la tarjeta. Intenta nuevamente.");
+    }
   };
+}
+
+export function stopScanner() {
+  active = false;
+
+  if (reader) {
+    reader.onreading = null;
+    reader.onreadingerror = null;
+  }
+
+  if (controller) {
+    controller.abort();
+  }
+
+  reader = null;
+  controller = null;
+  lastUid = "";
+  lastScanAt = 0;
 }
