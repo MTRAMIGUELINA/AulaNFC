@@ -1,4 +1,3 @@
-alert("SCRIPT NUEVO CARGADO");
 const URL_APPS_SCRIPT =
   "https://script.google.com/macros/s/AKfycbyxSbdzdXQxvVxsPQ8ZA34HoH5U7mR8TpLxYo0sC64X98yAG0POgda76cJq-9YLI46FCg/exec";
 
@@ -197,6 +196,9 @@ function enviarRegistro(datos) {
 
   resultado.innerHTML = "";
 
+  const nombreCallback =
+    "respuestaAulaNFC_" + Date.now();
+
   const parametros = new URLSearchParams({
     accion: "registrarNFC",
     uid: datos.uid,
@@ -205,6 +207,7 @@ function enviarRegistro(datos) {
       datos.campoFormativo || "",
     tipoParticipacion:
       datos.tipoParticipacion || "",
+    callback: nombreCallback,
     t: Date.now()
   });
 
@@ -215,32 +218,121 @@ function enviarRegistro(datos) {
 
   console.log("URL enviada:", url);
 
-  const peticion = new Image();
+  const scriptJSONP =
+    document.createElement("script");
 
-  peticion.onload = finalizarEnvio;
-  peticion.onerror = finalizarEnvio;
+  let respuestaRecibida = false;
 
-  peticion.src = url;
+  const temporizador = setTimeout(() => {
 
-  function finalizarEnvio() {
+    if (respuestaRecibida) {
+      return;
+    }
+
+    limpiarPeticion();
 
     estado.textContent =
-      "📡 Registro enviado. Acerca otra tarjeta.";
+      "❌ Apps Script no respondió.";
 
     resultado.innerHTML = `
-      ✅ Solicitud enviada
+      No se recibió confirmación del servidor.
       <br><br>
-      Módulo:
-      ${formatearModulo(datos.modulo)}
-      <br>
-      UID:
-      ${datos.uid}
+      Revisa la implementación de Apps Script.
     `;
 
-    vibrarTelefono();
+    envioEnProceso = false;
+
+  }, 15000);
+
+  window[nombreCallback] = function (
+    respuesta
+  ) {
+
+    respuestaRecibida = true;
+
+    clearTimeout(temporizador);
+
+    limpiarPeticion();
+
+    console.log(
+      "Respuesta de Apps Script:",
+      respuesta
+    );
+
+    if (respuesta.exito) {
+
+      estado.textContent =
+        "📡 Registro guardado. Acerca otra tarjeta.";
+
+      resultado.innerHTML = `
+        ✅ ${respuesta.mensaje}
+        <br><br>
+        Alumno:
+        ${respuesta.alumno || ""}
+        <br>
+        UID:
+        ${respuesta.uid || datos.uid}
+      `;
+
+      vibrarTelefono();
+
+    } else {
+
+      estado.textContent =
+        "❌ No se guardó el registro.";
+
+      resultado.innerHTML = `
+        ${respuesta.mensaje ||
+          "El servidor rechazó el registro."}
+        <br><br>
+        UID:
+        ${respuesta.uid || datos.uid}
+      `;
+
+    }
 
     envioEnProceso = false;
+  };
+
+  scriptJSONP.onerror = function () {
+
+    if (respuestaRecibida) {
+      return;
+    }
+
+    clearTimeout(temporizador);
+
+    limpiarPeticion();
+
+    estado.textContent =
+      "❌ No se pudo conectar con Apps Script.";
+
+    resultado.innerHTML = `
+      La petición no llegó correctamente
+      al servidor.
+    `;
+
+    envioEnProceso = false;
+  };
+
+  function limpiarPeticion() {
+
+    if (scriptJSONP.parentNode) {
+      scriptJSONP.parentNode.removeChild(
+        scriptJSONP
+      );
+    }
+
+    try {
+      delete window[nombreCallback];
+    } catch (error) {
+      window[nombreCallback] = undefined;
+    }
   }
+
+  scriptJSONP.src = url;
+
+  document.body.appendChild(scriptJSONP);
 }
 
 function formatearModulo(modulo) {
