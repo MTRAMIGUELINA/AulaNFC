@@ -15,6 +15,7 @@ import {
 const elements = getElements();
 let selectedModule = "";
 let sending = false;
+let readyTimer = null;
 
 elements.moduleButtons.forEach((button) => {
   button.addEventListener("click", () => selectModule(button.dataset.modulo || ""));
@@ -25,6 +26,7 @@ elements.scanButton.addEventListener("click", activateScanner);
 function selectModule(moduleName) {
   selectedModule = moduleName;
   setSelectedModule(moduleName);
+  clearReadyTimer();
 
   if (!isScannerActive()) {
     setScannerButton({ disabled: false, text: "Activar lector NFC" });
@@ -86,6 +88,8 @@ async function processCard(uid) {
     return;
   }
 
+  clearReadyTimer();
+
   const participation = getParticipationData();
   const registration = {
     uid,
@@ -109,16 +113,20 @@ async function processCard(uid) {
     }
 
     const studentName = escapeHtml(response.nombre || response.alumno || "");
+    const grade = escapeHtml(response.grado || "");
+    const group = escapeHtml(response.grupo || "");
     const message = escapeHtml(
       response.mensaje || `${formatModule(registration.modulo)} registrada`
     );
     const time = escapeHtml(
       response.hora || new Date().toLocaleTimeString("es-MX")
     );
+    const schoolData = [grade, group].filter(Boolean).join(" ");
 
-    setStatus("📡 Registro confirmado. Acerca otra tarjeta.");
+    setStatus("✅ Registro confirmado.");
     setResult(`
-      ${studentName ? `<div>👤 <strong>${studentName}</strong></div><br>` : ""}
+      ${studentName ? `<div>👤 <strong>${studentName}</strong></div>` : ""}
+      ${schoolData ? `<div>${schoolData}</div><br>` : "<br>"}
       <div>✅ ${message}</div>
       <div>Módulo: <strong>${escapeHtml(
         response.modulo || formatModule(registration.modulo)
@@ -127,6 +135,7 @@ async function processCard(uid) {
       <div>🕒 ${time}</div>
     `);
     vibrate();
+    scheduleReadyMessage();
   } catch (error) {
     console.error("Error al registrar:", error);
     setStatus("❌ No se confirmó el registro.");
@@ -134,8 +143,23 @@ async function processCard(uid) {
       <div>❌ ${escapeHtml(error.message || "Error de conexión.")}</div>
       <div>UID: <strong>${escapeHtml(formatUid(registration.uid))}</strong></div>
     `);
+    scheduleReadyMessage(3500);
   } finally {
     sending = false;
+  }
+}
+
+function scheduleReadyMessage(delay = 2500) {
+  clearReadyTimer();
+  readyTimer = window.setTimeout(() => {
+    setStatus("📡 Listo. Acerca la siguiente tarjeta.");
+  }, delay);
+}
+
+function clearReadyTimer() {
+  if (readyTimer) {
+    window.clearTimeout(readyTimer);
+    readyTimer = null;
   }
 }
 
