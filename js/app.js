@@ -67,7 +67,6 @@ async function activateScanner() {
       onReading: processCard,
       onReadingError: (message) => setStatus(`❌ ${message}`)
     });
-
     setScannerButton({ disabled: true, text: "Lector NFC activo" });
     setStatus("📡 Escáner activo. Acerca una tarjeta.");
   } catch (error) {
@@ -98,27 +97,53 @@ async function processCard(uid) {
   };
 
   sending = true;
-  setStatus("⏳ Enviando registro...");
+  setStatus("⏳ Registrando tarjeta...");
   setResult("");
 
   try {
     const response = await sendRegistration(registration);
-    console.log("URL enviada:", response.url);
+    const success = response.exito === true || response.ok === true;
 
-    setStatus("📡 Solicitud enviada. Acerca otra tarjeta.");
+    if (!success) {
+      throw new Error(response.mensaje || "Apps Script rechazó el registro.");
+    }
+
+    const studentName = escapeHtml(response.nombre || response.alumno || "");
+    const message = escapeHtml(
+      response.mensaje || `${formatModule(registration.modulo)} registrada`
+    );
+    const time = escapeHtml(
+      response.hora || new Date().toLocaleTimeString("es-MX")
+    );
+
+    setStatus("📡 Registro confirmado. Acerca otra tarjeta.");
     setResult(`
-      ✅ Solicitud enviada a Apps Script
-      <br><br>
-      Módulo: <strong>${formatModule(registration.modulo)}</strong>
-      <br>
-      UID: <strong>${formatUid(registration.uid)}</strong>
+      ${studentName ? `<div>👤 <strong>${studentName}</strong></div><br>` : ""}
+      <div>✅ ${message}</div>
+      <div>Módulo: <strong>${escapeHtml(
+        response.modulo || formatModule(registration.modulo)
+      )}</strong></div>
+      <div>UID: <strong>${escapeHtml(formatUid(registration.uid))}</strong></div>
+      <div>🕒 ${time}</div>
     `);
     vibrate();
   } catch (error) {
-    console.error("Error al enviar:", error);
-    setStatus("❌ No se pudo enviar la solicitud.");
-    setResult(`Error de conexión:<br>${error.message}`);
+    console.error("Error al registrar:", error);
+    setStatus("❌ No se confirmó el registro.");
+    setResult(`
+      <div>❌ ${escapeHtml(error.message || "Error de conexión.")}</div>
+      <div>UID: <strong>${escapeHtml(formatUid(registration.uid))}</strong></div>
+    `);
   } finally {
     sending = false;
   }
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
