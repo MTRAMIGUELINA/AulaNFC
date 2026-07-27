@@ -1,8 +1,9 @@
-import { CONFIG } from "./config.js";
+import { CONFIG } from "./config.js?v=3.0.1";
 
 let reader = null;
 let controller = null;
 let active = false;
+let sessionId = 0;
 let lastUid = "";
 let lastScanAt = 0;
 
@@ -15,9 +16,10 @@ export async function startScanner({ onReading, onReadingError }) {
     throw new Error("Este dispositivo no es compatible con Web NFC.");
   }
 
-  if (active) {
-    return;
-  }
+  if (active) return;
+
+  sessionId += 1;
+  const currentSession = sessionId;
 
   controller = new AbortController();
   reader = new NDEFReader();
@@ -25,10 +27,9 @@ export async function startScanner({ onReading, onReadingError }) {
   active = true;
 
   reader.onreading = (event) => {
-    if (!active) return;
+    if (!active || currentSession !== sessionId) return;
 
     const uid = String(event.serialNumber || "").trim();
-
     if (!uid) {
       onReadingError?.("Tarjeta detectada, pero no se encontró el UID.");
       return;
@@ -38,9 +39,7 @@ export async function startScanner({ onReading, onReadingError }) {
     const duplicated =
       uid === lastUid && now - lastScanAt < CONFIG.DUPLICATE_WINDOW_MS;
 
-    if (duplicated) {
-      return;
-    }
+    if (duplicated) return;
 
     lastUid = uid;
     lastScanAt = now;
@@ -48,7 +47,7 @@ export async function startScanner({ onReading, onReadingError }) {
   };
 
   reader.onreadingerror = () => {
-    if (active) {
+    if (active && currentSession === sessionId) {
       onReadingError?.("No se pudo leer la tarjeta. Intenta nuevamente.");
     }
   };
@@ -56,13 +55,14 @@ export async function startScanner({ onReading, onReadingError }) {
 
 export function stopScanner() {
   active = false;
+  sessionId += 1;
 
   if (reader) {
     reader.onreading = null;
     reader.onreadingerror = null;
   }
 
-  if (controller) {
+  if (controller && !controller.signal.aborted) {
     controller.abort();
   }
 
@@ -70,4 +70,6 @@ export function stopScanner() {
   controller = null;
   lastUid = "";
   lastScanAt = 0;
+
+  return true;
 }
