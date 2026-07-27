@@ -1,5 +1,6 @@
 const URL_APPS_SCRIPT =
   "https://script.google.com/macros/s/AKfycbyxSbdzdXQxvVxsPQ8ZA34HoH5U7mR8TpLxYo0sC64X98yAG0POgda76cJq-9YLI46FCg/exec";
+
 const botonesModulos =
   document.querySelectorAll(".modulo");
 
@@ -31,6 +32,7 @@ const tipoParticipacion =
 let moduloSeleccionado = "";
 let lectorNFC = null;
 let lectorActivo = false;
+let envioEnProceso = false;
 
 botonesModulos.forEach((boton) => {
 
@@ -46,7 +48,7 @@ botonesModulos.forEach((boton) => {
       boton.dataset.modulo;
 
     moduloActivo.textContent =
-      moduloSeleccionado;
+      formatearModulo(moduloSeleccionado);
 
     resultado.innerHTML = "";
 
@@ -174,33 +176,11 @@ function procesarTarjeta(evento) {
   }
 
   console.log(
-  "Registro preparado:",
-  datosRegistro
-);
+    "Registro preparado:",
+    datosRegistro
+  );
 
-enviarRegistro(datosRegistro);
-}
-
-function formatearModulo(modulo) {
-
-  const nombres = {
-    asistencia: "Asistencia",
-    tareas: "Tareas",
-    participacion: "Participación",
-    conducta: "Conducta",
-    lectura: "Lectura"
-  };
-
-  return nombres[modulo] || modulo;
-
-}
-
-function vibrarTelefono() {
-
-  if ("vibrate" in navigator) {
-    navigator.vibrate(180);
-  }
-
+  enviarRegistro(datosRegistro);
 }
 
 function enviarRegistro(datos) {
@@ -262,55 +242,29 @@ function enviarRegistro(datos) {
   }
 }
 
-  const url =
-  URL_APPS_SCRIPT +
-  "?" +
-  parametros.toString();
+function formatearModulo(modulo) {
 
-try {
+  const nombres = {
+    asistencia: "Asistencia",
+    tareas: "Tareas",
+    participacion: "Participación",
+    conducta: "Conducta",
+    lectura: "Lectura"
+  };
 
-  await fetch(url, {
-    method: "GET",
-    mode: "no-cors",
-    cache: "no-store"
-  });
+  return nombres[modulo] || modulo;
+}
 
-    estado.textContent =
-      "📡 Registro enviado. Acerca otra tarjeta.";
+function vibrarTelefono() {
 
-    resultado.innerHTML = `
-      ✅ Solicitud enviada
-      <br><br>
-      Módulo:
-      ${formatearModulo(datos.modulo)}
-      <br>
-      UID:
-      ${datos.uid}
-    `;
-
-    vibrarTelefono();
-
-  } catch (error) {
-
-    console.error(
-      "Error enviando registro:",
-      error
-    );
-
-    estado.textContent =
-      "❌ No se pudo enviar el registro.";
-
-    resultado.innerHTML =
-      "Revisa la conexión a internet e intenta nuevamente.";
-
-  } finally {
-
-    envioEnProceso = false;
-
+  if ("vibrate" in navigator) {
+    navigator.vibrate(180);
   }
+
 }
 
 function formatearUID(uid) {
+
   return String(uid || "")
     .replace(
       /(.{2})(?=.)/g,
