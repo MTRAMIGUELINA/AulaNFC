@@ -235,6 +235,7 @@ async function enviarRegistro(datos) {
     parametros.toString();
 
   console.log("URL enviada:", url);
+  alert(url);
 
   try {
 
