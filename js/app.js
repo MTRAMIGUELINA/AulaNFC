@@ -1,10 +1,11 @@
-import { sendRegistration } from "./api.js?v=3.0.1";
+import { sendRegistration } from "./api.js?v=3.1.0";
 import { isScannerActive, startScanner, stopScanner } from "./scanner.js?v=3.0.1";
 import {
   addHistoryRecord,
   formatModule,
   getElements,
   getParticipationData,
+  getReadingData,
   lockConfiguration,
   setResult,
   setScannerButton,
@@ -12,7 +13,7 @@ import {
   setSelectedModule,
   setStatus,
   vibrate
-} from "./ui.js?v=3.0.1";
+} from "./ui.js?v=3.1.0";
 
 const elements = getElements();
 let selectedModule = "";
@@ -46,9 +47,16 @@ function validateSelection() {
 
   if (selectedModule === "participacion") {
     const participation = getParticipationData();
-
     if (!participation.campoFormativo || !participation.tipoParticipacion) {
       setStatus("❌ Selecciona el campo formativo y el tipo de participación.");
+      return false;
+    }
+  }
+
+  if (selectedModule === "lectura") {
+    const reading = getReadingData();
+    if (!reading.actividadLectura) {
+      setStatus("❌ Selecciona el nivel de lectura.");
       return false;
     }
   }
@@ -102,11 +110,18 @@ async function processCard(uid) {
   if (!validateSelection()) return;
 
   const participation = getParticipationData();
+  const reading = getReadingData();
   const registration = {
     uid,
     modulo: selectedModule,
     campoFormativo: selectedModule === "participacion" ? participation.campoFormativo : "",
-    tipoParticipacion: selectedModule === "participacion" ? participation.tipoParticipacion : ""
+    tipoParticipacion:
+      selectedModule === "participacion"
+        ? participation.tipoParticipacion
+        : selectedModule === "lectura"
+          ? reading.actividadLectura
+          : "",
+    actividadLectura: selectedModule === "lectura" ? reading.actividadLectura : ""
   };
 
   sending = true;
@@ -126,9 +141,13 @@ async function processCard(uid) {
     const group = escapeHtml(response.grupo || "");
     const time = escapeHtml(response.hora || new Date().toLocaleTimeString("es-MX"));
     const schoolData = [grade, group].filter(Boolean).join(" ");
-    const detail = selectedModule === "participacion"
-      ? `${escapeHtml(participation.campoFormativo)} · ${escapeHtml(participation.tipoParticipacion)}`
-      : formatModule(selectedModule);
+
+    let detail = formatModule(selectedModule);
+    if (selectedModule === "participacion") {
+      detail = `${escapeHtml(participation.campoFormativo)} · ${escapeHtml(participation.tipoParticipacion)}`;
+    } else if (selectedModule === "lectura") {
+      detail = escapeHtml(reading.actividadLectura);
+    }
 
     setStatus(`✅ ${studentName}${schoolData ? ` — ${schoolData}` : ""}`);
     setResult(`<span class="confirmacion-rapida">Registro confirmado</span>`);
