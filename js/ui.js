@@ -8,8 +8,14 @@ const elements = {
   result: document.getElementById("resultado"),
   participationOptions: document.getElementById("opcionesParticipacion"),
   formativeField: document.getElementById("campoFormativo"),
-  participationType: document.getElementById("tipoParticipacion")
+  participationType: document.getElementById("tipoParticipacion"),
+  scannerIndicator: document.getElementById("indicadorLector"),
+  lockedNotice: document.getElementById("configBloqueada"),
+  historyList: document.getElementById("listaRegistros"),
+  counter: document.getElementById("contadorRegistros")
 };
+
+let recordCount = 0;
 
 export function getElements() {
   return elements;
@@ -36,9 +42,46 @@ export function setResult(message) {
   elements.result.innerHTML = message;
 }
 
-export function setScannerButton({ disabled, text }) {
+export function setScannerButton({ disabled, text, active = false }) {
   elements.scanButton.disabled = disabled;
   elements.scanButton.textContent = text;
+  elements.scanButton.classList.toggle("detener", active);
+}
+
+export function setScannerState(active) {
+  elements.scannerIndicator.textContent = active ? "🟢 ACTIVO" : "⚪ APAGADO";
+  elements.scannerIndicator.classList.toggle("activo", active);
+  elements.scannerIndicator.classList.toggle("apagado", !active);
+}
+
+export function lockConfiguration(locked) {
+  elements.moduleButtons.forEach((button) => {
+    button.disabled = locked;
+  });
+  elements.formativeField.disabled = locked;
+  elements.participationType.disabled = locked;
+  elements.lockedNotice.classList.toggle("oculto", !locked);
+}
+
+export function addHistoryRecord({ name, time, detail = "" }) {
+  recordCount += 1;
+  elements.counter.textContent = `Registros: ${recordCount}`;
+
+  const empty = elements.historyList.querySelector(".sin-registros");
+  empty?.remove();
+
+  const item = document.createElement("div");
+  item.className = "registro-item";
+  item.innerHTML = `
+    <span class="registro-hora">${time}</span>
+    <span class="registro-datos"><strong>✔ ${name}</strong>${detail ? `<small>${detail}</small>` : ""}</span>
+  `;
+
+  elements.historyList.prepend(item);
+
+  while (elements.historyList.children.length > 8) {
+    elements.historyList.lastElementChild?.remove();
+  }
 }
 
 export function getParticipationData() {
@@ -62,7 +105,7 @@ export function formatUid(uid) {
   return parts ? parts.join(":") : clean;
 }
 
-export function vibrate(duration = 180) {
+export function vibrate(duration = 100) {
   if ("vibrate" in navigator) {
     navigator.vibrate(duration);
   }
