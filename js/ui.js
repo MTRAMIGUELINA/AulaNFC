@@ -9,8 +9,11 @@ const elements = {
   participationOptions: document.getElementById("opcionesParticipacion"),
   formativeField: document.getElementById("campoFormativo"),
   participationType: document.getElementById("tipoParticipacion"),
+  readingOptions: document.getElementById("opcionesLectura"),
+  readingActivity: document.getElementById("actividadLectura"),
   scannerIndicator: document.getElementById("indicadorLector"),
   lockedNotice: document.getElementById("configBloqueada"),
+  readingLockedNotice: document.getElementById("lecturaBloqueada"),
   historyList: document.getElementById("listaRegistros"),
   counter: document.getElementById("contadorRegistros")
 };
@@ -28,10 +31,8 @@ export function setSelectedModule(moduleName) {
 
   elements.activeModule.textContent = formatModule(moduleName);
   elements.result.innerHTML = "";
-  elements.participationOptions.classList.toggle(
-    "oculto",
-    moduleName !== "participacion"
-  );
+  elements.participationOptions.classList.toggle("oculto", moduleName !== "participacion");
+  elements.readingOptions.classList.toggle("oculto", moduleName !== "lectura");
 }
 
 export function setStatus(message) {
@@ -60,7 +61,9 @@ export function lockConfiguration(locked) {
   });
   elements.formativeField.disabled = locked;
   elements.participationType.disabled = locked;
+  elements.readingActivity.disabled = locked;
   elements.lockedNotice.classList.toggle("oculto", !locked);
+  elements.readingLockedNotice.classList.toggle("oculto", !locked);
 }
 
 export function addHistoryRecord({ name, time, detail = "" }) {
@@ -88,6 +91,12 @@ export function getParticipationData() {
   return {
     campoFormativo: elements.formativeField.value,
     tipoParticipacion: elements.participationType.value
+  };
+}
+
+export function getReadingData() {
+  return {
+    actividadLectura: elements.readingActivity.value
   };
 }
 
