@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AulaNFC v2.0</title>
-  <link rel="stylesheet" href="css/style.css?v=3.0.1">
+  <link rel="stylesheet" href="css/style.css?v=3.1.0">
 </head>
 <body>
   <main class="contenedor">
@@ -49,6 +49,18 @@
       <p id="configBloqueada" class="aviso-bloqueo oculto">🔒 Configuración bloqueada mientras el lector está activo.</p>
     </section>
 
+    <section id="opcionesLectura" class="opciones oculto">
+      <label for="actividadLectura">Actividad</label>
+      <select id="actividadLectura">
+        <option value="">Selecciona un nivel</option>
+        <option value="Requiere apoyo">Requiere apoyo</option>
+        <option value="Se acerca al estándar">Se acerca al estándar</option>
+        <option value="Estándar">Estándar</option>
+        <option value="Avanzado">Avanzado</option>
+      </select>
+      <p id="lecturaBloqueada" class="aviso-bloqueo oculto">🔒 Configuración bloqueada mientras el lector está activo.</p>
+    </section>
+
     <section class="lector">
       <div class="estado-lector">
         <span>Estado del lector</span>
@@ -70,6 +82,6 @@
     </section>
   </main>
 
-  <script type="module" src="js/app.js?v=3.0.1"></script>
+  <script type="module" src="js/app.js?v=3.1.0"></script>
 </body>
 </html>
