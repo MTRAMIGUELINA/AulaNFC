@@ -11,11 +11,14 @@ const elements = {
   participationOptions: document.getElementById("opcionesParticipacion"),
   formativeField: document.getElementById("campoFormativo"),
   participationType: document.getElementById("tipoParticipacion"),
+  conductOptions: document.getElementById("opcionesConducta"),
+  conductIncident: document.getElementById("incidenciaConducta"),
   readingOptions: document.getElementById("opcionesLectura"),
   readingActivity: document.getElementById("actividadLectura"),
   scannerIndicator: document.getElementById("indicadorLector"),
   taskLockedNotice: document.getElementById("tareasBloqueadas"),
   lockedNotice: document.getElementById("configBloqueada"),
+  conductLockedNotice: document.getElementById("conductaBloqueada"),
   readingLockedNotice: document.getElementById("lecturaBloqueada"),
   historyList: document.getElementById("listaRegistros"),
   counter: document.getElementById("contadorRegistros")
@@ -36,6 +39,7 @@ export function setSelectedModule(moduleName) {
   elements.result.innerHTML = "";
   elements.taskOptions.classList.toggle("oculto", moduleName !== "tareas");
   elements.participationOptions.classList.toggle("oculto", moduleName !== "participacion");
+  elements.conductOptions.classList.toggle("oculto", moduleName !== "conducta");
   elements.readingOptions.classList.toggle("oculto", moduleName !== "lectura");
 }
 
@@ -66,9 +70,11 @@ export function lockConfiguration(locked) {
   elements.taskResult.disabled = locked;
   elements.formativeField.disabled = locked;
   elements.participationType.disabled = locked;
+  elements.conductIncident.disabled = locked;
   elements.readingActivity.disabled = locked;
   elements.taskLockedNotice.classList.toggle("oculto", !locked);
   elements.lockedNotice.classList.toggle("oculto", !locked);
+  elements.conductLockedNotice.classList.toggle("oculto", !locked);
   elements.readingLockedNotice.classList.toggle("oculto", !locked);
 }
 
@@ -103,6 +109,12 @@ export function getParticipationData() {
   return {
     campoFormativo: elements.formativeField.value,
     tipoParticipacion: elements.participationType.value
+  };
+}
+
+export function getConductData() {
+  return {
+    incidencia: elements.conductIncident.value
   };
 }
 
