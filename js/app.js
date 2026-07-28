@@ -154,6 +154,8 @@ async function openManualPanel() {
       const response = await fetchStudents();
       const list = Array.isArray(response) ? response : response.alumnos || response.data || [];
       students = list.map(normalizeStudent).filter((student) => student.id && student.nombre);
+      
+      alert("Alumnos cargados: " + students.length);
 
       if (!students.length) {
         throw new Error(response.mensaje || "No se recibió la lista de alumnos.");
