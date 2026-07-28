@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AulaNFC v2.0</title>
-  <link rel="stylesheet" href="css/style.css?v=3.1.0">
+  <title>AulaNFC v2.1</title>
+  <link rel="stylesheet" href="css/style.css?v=3.2.0">
 </head>
 <body>
   <main class="contenedor">
@@ -27,6 +27,17 @@
     <section class="seleccion">
       <p>Módulo seleccionado</p>
       <div id="moduloActivo">Ninguno</div>
+    </section>
+
+    <section id="opcionesTareas" class="opciones oculto">
+      <label for="resultadoTarea">Resultado</label>
+      <select id="resultadoTarea">
+        <option value="">Selecciona un resultado</option>
+        <option value="Entregó">Entregó</option>
+        <option value="Incompleta">Incompleta</option>
+        <option value="No entregó">No entregó</option>
+      </select>
+      <p id="tareasBloqueadas" class="aviso-bloqueo oculto">🔒 Configuración bloqueada mientras el lector está activo.</p>
     </section>
 
     <section id="opcionesParticipacion" class="opciones oculto">
@@ -82,6 +93,6 @@
     </section>
   </main>
 
-  <script type="module" src="js/app.js?v=3.1.0"></script>
+  <script type="module" src="js/app.js?v=3.2.0"></script>
 </body>
 </html>
