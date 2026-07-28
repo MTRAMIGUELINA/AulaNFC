@@ -6,12 +6,15 @@ const elements = {
   scanButton: document.getElementById("btnEscanear"),
   status: document.getElementById("estado"),
   result: document.getElementById("resultado"),
+  taskOptions: document.getElementById("opcionesTareas"),
+  taskResult: document.getElementById("resultadoTarea"),
   participationOptions: document.getElementById("opcionesParticipacion"),
   formativeField: document.getElementById("campoFormativo"),
   participationType: document.getElementById("tipoParticipacion"),
   readingOptions: document.getElementById("opcionesLectura"),
   readingActivity: document.getElementById("actividadLectura"),
   scannerIndicator: document.getElementById("indicadorLector"),
+  taskLockedNotice: document.getElementById("tareasBloqueadas"),
   lockedNotice: document.getElementById("configBloqueada"),
   readingLockedNotice: document.getElementById("lecturaBloqueada"),
   historyList: document.getElementById("listaRegistros"),
@@ -31,6 +34,7 @@ export function setSelectedModule(moduleName) {
 
   elements.activeModule.textContent = formatModule(moduleName);
   elements.result.innerHTML = "";
+  elements.taskOptions.classList.toggle("oculto", moduleName !== "tareas");
   elements.participationOptions.classList.toggle("oculto", moduleName !== "participacion");
   elements.readingOptions.classList.toggle("oculto", moduleName !== "lectura");
 }
@@ -59,9 +63,11 @@ export function lockConfiguration(locked) {
   elements.moduleButtons.forEach((button) => {
     button.disabled = locked;
   });
+  elements.taskResult.disabled = locked;
   elements.formativeField.disabled = locked;
   elements.participationType.disabled = locked;
   elements.readingActivity.disabled = locked;
+  elements.taskLockedNotice.classList.toggle("oculto", !locked);
   elements.lockedNotice.classList.toggle("oculto", !locked);
   elements.readingLockedNotice.classList.toggle("oculto", !locked);
 }
@@ -85,6 +91,12 @@ export function addHistoryRecord({ name, time, detail = "" }) {
   while (elements.historyList.children.length > 8) {
     elements.historyList.lastElementChild?.remove();
   }
+}
+
+export function getTaskData() {
+  return {
+    resultadoTarea: elements.taskResult.value
+  };
 }
 
 export function getParticipationData() {
