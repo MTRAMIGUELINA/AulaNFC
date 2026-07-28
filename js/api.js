@@ -13,6 +13,7 @@ export function sendRegistration(data) {
       campoFormativo: data.campoFormativo || "",
       tipoParticipacion: data.tipoParticipacion || "",
       resultadoTarea: data.resultadoTarea || "",
+      incidencia: data.incidencia || "",
       actividadLectura: data.actividadLectura || "",
       callback: callbackName,
       t: Date.now()
