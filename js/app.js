@@ -1,4 +1,4 @@
-import { fetchStudents, sendRegistration } from "./api.js?v=3.4.0";
+import { fetchStudents, sendManualRegistration, sendRegistration } from "./api.js?v=3.5.0";
 import { isScannerActive, startScanner, stopScanner } from "./scanner.js?v=3.0.1";
 import {
   addHistoryRecord,
@@ -153,7 +153,7 @@ async function openManualPanel() {
     try {
       const response = await fetchStudents();
       const list = Array.isArray(response) ? response : response.alumnos || response.data || [];
-      students = list.map(normalizeStudent).filter((student) => student.uid && student.nombre);
+      students = list.map(normalizeStudent).filter((student) => student.id && student.nombre);
 
       if (!students.length) {
         throw new Error(response.mensaje || "No se recibió la lista de alumnos.");
@@ -213,18 +213,24 @@ function renderStudentResults() {
 
 async function registerSelectedStudent() {
   if (!selectedStudent || sending || !validateSelection()) return;
-  await registerStudent(selectedStudent.uid, "Manual", selectedStudent);
+
+  const registration = buildRegistration("", "Manual");
+  registration.idAlumno = selectedStudent.id;
+
+  await registerStudent("", "Manual", selectedStudent, registration);
 }
 
-async function registerStudent(uid, method, fallbackStudent = null) {
-  const registration = buildRegistration(uid, method);
+async function registerStudent(uid, method, fallbackStudent = null, preparedRegistration = null) {
+  const registration = preparedRegistration || buildRegistration(uid, method);
   sending = true;
   clearFeedbackTimer();
   setStatus("⏳ Registrando...");
   manual.confirmButton.disabled = true;
 
   try {
-    const response = await sendRegistration(registration);
+    const response = method === "Manual"
+      ? await sendManualRegistration(registration)
+      : await sendRegistration(registration);
     const success = response.exito === true || response.ok === true;
     if (!success) throw new Error(response.mensaje || "Apps Script rechazó el registro.");
 
@@ -297,10 +303,40 @@ function getRegistrationDetail() {
 
 function normalizeStudent(student) {
   return {
-    uid: String(student.uid || student.UID || student.id || student.Id || "").trim(),
-    nombre: String(student.nombre || student.alumno || student.Nombre || student.Alumno || "").trim(),
-    grado: String(student.grado || student.Grado || "").trim(),
-    grupo: String(student.grupo || student.Grupo || "").trim()
+    id: String(
+      student.id ||
+      student.Id ||
+      student.idAlumno ||
+      student.ID_ALUMNO ||
+      ""
+    ).trim(),
+
+    uid: String(
+      student.uid ||
+      student.UID ||
+      ""
+    ).trim(),
+
+    nombre: String(
+      student.nombreCompleto ||
+      student.nombre ||
+      student.alumno ||
+      student.Nombre ||
+      student.Alumno ||
+      ""
+    ).trim(),
+
+    grado: String(
+      student.grado ||
+      student.Grado ||
+      ""
+    ).trim(),
+
+    grupo: String(
+      student.grupo ||
+      student.Grupo ||
+      ""
+    ).trim()
   };
 }
 
