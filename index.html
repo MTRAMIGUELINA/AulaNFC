@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AulaNFC v2.1</title>
-  <link rel="stylesheet" href="css/style.css?v=3.3.0">
+  <link rel="stylesheet" href="css/style.css?v=3.4.0">
 </head>
 <body>
   <main class="contenedor">
@@ -90,8 +90,22 @@
         <strong id="indicadorLector" class="apagado">⚪ APAGADO</strong>
       </div>
       <button id="btnEscanear" disabled>▶ ACTIVAR LECTOR</button>
+      <button id="btnRegistroManual" class="boton-secundario" disabled>🔎 BUSCAR ALUMNO</button>
       <div id="estado">Selecciona un módulo para comenzar.</div>
       <div id="resultado" aria-live="polite"></div>
+    </section>
+
+    <section id="panelRegistroManual" class="registro-manual oculto" aria-labelledby="tituloRegistroManual">
+      <div class="registro-manual-encabezado">
+        <h2 id="tituloRegistroManual">Registro manual</h2>
+        <button id="btnCerrarManual" class="boton-cerrar" type="button" aria-label="Cerrar búsqueda">✕</button>
+      </div>
+      <label for="buscarAlumno">Buscar por nombre</label>
+      <input id="buscarAlumno" type="search" autocomplete="off" placeholder="Escribe el nombre del alumno">
+      <div id="resultadosAlumnos" class="resultados-alumnos" aria-live="polite">
+        <p class="mensaje-busqueda">Escribe al menos dos letras.</p>
+      </div>
+      <button id="btnConfirmarManual" type="button" disabled>✅ REGISTRAR ALUMNO</button>
     </section>
 
     <section class="historial">
@@ -105,6 +119,6 @@
     </section>
   </main>
 
-  <script type="module" src="js/app.js?v=3.3.0"></script>
+  <script type="module" src="js/app.js?v=3.4.0"></script>
 </body>
 </html>
