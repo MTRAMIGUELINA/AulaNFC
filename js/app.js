@@ -1,4 +1,4 @@
-import { sendRegistration } from "./api.js?v=3.1.0";
+import { sendRegistration } from "./api.js?v=3.2.0";
 import { isScannerActive, startScanner, stopScanner } from "./scanner.js?v=3.0.1";
 import {
   addHistoryRecord,
@@ -6,6 +6,7 @@ import {
   getElements,
   getParticipationData,
   getReadingData,
+  getTaskData,
   lockConfiguration,
   setResult,
   setScannerButton,
@@ -13,7 +14,7 @@ import {
   setSelectedModule,
   setStatus,
   vibrate
-} from "./ui.js?v=3.1.0";
+} from "./ui.js?v=3.2.0";
 
 const elements = getElements();
 let selectedModule = "";
@@ -43,6 +44,14 @@ function validateSelection() {
   if (!selectedModule) {
     setStatus("❌ Primero selecciona un módulo.");
     return false;
+  }
+
+  if (selectedModule === "tareas") {
+    const task = getTaskData();
+    if (!task.resultadoTarea) {
+      setStatus("❌ Selecciona el resultado de la tarea.");
+      return false;
+    }
   }
 
   if (selectedModule === "participacion") {
@@ -109,18 +118,21 @@ async function processCard(uid) {
   if (!isScannerActive() || sending) return;
   if (!validateSelection()) return;
 
+  const task = getTaskData();
   const participation = getParticipationData();
   const reading = getReadingData();
+
+  let genericType = "";
+  if (selectedModule === "tareas") genericType = task.resultadoTarea;
+  if (selectedModule === "participacion") genericType = participation.tipoParticipacion;
+  if (selectedModule === "lectura") genericType = reading.actividadLectura;
+
   const registration = {
     uid,
     modulo: selectedModule,
     campoFormativo: selectedModule === "participacion" ? participation.campoFormativo : "",
-    tipoParticipacion:
-      selectedModule === "participacion"
-        ? participation.tipoParticipacion
-        : selectedModule === "lectura"
-          ? reading.actividadLectura
-          : "",
+    tipoParticipacion: genericType,
+    resultadoTarea: selectedModule === "tareas" ? task.resultadoTarea : "",
     actividadLectura: selectedModule === "lectura" ? reading.actividadLectura : ""
   };
 
@@ -143,7 +155,9 @@ async function processCard(uid) {
     const schoolData = [grade, group].filter(Boolean).join(" ");
 
     let detail = formatModule(selectedModule);
-    if (selectedModule === "participacion") {
+    if (selectedModule === "tareas") {
+      detail = escapeHtml(task.resultadoTarea);
+    } else if (selectedModule === "participacion") {
       detail = `${escapeHtml(participation.campoFormativo)} · ${escapeHtml(participation.tipoParticipacion)}`;
     } else if (selectedModule === "lectura") {
       detail = escapeHtml(reading.actividadLectura);
