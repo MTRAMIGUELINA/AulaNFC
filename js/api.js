@@ -10,7 +10,21 @@ export function sendRegistration(data) {
     resultadoTarea: data.resultadoTarea || "",
     incidencia: data.incidencia || "",
     actividadLectura: data.actividadLectura || "",
-    metodo: data.metodo || "NFC"
+    metodo: "NFC"
+  });
+}
+
+export function sendManualRegistration(data) {
+  return jsonpRequest({
+    accion: "registrarManual",
+    idAlumno: data.idAlumno,
+    modulo: data.modulo,
+    campoFormativo: data.campoFormativo || "",
+    tipoParticipacion: data.tipoParticipacion || "",
+    resultadoTarea: data.resultadoTarea || "",
+    incidencia: data.incidencia || "",
+    actividadLectura: data.actividadLectura || "",
+    metodo: "Manual"
   });
 }
 
