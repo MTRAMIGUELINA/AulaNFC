@@ -1,8 +1,9 @@
-import { sendRegistration } from "./api.js?v=3.2.0";
+import { sendRegistration } from "./api.js?v=3.3.0";
 import { isScannerActive, startScanner, stopScanner } from "./scanner.js?v=3.0.1";
 import {
   addHistoryRecord,
   formatModule,
+  getConductData,
   getElements,
   getParticipationData,
   getReadingData,
@@ -14,7 +15,7 @@ import {
   setSelectedModule,
   setStatus,
   vibrate
-} from "./ui.js?v=3.2.0";
+} from "./ui.js?v=3.3.0";
 
 const elements = getElements();
 let selectedModule = "";
@@ -58,6 +59,14 @@ function validateSelection() {
     const participation = getParticipationData();
     if (!participation.campoFormativo || !participation.tipoParticipacion) {
       setStatus("❌ Selecciona el campo formativo y el tipo de participación.");
+      return false;
+    }
+  }
+
+  if (selectedModule === "conducta") {
+    const conduct = getConductData();
+    if (!conduct.incidencia) {
+      setStatus("❌ Selecciona una incidencia de conducta.");
       return false;
     }
   }
@@ -120,11 +129,13 @@ async function processCard(uid) {
 
   const task = getTaskData();
   const participation = getParticipationData();
+  const conduct = getConductData();
   const reading = getReadingData();
 
   let genericType = "";
   if (selectedModule === "tareas") genericType = task.resultadoTarea;
   if (selectedModule === "participacion") genericType = participation.tipoParticipacion;
+  if (selectedModule === "conducta") genericType = conduct.incidencia;
   if (selectedModule === "lectura") genericType = reading.actividadLectura;
 
   const registration = {
@@ -133,6 +144,7 @@ async function processCard(uid) {
     campoFormativo: selectedModule === "participacion" ? participation.campoFormativo : "",
     tipoParticipacion: genericType,
     resultadoTarea: selectedModule === "tareas" ? task.resultadoTarea : "",
+    incidencia: selectedModule === "conducta" ? conduct.incidencia : "",
     actividadLectura: selectedModule === "lectura" ? reading.actividadLectura : ""
   };
 
@@ -159,6 +171,8 @@ async function processCard(uid) {
       detail = escapeHtml(task.resultadoTarea);
     } else if (selectedModule === "participacion") {
       detail = `${escapeHtml(participation.campoFormativo)} · ${escapeHtml(participation.tipoParticipacion)}`;
+    } else if (selectedModule === "conducta") {
+      detail = escapeHtml(conduct.incidencia);
     } else if (selectedModule === "lectura") {
       detail = escapeHtml(reading.actividadLectura);
     }
