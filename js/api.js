@@ -1,20 +1,28 @@
 import { CONFIG } from "./config.js";
 
 export function sendRegistration(data) {
-  return new Promise((resolve, reject) => {
-    const callbackName = `aulaNfcCallback_${Date.now()}_${Math.random()
-      .toString(36)
-      .slice(2)}`;
+  return jsonpRequest({
+    accion: "registrarNFC",
+    uid: data.uid,
+    modulo: data.modulo,
+    campoFormativo: data.campoFormativo || "",
+    tipoParticipacion: data.tipoParticipacion || "",
+    resultadoTarea: data.resultadoTarea || "",
+    incidencia: data.incidencia || "",
+    actividadLectura: data.actividadLectura || "",
+    metodo: data.metodo || "NFC"
+  });
+}
 
+export function fetchStudents() {
+  return jsonpRequest({ accion: "obtenerAlumnos" });
+}
+
+function jsonpRequest(data) {
+  return new Promise((resolve, reject) => {
+    const callbackName = `aulaNfcCallback_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     const parameters = new URLSearchParams({
-      accion: "registrarNFC",
-      uid: data.uid,
-      modulo: data.modulo,
-      campoFormativo: data.campoFormativo || "",
-      tipoParticipacion: data.tipoParticipacion || "",
-      resultadoTarea: data.resultadoTarea || "",
-      incidencia: data.incidencia || "",
-      actividadLectura: data.actividadLectura || "",
+      ...data,
       callback: callbackName,
       t: Date.now()
     });
@@ -24,10 +32,7 @@ export function sendRegistration(data) {
     let finished = false;
 
     const cleanup = () => {
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-
+      script.remove();
       delete window[callbackName];
     };
 
@@ -39,15 +44,10 @@ export function sendRegistration(data) {
       handler(value);
     };
 
-    window[callbackName] = (response) => {
-      finish(resolve, response || {});
-    };
-
+    window[callbackName] = (response) => finish(resolve, response || {});
     script.async = true;
     script.src = url;
-    script.onerror = () => {
-      finish(reject, new Error("Apps Script no respondió a la solicitud."));
-    };
+    script.onerror = () => finish(reject, new Error("Apps Script no respondió a la solicitud."));
 
     const timeoutId = window.setTimeout(() => {
       finish(reject, new Error("La solicitud superó el tiempo máximo de espera."));
