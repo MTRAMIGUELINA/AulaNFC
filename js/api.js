@@ -12,6 +12,7 @@ export function sendRegistration(data) {
       modulo: data.modulo,
       campoFormativo: data.campoFormativo || "",
       tipoParticipacion: data.tipoParticipacion || "",
+      resultadoTarea: data.resultadoTarea || "",
       actividadLectura: data.actividadLectura || "",
       callback: callbackName,
       t: Date.now()
