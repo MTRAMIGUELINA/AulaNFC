@@ -7,11 +7,7 @@ body {
   padding: 20px;
   min-height: 100vh;
   font-family: Arial, Helvetica, sans-serif;
-  background: linear-gradient(
-    180deg,
-    #1976d2,
-    #0d5ba8
-  );
+  background: linear-gradient(180deg, #1976d2, #0d5ba8);
 }
 
 .contenedor {
@@ -155,11 +151,49 @@ select {
 
 #resultado {
   margin-top: 22px;
-  padding: 15px;
-  color: #2e7d32;
-  font-size: 21px;
-  font-weight: bold;
   word-break: break-word;
+}
+
+.registro-exitoso,
+.registro-error {
+  padding: 18px;
+  border-radius: 14px;
+}
+
+.registro-exitoso {
+  border: 2px solid #a5d6a7;
+  background: #f1f8e9;
+  color: #1b5e20;
+}
+
+.registro-error {
+  border: 2px solid #ef9a9a;
+  background: #ffebee;
+  color: #b71c1c;
+  font-size: 17px;
+  font-weight: bold;
+}
+
+.icono-confirmacion {
+  font-size: 34px;
+}
+
+.nombre-alumno {
+  margin-top: 6px;
+  font-size: 25px;
+  font-weight: bold;
+}
+
+.mensaje-registro {
+  margin-top: 8px;
+  font-size: 18px;
+}
+
+.detalle-registro {
+  margin-top: 12px;
+  color: #3f5f42;
+  font-size: 15px;
+  line-height: 1.5;
 }
 
 @media (max-width: 380px) {
