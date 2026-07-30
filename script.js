@@ -1,15 +1,9 @@
 const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbyYdimHGfauQU-z9pwYYdzb60Bcod9lYHgIypsGhhj0Qy9hsQnLJ747IikxKr0El4ObbA/exec";
-
 const $ = (id) => document.getElementById(id);
+
 const botonesModulos = document.querySelectorAll('.modulo');
-const moduloActivo = $('moduloActivo');
 const botonEscanear = $('btnEscanear');
 const btnBuscarManual = $('btnBuscarManual');
-const estado = $('estado');
-const resultado = $('resultado');
-const opcionesParticipacion = $('opcionesParticipacion');
-const campoFormativo = $('campoFormativo');
-const tipoParticipacion = $('tipoParticipacion');
 const resultadoConsultaHistorial = $('resultadoConsultaHistorial');
 const listaHistorialGeneral = $('listaHistorialGeneral');
 const btnDesplegarLista = $('btnDesplegarLista');
@@ -26,18 +20,21 @@ let alumnosCargados = false;
 let registrosConsultaActual = [];
 let consultaGeneralActiva = false;
 let historialSesion = [];
+let alumnoManualId = '';
+let modoHistorialVisible = '';
 
 inicializarFecha();
 
-$('btnConsultarFecha').addEventListener('click', consultarHistorialFecha);
-$('btnHistorialGeneral').addEventListener('click', consultarHistorialGeneral);
+$('btnConsultarFecha').addEventListener('click', alternarHistorialFecha);
+$('btnHistorialGeneral').addEventListener('click', alternarHistorialGeneral);
 btnDesplegarLista.addEventListener('click', alternarListaCompleta);
-$('btnAbrirBuscar').addEventListener('click', abrirBuscarAlumno);
-$('btnCerrarBuscar').addEventListener('click', () => $('vistaBuscar').classList.add('oculto'));
+$('btnAbrirBuscar').addEventListener('click', alternarBuscarAlumno);
+$('btnCerrarBuscar').addEventListener('click', cerrarBuscarAlumno);
 $('campoBusquedaAlumno').addEventListener('input', () => renderizarBusquedaConsulta($('campoBusquedaAlumno').value));
-$('btnCerrarManual').addEventListener('click', () => $('panelRegistroManual').classList.add('oculto'));
+$('btnCerrarManual').addEventListener('click', cerrarRegistroManual);
 btnBuscarManual.addEventListener('click', abrirRegistroManual);
 $('campoBusquedaManual').addEventListener('input', () => renderizarBusquedaManual($('campoBusquedaManual').value));
+$('btnGuardarManual').addEventListener('click', guardarRegistroManual);
 botonEscanear.addEventListener('click', alternarLectorNFC);
 
 botonesModulos.forEach((boton) => {
@@ -45,16 +42,23 @@ botonesModulos.forEach((boton) => {
     botonesModulos.forEach((item) => item.classList.remove('activo'));
     boton.classList.add('activo');
     moduloSeleccionado = boton.dataset.modulo || '';
-    moduloActivo.textContent = formatearModulo(moduloSeleccionado);
-    opcionesParticipacion.classList.toggle('oculto', moduloSeleccionado !== 'participacion');
+    $('moduloActivo').textContent = formatearModulo(moduloSeleccionado);
+    mostrarOpcionesModulo();
     botonEscanear.disabled = false;
     btnBuscarManual.disabled = false;
-    resultado.innerHTML = '';
-    estado.textContent = lectorActivo
+    $('resultado').innerHTML = '';
+    $('estado').textContent = lectorActivo
       ? `📡 Lector activo para ${formatearModulo(moduloSeleccionado)}.`
-      : 'Módulo listo. Activa el lector NFC o busca un alumno.';
+      : 'Módulo listo. Activa el lector NFC o usa el registro manual.';
   });
 });
+
+function mostrarOpcionesModulo() {
+  $('opcionesTareas').classList.toggle('oculto', moduloSeleccionado !== 'tareas');
+  $('opcionesParticipacion').classList.toggle('oculto', moduloSeleccionado !== 'participacion');
+  $('opcionesConducta').classList.toggle('oculto', moduloSeleccionado !== 'conducta');
+  $('opcionesLectura').classList.toggle('oculto', moduloSeleccionado !== 'lectura');
+}
 
 function inicializarFecha() {
   const ahora = new Date();
@@ -62,9 +66,21 @@ function inicializarFecha() {
   $('fechaHistorial').value = local.toISOString().slice(0, 10);
 }
 
-async function consultarHistorialFecha() {
+function ocultarHistorial() {
+  resultadoConsultaHistorial.classList.add('oculto');
+  listaHistorialGeneral.classList.add('oculto');
+  btnDesplegarLista.classList.add('oculto');
+  modoHistorialVisible = '';
+}
+
+async function alternarHistorialFecha() {
+  if (modoHistorialVisible === 'fecha') {
+    ocultarHistorial();
+    return;
+  }
   const fecha = $('fechaHistorial').value;
   if (!fecha) return;
+  modoHistorialVisible = 'fecha';
   consultaGeneralActiva = false;
   prepararConsulta(`Consultando registros del ${formatearFechaVisible(fecha)}...`);
   try {
@@ -76,7 +92,12 @@ async function consultarHistorialFecha() {
   }
 }
 
-async function consultarHistorialGeneral() {
+async function alternarHistorialGeneral() {
+  if (modoHistorialVisible === 'general') {
+    ocultarHistorial();
+    return;
+  }
+  modoHistorialVisible = 'general';
   consultaGeneralActiva = true;
   prepararConsulta('Consultando todos los registros...');
   try {
@@ -93,61 +114,60 @@ function prepararConsulta(mensaje) {
   $('estadoHistorial').textContent = mensaje;
   actualizarResumen({}, 0);
   listaHistorialGeneral.classList.add('oculto');
-  listaHistorialGeneral.innerHTML = '<div class="mensaje-lista">Cargando...</div>';
   btnDesplegarLista.classList.add('oculto');
-  $('btnConsultarFecha').disabled = true;
-  $('btnHistorialGeneral').disabled = true;
 }
 
 function mostrarResultadoHistorial(respuesta, titulo, mostrarListaDirecta) {
   registrosConsultaActual = Array.isArray(respuesta.registros)
     ? respuesta.registros
     : Array.isArray(respuesta.historial) ? respuesta.historial : [];
-  const resumen = respuesta.resumen || contarModulos(registrosConsultaActual);
-  actualizarResumen(resumen, registrosConsultaActual.length);
+  actualizarResumen(respuesta.resumen || contarModulos(registrosConsultaActual), registrosConsultaActual.length);
   $('estadoHistorial').textContent = `${titulo}: ${registrosConsultaActual.length} ${registrosConsultaActual.length === 1 ? 'registro' : 'registros'}.`;
   listaHistorialGeneral.innerHTML = registrosConsultaActual.length
     ? registrosConsultaActual.map(crearTarjetaHistorial).join('')
     : '<div class="mensaje-lista">No hay registros para esta consulta.</div>';
-
   if (mostrarListaDirecta) {
     listaHistorialGeneral.classList.remove('oculto');
-    btnDesplegarLista.classList.add('oculto');
   } else {
     listaHistorialGeneral.classList.add('oculto');
     btnDesplegarLista.classList.remove('oculto');
     btnDesplegarLista.textContent = 'Desplegar lista completa';
   }
-  habilitarBotonesHistorial();
 }
 
 function alternarListaCompleta() {
   if (!consultaGeneralActiva) return;
-  const quedaOculta = listaHistorialGeneral.classList.toggle('oculto');
-  btnDesplegarLista.textContent = quedaOculta ? 'Desplegar lista completa' : 'Ocultar lista completa';
+  const oculta = listaHistorialGeneral.classList.toggle('oculto');
+  btnDesplegarLista.textContent = oculta ? 'Desplegar lista completa' : 'Ocultar lista completa';
 }
 
 function mostrarErrorHistorial(error) {
-  console.error(error);
   resultadoConsultaHistorial.classList.remove('oculto');
   $('estadoHistorial').textContent = 'No se pudo cargar el historial.';
   listaHistorialGeneral.classList.remove('oculto');
   listaHistorialGeneral.innerHTML = `<div class="mensaje-lista error">${escaparHTML(error.message || 'Error de consulta')}</div>`;
-  habilitarBotonesHistorial();
 }
 
-function habilitarBotonesHistorial() {
-  $('btnConsultarFecha').disabled = false;
-  $('btnHistorialGeneral').disabled = false;
-}
-
-function abrirBuscarAlumno() {
+async function alternarBuscarAlumno() {
+  if (!$('vistaBuscar').classList.contains('oculto')) {
+    cerrarBuscarAlumno();
+    return;
+  }
   $('vistaBuscar').classList.remove('oculto');
   $('fichaAlumno').classList.add('oculto');
   $('campoBusquedaAlumno').value = '';
   $('listaAlumnos').classList.add('oculto');
   $('contadorAlumnos').textContent = 'Escribe un nombre para buscar.';
-  cargarAlumnos().then(() => $('campoBusquedaAlumno').focus());
+  try {
+    await cargarAlumnos();
+    $('campoBusquedaAlumno').focus();
+  } catch (error) {
+    $('contadorAlumnos').textContent = error.message;
+  }
+}
+
+function cerrarBuscarAlumno() {
+  $('vistaBuscar').classList.add('oculto');
 }
 
 async function cargarAlumnos() {
@@ -189,8 +209,11 @@ function mostrarFichaBasica(id) {
 async function abrirRegistroManual() {
   if (!validarModulo()) return;
   $('panelRegistroManual').classList.remove('oculto');
+  alumnoManualId = '';
   $('campoBusquedaManual').value = '';
   $('listaManual').classList.add('oculto');
+  $('alumnoManualSeleccionado').classList.add('oculto');
+  $('btnGuardarManual').disabled = true;
   $('contadorManual').textContent = 'Escribe un nombre para buscar.';
   try {
     await cargarAlumnos();
@@ -200,9 +223,17 @@ async function abrirRegistroManual() {
   }
 }
 
+function cerrarRegistroManual() {
+  $('panelRegistroManual').classList.add('oculto');
+  alumnoManualId = '';
+}
+
 function renderizarBusquedaManual(termino) {
   const texto = normalizarTexto(termino);
   const lista = $('listaManual');
+  alumnoManualId = '';
+  $('btnGuardarManual').disabled = true;
+  $('alumnoManualSeleccionado').classList.add('oculto');
   if (texto.length < 2) {
     lista.classList.add('oculto');
     $('contadorManual').textContent = 'Escribe al menos dos letras.';
@@ -212,31 +243,51 @@ function renderizarBusquedaManual(termino) {
   $('contadorManual').textContent = `${filtrados.length} coincidencias`;
   lista.classList.remove('oculto');
   lista.innerHTML = filtrados.length ? filtrados.map((a) => botonAlumnoHTML(a, 'manual')).join('') : '<div class="mensaje-lista">No se encontraron alumnos.</div>';
-  lista.querySelectorAll('[data-manual-id]').forEach((boton) => boton.addEventListener('click', () => registrarManual(boton.dataset.manualId)));
+  lista.querySelectorAll('[data-manual-id]').forEach((boton) => boton.addEventListener('click', () => seleccionarAlumnoManual(boton.dataset.manualId)));
 }
 
-async function registrarManual(id) {
-  if (!validarModulo() || envioEnProceso) return;
+function seleccionarAlumnoManual(id) {
   const alumno = alumnos.find((a) => String(a.id) === String(id));
+  if (!alumno) return;
+  alumnoManualId = String(id);
+  $('alumnoManualSeleccionado').innerHTML = `<strong>Alumno seleccionado:</strong><br>${escaparHTML(nombreCompleto(alumno))}<br><small>${escaparHTML(gradoGrupo(alumno))}</small>`;
+  $('alumnoManualSeleccionado').classList.remove('oculto');
+  $('btnGuardarManual').disabled = false;
+}
+
+async function guardarRegistroManual() {
+  if (!alumnoManualId || !validarModulo() || envioEnProceso) return;
+  const alumno = alumnos.find((a) => String(a.id) === alumnoManualId);
   envioEnProceso = true;
-  estado.textContent = '⏳ Registrando manualmente...';
+  $('btnGuardarManual').disabled = true;
+  $('estado').textContent = '⏳ Guardando registro manual...';
   try {
-    const respuesta = await solicitarJSONP('registrarManual', {
-      id,
-      modulo: moduloSeleccionado,
-      campoFormativo: moduloSeleccionado === 'participacion' ? campoFormativo.value : '',
-      tipoParticipacion: moduloSeleccionado === 'participacion' ? tipoParticipacion.value : ''
-    });
+    const respuesta = await solicitarJSONP('registrarManual', construirParametrosRegistro({ id: alumnoManualId }));
     validarRespuesta(respuesta);
-    const nombre = respuesta.nombre || respuesta.nombreCompleto || nombreCompleto(alumno || {});
-    confirmarRegistro(nombre, moduloSeleccionado, 'Manual');
-    $('panelRegistroManual').classList.add('oculto');
+    confirmarRegistro(respuesta.nombre || respuesta.nombreCompleto || nombreCompleto(alumno || {}), moduloSeleccionado, 'Manual');
+    cerrarRegistroManual();
   } catch (error) {
-    estado.textContent = '❌ No se pudo registrar.';
-    resultado.textContent = error.message;
+    $('estado').textContent = '❌ No se pudo guardar el registro manual.';
+    $('resultado').textContent = error.message;
+    $('btnGuardarManual').disabled = false;
   } finally {
     envioEnProceso = false;
   }
+}
+
+function construirParametrosRegistro(base) {
+  return {
+    ...base,
+    modulo: moduloSeleccionado,
+    tipoTarea: moduloSeleccionado === 'tareas' ? $('tipoTarea').value : '',
+    resultadoTarea: moduloSeleccionado === 'tareas' ? $('tipoTarea').value : '',
+    campoFormativo: moduloSeleccionado === 'participacion' ? $('campoFormativo').value : '',
+    tipoParticipacion: moduloSeleccionado === 'participacion' ? $('tipoParticipacion').value : '',
+    tipoConducta: moduloSeleccionado === 'conducta' ? $('tipoConducta').value : '',
+    conducta: moduloSeleccionado === 'conducta' ? $('tipoConducta').value : '',
+    tipoLectura: moduloSeleccionado === 'lectura' ? $('tipoLectura').value : '',
+    lectura: moduloSeleccionado === 'lectura' ? $('tipoLectura').value : ''
+  };
 }
 
 async function alternarLectorNFC() {
@@ -246,7 +297,7 @@ async function alternarLectorNFC() {
   }
   if (!validarModulo()) return;
   if (!('NDEFReader' in window)) {
-    estado.textContent = '❌ Este dispositivo no es compatible con Web NFC.';
+    $('estado').textContent = '❌ Este dispositivo no es compatible con Web NFC.';
     return;
   }
   try {
@@ -256,13 +307,13 @@ async function alternarLectorNFC() {
     lectorActivo = true;
     botonEscanear.textContent = 'Desactivar lector NFC';
     botonEscanear.classList.add('activo-lector');
-    estado.textContent = '📡 Lector NFC activo. Acerca una tarjeta.';
+    $('estado').textContent = '📡 Lector NFC activo. Acerca una tarjeta.';
     lectorNFC.onreading = procesarTarjeta;
-    lectorNFC.onreadingerror = () => estado.textContent = '❌ No se pudo leer la tarjeta.';
+    lectorNFC.onreadingerror = () => $('estado').textContent = '❌ No se pudo leer la tarjeta.';
   } catch (error) {
     lectorActivo = false;
     botonEscanear.textContent = 'Activar lector NFC';
-    estado.textContent = `❌ ${error.message || 'No se pudo activar el lector NFC.'}`;
+    $('estado').textContent = `❌ ${error.message || 'No se pudo activar el lector NFC.'}`;
   }
 }
 
@@ -273,7 +324,7 @@ function desactivarLectorNFC() {
   controladorNFC = null;
   botonEscanear.textContent = 'Activar lector NFC';
   botonEscanear.classList.remove('activo-lector');
-  estado.textContent = 'Lector NFC desactivado.';
+  $('estado').textContent = 'Lector NFC desactivado.';
 }
 
 function procesarTarjeta(evento) {
@@ -289,47 +340,45 @@ function procesarTarjeta(evento) {
 async function enviarRegistroNFC(uid) {
   if (!validarModulo() || envioEnProceso) return;
   envioEnProceso = true;
-  estado.textContent = '⏳ Enviando registro...';
+  $('estado').textContent = '⏳ Enviando registro...';
   try {
-    const respuesta = await solicitarJSONP('registrarNFC', {
-      uid,
-      modulo: moduloSeleccionado,
-      campoFormativo: moduloSeleccionado === 'participacion' ? campoFormativo.value : '',
-      tipoParticipacion: moduloSeleccionado === 'participacion' ? tipoParticipacion.value : ''
-    });
+    const respuesta = await solicitarJSONP('registrarNFC', construirParametrosRegistro({ uid }));
     validarRespuesta(respuesta);
     confirmarRegistro(respuesta.nombre || respuesta.nombreCompleto || 'Alumno', moduloSeleccionado, 'NFC');
   } catch (error) {
-    estado.textContent = '❌ No se pudo confirmar el registro.';
-    resultado.textContent = error.message;
+    $('estado').textContent = '❌ No se pudo confirmar el registro.';
+    $('resultado').textContent = error.message;
   } finally {
     envioEnProceso = false;
   }
 }
 
-function confirmarRegistro(nombre, modulo, metodo) {
-  estado.textContent = lectorActivo ? '📡 Registro confirmado. Acerca otra tarjeta.' : '✅ Registro confirmado.';
-  resultado.innerHTML = `✅ Registro guardado<br><strong>${escaparHTML(nombre)}</strong><br>${escaparHTML(formatearModulo(modulo))} · ${metodo}`;
-  historialSesion.unshift({ nombre, modulo, metodo, hora: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) });
-  renderizarHistorialSesion();
-  if ('vibrate' in navigator) navigator.vibrate(180);
-}
-
-function renderizarHistorialSesion() {
-  $('totalSesion').textContent = historialSesion.length;
-  $('historialSesion').innerHTML = historialSesion.map((r) => `<article class="historial-item"><div class="historial-icono">${moduloPresentacion(r.modulo)}</div><div><strong>${escaparHTML(r.nombre)}</strong><p>${escaparHTML(formatearModulo(r.modulo))} · ${r.metodo}</p></div><time>${r.hora}</time></article>`).join('');
-}
-
 function validarModulo() {
   if (!moduloSeleccionado) {
-    estado.textContent = '❌ Primero selecciona un módulo.';
+    $('estado').textContent = '❌ Primero selecciona un módulo.';
     return false;
   }
-  if (moduloSeleccionado === 'participacion' && (!campoFormativo.value || !tipoParticipacion.value)) {
-    estado.textContent = '❌ Selecciona el campo formativo y el tipo de participación.';
+  const validaciones = {
+    tareas: [$('tipoTarea').value, 'Selecciona el resultado de la tarea.'],
+    participacion: [$('campoFormativo').value && $('tipoParticipacion').value, 'Selecciona el campo formativo y el tipo de participación.'],
+    conducta: [$('tipoConducta').value, 'Selecciona el tipo de conducta.'],
+    lectura: [$('tipoLectura').value, 'Selecciona el resultado de lectura.']
+  };
+  const validacion = validaciones[moduloSeleccionado];
+  if (validacion && !validacion[0]) {
+    $('estado').textContent = `❌ ${validacion[1]}`;
     return false;
   }
   return true;
+}
+
+function confirmarRegistro(nombre, modulo, metodo) {
+  $('estado').textContent = lectorActivo ? '📡 Registro confirmado. Acerca otra tarjeta.' : '✅ Registro confirmado.';
+  $('resultado').innerHTML = `✅ Registro guardado<br><strong>${escaparHTML(nombre)}</strong><br>${escaparHTML(formatearModulo(modulo))} · ${metodo}`;
+  historialSesion.unshift({ nombre, modulo, metodo, hora: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) });
+  $('totalSesion').textContent = historialSesion.length;
+  $('historialSesion').innerHTML = historialSesion.map((r) => `<article class="historial-item"><div class="historial-icono">${moduloPresentacion(r.modulo)}</div><div><strong>${escaparHTML(r.nombre)}</strong><p>${escaparHTML(formatearModulo(r.modulo))} · ${r.metodo}</p></div><time>${r.hora}</time></article>`).join('');
+  if ('vibrate' in navigator) navigator.vibrate(180);
 }
 
 function botonAlumnoHTML(alumno, tipo) {
