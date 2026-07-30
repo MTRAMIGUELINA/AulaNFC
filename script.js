@@ -366,15 +366,48 @@ function procesarTarjeta(evento) {
 
 async function enviarRegistroNFC(uid) {
   if (!validarModulo() || envioEnProceso) return;
+
   envioEnProceso = true;
   $('estado').textContent = '⏳ Enviando registro...';
+
   try {
-    const respuesta = await solicitarJSONP('registrarNFC', construirParametrosRegistro({ uid }));
+    const parametros = construirParametrosRegistro({ uid });
+
+    // Refuerzo específico para Participación por NFC
+    if (moduloSeleccionado === 'participacion') {
+      parametros.campoFormativo =
+        String($('campoFormativo').value || '').trim();
+
+      parametros.tipoParticipacion =
+        String($('tipoParticipacion').value || '').trim();
+
+      // Alias adicional para Apps Script
+      parametros.tipoRegistro =
+        parametros.tipoParticipacion;
+    }
+
+    const respuesta = await solicitarJSONP(
+      'registrarNFC',
+      parametros
+    );
+
     validarRespuesta(respuesta);
-    confirmarRegistro(respuesta.nombre || respuesta.nombreCompleto || 'Alumno', moduloSeleccionado, 'NFC');
+
+    confirmarRegistro(
+      respuesta.nombre ||
+      respuesta.nombreCompleto ||
+      'Alumno',
+      moduloSeleccionado,
+      'NFC'
+    );
+
   } catch (error) {
-    $('estado').textContent = '❌ No se pudo confirmar el registro.';
-    $('resultado').textContent = error.message;
+    $('estado').textContent =
+      '❌ No se pudo confirmar el registro.';
+
+    $('resultado').textContent =
+      error.message;
+
   } finally {
     envioEnProceso = false;
   }
