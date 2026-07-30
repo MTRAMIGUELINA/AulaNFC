@@ -5,8 +5,11 @@ button, input, select { font: inherit; }
 .encabezado { text-align: center; margin-bottom: 20px; }
 .encabezado h1 { margin: 0; color: #1976d2; font-size: 34px; }
 .encabezado p { margin: 8px 0 0; color: #666; font-size: 17px; }
-.panel-historial { margin-bottom: 26px; padding: 20px; border: 2px solid #dbe7f3; border-radius: 18px; background: #f8fbff; }
+.boton-historial-principal { width: 100%; margin-bottom: 22px; padding: 17px; border: 0; border-radius: 14px; background: #0d47a1; color: #fff; font-size: 20px; font-weight: 900; cursor: pointer; box-shadow: 0 6px 16px rgba(13,71,161,.25); }
+.boton-historial-principal:hover { background: #0b3d91; }
+.panel-historial { margin-bottom: 26px; padding: 20px; border: 2px solid #dbe7f3; border-radius: 18px; background: #f8fbff; scroll-margin-top: 12px; }
 .titulo-historial, .buscar-encabezado-con-boton { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
+.acciones-historial { display: flex; align-items: center; gap: 10px; }
 .seccion-fija { display: block; margin-bottom: 4px; color: #1976d2; font-size: 12px; font-weight: 800; letter-spacing: .12em; }
 .titulo-historial h2 { margin: 0; font-size: 24px; }
 .boton-consulta, #btnConsultarFecha, .boton-secundario, .boton-cerrar, .boton-manual, .boton-guardar-manual { border-radius: 12px; cursor: pointer; font-weight: 800; }
@@ -90,6 +93,8 @@ select:focus, .buscador:focus, #fechaHistorial:focus { border-color: #1976d2; bo
   body { padding: 10px; }
   .contenedor { padding: 18px; border-radius: 18px; }
   .titulo-historial { flex-direction: column; }
+  .acciones-historial { width: 100%; }
+  .acciones-historial .boton-consulta { flex: 1; }
   .boton-consulta { width: 100%; }
   .controles-historial { grid-template-columns: 1fr; }
   .resumen-historial { grid-template-columns: 1fr 1fr; }
