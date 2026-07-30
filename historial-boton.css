@@ -1,0 +1,55 @@
+.boton-historial-principal {
+  position: relative;
+  width: 100%;
+  min-height: 64px;
+  margin: 0 0 24px;
+  padding: 17px 24px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #7b1fa2 0%, #512da8 45%, #1976d2 100%);
+  color: #fff;
+  font-size: 21px;
+  font-weight: 900;
+  letter-spacing: .04em;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(81,45,168,.34), inset 0 1px 0 rgba(255,255,255,.28);
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+
+.boton-historial-principal::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 25%, rgba(255,255,255,.22) 48%, transparent 72%);
+  transform: translateX(-120%);
+  transition: transform .55s ease;
+}
+
+.boton-historial-principal:hover {
+  filter: brightness(1.06);
+  transform: translateY(-2px);
+  box-shadow: 0 11px 25px rgba(81,45,168,.42), inset 0 1px 0 rgba(255,255,255,.3);
+}
+
+.boton-historial-principal:hover::before {
+  transform: translateX(120%);
+}
+
+.boton-historial-principal:active {
+  transform: translateY(1px) scale(.995);
+  box-shadow: 0 5px 12px rgba(81,45,168,.3);
+}
+
+.boton-historial-principal[aria-expanded="true"] {
+  background: linear-gradient(135deg, #ef6c00 0%, #f4511e 52%, #c62828 100%);
+  box-shadow: 0 8px 20px rgba(198,40,40,.34), inset 0 1px 0 rgba(255,255,255,.28);
+}
+
+@media (max-width: 600px) {
+  .boton-historial-principal {
+    min-height: 60px;
+    padding: 15px 18px;
+    font-size: 19px;
+  }
+}
