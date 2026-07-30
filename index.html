@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AulaNFC</title>
-  <link rel="stylesheet" href="style.css?v=14">
+  <meta name="theme-color" content="#1976d2">
+  <title>AulaNFC V2.0</title>
+  <link rel="stylesheet" href="style.css?v=15">
 </head>
 <body>
   <main class="contenedor">
@@ -13,75 +14,53 @@
       <p>Registro y consulta del aula</p>
     </header>
 
-    <section class="panel-historial" aria-labelledby="tituloHistorialGeneral">
+    <section class="panel-historial">
       <div class="titulo-historial">
-        <div>
-          <span class="seccion-fija">HISTORIAL</span>
-          <h2 id="tituloHistorialGeneral">Historial del día</h2>
-        </div>
+        <div><span class="seccion-fija">HISTORIAL</span><h2>Historial del día</h2></div>
         <button id="btnAbrirBuscar" class="boton-consulta" type="button">🔎 Buscar alumno</button>
       </div>
-
       <div class="controles-historial">
         <label for="fechaHistorial">Fecha que deseas consultar</label>
         <input id="fechaHistorial" type="date">
         <button id="btnConsultarFecha" type="button">Ver historial</button>
         <button id="btnHistorialGeneral" class="boton-secundario" type="button">📚 Ver historial general</button>
       </div>
-
-      <div id="resumenHistorial" class="resumen-historial oculto" aria-live="polite">
-        <article><span>🟢 Asistencias</span><strong id="totalAsistencias">0</strong></article>
-        <article><span>🟡 Tareas</span><strong id="totalTareas">0</strong></article>
-        <article><span>🔵 Participaciones</span><strong id="totalParticipaciones">0</strong></article>
-        <article><span>🟣 Conductas</span><strong id="totalConductas">0</strong></article>
-        <article><span>🟠 Lecturas</span><strong id="totalLecturas">0</strong></article>
-        <article class="total-general"><span>Total</span><strong id="totalRegistrosConsulta">0</strong></article>
-      </div>
-
-      <p id="estadoHistorial" class="estado-historial oculto">Selecciona una fecha o consulta el historial general.</p>
-      <div id="listaHistorialGeneral" class="lista-historial oculto">
-        <div class="mensaje-lista">Todavía no se ha realizado una consulta.</div>
-      </div>
+      <section id="resultadoConsultaHistorial" class="oculto" aria-live="polite">
+        <div id="resumenHistorial" class="resumen-historial">
+          <article><span>🟢 Asistencias</span><strong id="totalAsistencias">0</strong></article>
+          <article><span>🟡 Tareas</span><strong id="totalTareas">0</strong></article>
+          <article><span>🔵 Participaciones</span><strong id="totalParticipaciones">0</strong></article>
+          <article><span>🟣 Conductas</span><strong id="totalConductas">0</strong></article>
+          <article><span>🟠 Lecturas</span><strong id="totalLecturas">0</strong></article>
+          <article class="total-general"><span>Total</span><strong id="totalRegistrosConsulta">0</strong></article>
+        </div>
+        <p id="estadoHistorial" class="estado-historial"></p>
+        <button id="btnDesplegarLista" class="boton-secundario oculto" type="button">Desplegar lista completa</button>
+        <div id="listaHistorialGeneral" class="lista-historial oculto"></div>
+      </section>
     </section>
 
     <section id="vistaBuscar" class="panel-buscar oculto">
       <div class="buscar-encabezado-con-boton">
-        <div class="buscar-encabezado">
-          <h2>Buscar alumno</h2>
-          <p>Escribe al menos dos letras para encontrar un alumno.</p>
-        </div>
-        <button id="btnCerrarBuscar" class="boton-cerrar" type="button" aria-label="Cerrar consulta">✕</button>
+        <div class="buscar-encabezado"><h2>Buscar alumno</h2><p>Consulta los datos básicos del alumno.</p></div>
+        <button id="btnCerrarBuscar" class="boton-cerrar" type="button">✕</button>
       </div>
-
       <label class="etiqueta" for="campoBusquedaAlumno">Nombre del alumno</label>
-      <input id="campoBusquedaAlumno" class="buscador" type="search" placeholder="Escribe un nombre..." autocomplete="off">
-      <p id="contadorAlumnos" class="contador oculto"></p>
+      <input id="campoBusquedaAlumno" class="buscador" type="search" placeholder="Escribe al menos dos letras..." autocomplete="off">
+      <p id="contadorAlumnos" class="contador">Escribe un nombre para buscar.</p>
       <div id="listaAlumnos" class="lista-alumnos oculto"></div>
-
       <section id="fichaAlumno" class="ficha oculto">
-        <div class="ficha-cabecera">
-          <div id="inicialesAlumno" class="avatar">AL</div>
-          <div>
-            <h2 id="nombreAlumno">Alumno</h2>
-            <p id="gradoGrupoAlumno">—</p>
-          </div>
-        </div>
+        <div class="ficha-cabecera"><div id="inicialesAlumno" class="avatar">AL</div><div><h2 id="nombreAlumno">Alumno</h2><p id="gradoGrupoAlumno">—</p></div></div>
         <div class="datos-alumno">
           <div><span>ID</span><strong id="idAlumno">—</strong></div>
           <div><span>UID NFC</span><strong id="uidAlumno">—</strong></div>
           <div><span>Estado</span><strong id="estadoAlumno">—</strong></div>
         </div>
-        <div class="historial-cabecera">
-          <h2>Historial del alumno</h2>
-          <span id="totalHistorial">0 registros</span>
-        </div>
-        <div id="listaHistorial" class="lista-historial"></div>
       </section>
     </section>
 
     <section id="vistaEscaner">
-      <section class="seccion">
-        <h2>¿Qué deseas registrar?</h2>
+      <section class="seccion"><h2>¿Qué deseas registrar?</h2>
         <div class="modulos">
           <button class="modulo asistencia" data-modulo="asistencia"><span>🟢</span>Asistencia</button>
           <button class="modulo tareas" data-modulo="tareas"><span>🟡</span>Tareas</button>
@@ -90,39 +69,31 @@
           <button class="modulo lectura" data-modulo="lectura"><span>🟠</span>Lectura</button>
         </div>
       </section>
-
-      <section class="seleccion">
-        <p>Módulo seleccionado</p>
-        <div id="moduloActivo">Ninguno</div>
-      </section>
-
+      <section class="seleccion"><p>Módulo seleccionado</p><div id="moduloActivo">Ninguno</div></section>
       <section id="opcionesParticipacion" class="opciones oculto">
         <h2>Campo formativo</h2>
-        <select id="campoFormativo">
-          <option value="">Selecciona un campo</option>
-          <option value="Lenguajes">Lenguajes</option>
-          <option value="Saberes y Pensamiento Científico">Saberes y Pensamiento Científico</option>
-          <option value="Ética, Naturaleza y Sociedad">Ética, Naturaleza y Sociedad</option>
-          <option value="De lo Humano a lo Comunitario">De lo Humano a lo Comunitario</option>
-        </select>
+        <select id="campoFormativo"><option value="">Selecciona un campo</option><option>Lenguajes</option><option>Saberes y Pensamiento Científico</option><option>Ética, Naturaleza y Sociedad</option><option>De lo Humano a lo Comunitario</option></select>
         <h2>Tipo de participación</h2>
-        <select id="tipoParticipacion">
-          <option value="">Selecciona una opción</option>
-          <option value="Participó">Participó</option>
-          <option value="Excelente participación">Excelente participación</option>
-          <option value="Apoyo al equipo">Apoyo al equipo</option>
-        </select>
+        <select id="tipoParticipacion"><option value="">Selecciona una opción</option><option>Participó</option><option>Excelente participación</option><option>Apoyo al equipo</option></select>
       </section>
-
       <section class="lector">
         <div id="estado">Selecciona un módulo para comenzar.</div>
         <button id="btnEscanear" disabled>Activar lector NFC</button>
-        <div id="resultado"></div>
+        <button id="btnBuscarManual" class="boton-manual" disabled type="button">🔎 BUSCAR ALUMNO</button>
+        <div id="resultado" aria-live="polite"></div>
+      </section>
+      <section id="panelRegistroManual" class="panel-buscar oculto">
+        <div class="buscar-encabezado-con-boton"><div class="buscar-encabezado"><h2>Registro manual</h2><p>Selecciona al alumno para registrar el módulo activo.</p></div><button id="btnCerrarManual" class="boton-cerrar" type="button">✕</button></div>
+        <input id="campoBusquedaManual" class="buscador" type="search" placeholder="Escribe al menos dos letras..." autocomplete="off">
+        <p id="contadorManual" class="contador">Escribe un nombre para buscar.</p>
+        <div id="listaManual" class="lista-alumnos oculto"></div>
+      </section>
+      <section class="sesion">
+        <div class="historial-cabecera"><h2>Últimos registros de la sesión</h2><span id="totalSesion">0</span></div>
+        <div id="historialSesion" class="lista-historial"><div class="mensaje-lista">Todavía no hay registros en esta sesión.</div></div>
       </section>
     </section>
   </main>
-
-  <script src="script.js?v=13"></script>
-  <script src="ui-fixes.js?v=1"></script>
+  <script src="script.js?v=15"></script>
 </body>
 </html>
