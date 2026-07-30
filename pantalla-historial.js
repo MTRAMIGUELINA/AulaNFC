@@ -10,6 +10,9 @@
   const estadoHistorial = document.getElementById('estadoHistorial');
   const listaHistorial = document.getElementById('listaHistorialGeneral');
   const botonDesplegar = document.getElementById('btnDesplegarLista');
+  const listaAlumnos = document.getElementById('listaAlumnos');
+  const campoBusquedaAlumno = document.getElementById('campoBusquedaAlumno');
+  const contadorAlumnos = document.getElementById('contadorAlumnos');
 
   let consultaFechaPendiente = false;
   let listaFechaActiva = false;
@@ -49,6 +52,23 @@
   });
 
   botonCerrar.addEventListener('click', cerrarHistorial);
+
+  if (listaAlumnos) {
+    listaAlumnos.addEventListener('click', (evento) => {
+      const alumnoSeleccionado = evento.target.closest('[data-consulta-id]');
+      if (!alumnoSeleccionado) return;
+
+      listaAlumnos.classList.add('oculto');
+
+      if (campoBusquedaAlumno) {
+        campoBusquedaAlumno.value = '';
+      }
+
+      if (contadorAlumnos) {
+        contadorAlumnos.textContent = 'Alumno seleccionado.';
+      }
+    });
+  }
 
   if (botonConsultarFecha && estadoHistorial && listaHistorial && botonDesplegar) {
     botonConsultarFecha.addEventListener('click', () => {
