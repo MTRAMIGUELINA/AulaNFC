@@ -21,6 +21,8 @@ let registrosConsultaActual = [];
 let consultaGeneralActiva = false;
 let historialSesion = [];
 let alumnoManualId = '';
+let alumnoConsultaId = '';
+let alumnoConsultaNombre = '';
 let modoHistorialVisible = '';
 
 inicializarFecha();
@@ -78,15 +80,26 @@ async function alternarHistorialFecha() {
     ocultarHistorial();
     return;
   }
+
   const fecha = $('fechaHistorial').value;
   if (!fecha) return;
+
+  if (!alumnoConsultaId) {
+    mostrarErrorHistorial(new Error('Primero busca y selecciona un alumno.'));
+    return;
+  }
+
   modoHistorialVisible = 'fecha';
   consultaGeneralActiva = false;
-  prepararConsulta(`Consultando registros del ${formatearFechaVisible(fecha)}...`);
+  prepararConsulta(`Consultando registros de ${alumnoConsultaNombre} del ${formatearFechaVisible(fecha)}...`);
+
   try {
-    const respuesta = await solicitarJSONP('obtenerHistorialGeneral', { fecha });
+    const respuesta = await solicitarJSONP('obtenerHistorialGeneral', {
+      fecha,
+      idAlumno: alumnoConsultaId
+    });
     validarRespuesta(respuesta);
-    mostrarResultadoHistorial(respuesta, `Historial del ${formatearFechaVisible(fecha)}`, true);
+    mostrarResultadoHistorial(respuesta, `${alumnoConsultaNombre} · ${formatearFechaVisible(fecha)}`, true);
   } catch (error) {
     mostrarErrorHistorial(error);
   }
@@ -97,13 +110,22 @@ async function alternarHistorialGeneral() {
     ocultarHistorial();
     return;
   }
+
+  if (!alumnoConsultaId) {
+    mostrarErrorHistorial(new Error('Primero busca y selecciona un alumno.'));
+    return;
+  }
+
   modoHistorialVisible = 'general';
   consultaGeneralActiva = true;
-  prepararConsulta('Consultando todos los registros...');
+  prepararConsulta(`Consultando el historial general de ${alumnoConsultaNombre}...`);
+
   try {
-    const respuesta = await solicitarJSONP('obtenerHistorialGeneral');
+    const respuesta = await solicitarJSONP('obtenerHistorialGeneral', {
+      idAlumno: alumnoConsultaId
+    });
     validarRespuesta(respuesta);
-    mostrarResultadoHistorial(respuesta, 'Historial general', false);
+    mostrarResultadoHistorial(respuesta, `Historial general de ${alumnoConsultaNombre}`, false);
   } catch (error) {
     mostrarErrorHistorial(error);
   }
@@ -197,13 +219,18 @@ function renderizarBusquedaConsulta(termino) {
 function mostrarFichaBasica(id) {
   const alumno = alumnos.find((a) => String(a.id) === String(id));
   if (!alumno) return;
-  $('inicialesAlumno').textContent = iniciales(nombreCompleto(alumno));
-  $('nombreAlumno').textContent = nombreCompleto(alumno);
+
+  alumnoConsultaId = String(alumno.id || '').trim();
+  alumnoConsultaNombre = nombreCompleto(alumno);
+
+  $('inicialesAlumno').textContent = iniciales(alumnoConsultaNombre);
+  $('nombreAlumno').textContent = alumnoConsultaNombre;
   $('gradoGrupoAlumno').textContent = gradoGrupo(alumno);
   $('idAlumno').textContent = alumno.id || '—';
   $('uidAlumno').textContent = alumno.uid || 'Sin UID';
   $('estadoAlumno').textContent = alumno.activo === false || normalizarTexto(alumno.estatus) === 'inactivo' ? 'Inactivo' : 'Activo';
   $('fichaAlumno').classList.remove('oculto');
+  ocultarHistorial();
 }
 
 async function abrirRegistroManual() {
