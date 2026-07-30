@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AulaNFC</title>
-  <link rel="stylesheet" href="style.css?v=13">
+  <link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
   <main class="contenedor">
@@ -29,7 +29,7 @@
         <button id="btnHistorialGeneral" class="boton-secundario" type="button">📚 Ver historial general</button>
       </div>
 
-      <div id="resumenHistorial" class="resumen-historial" aria-live="polite">
+      <div id="resumenHistorial" class="resumen-historial oculto" aria-live="polite">
         <article><span>🟢 Asistencias</span><strong id="totalAsistencias">0</strong></article>
         <article><span>🟡 Tareas</span><strong id="totalTareas">0</strong></article>
         <article><span>🔵 Participaciones</span><strong id="totalParticipaciones">0</strong></article>
@@ -38,8 +38,8 @@
         <article class="total-general"><span>Total</span><strong id="totalRegistrosConsulta">0</strong></article>
       </div>
 
-      <p id="estadoHistorial" class="estado-historial">Selecciona una fecha o consulta el historial general.</p>
-      <div id="listaHistorialGeneral" class="lista-historial">
+      <p id="estadoHistorial" class="estado-historial oculto">Selecciona una fecha o consulta el historial general.</p>
+      <div id="listaHistorialGeneral" class="lista-historial oculto">
         <div class="mensaje-lista">Todavía no se ha realizado una consulta.</div>
       </div>
     </section>
@@ -48,15 +48,15 @@
       <div class="buscar-encabezado-con-boton">
         <div class="buscar-encabezado">
           <h2>Buscar alumno</h2>
-          <p>Consulta la ficha y el historial completo.</p>
+          <p>Escribe al menos dos letras para encontrar un alumno.</p>
         </div>
         <button id="btnCerrarBuscar" class="boton-cerrar" type="button" aria-label="Cerrar consulta">✕</button>
       </div>
 
       <label class="etiqueta" for="campoBusquedaAlumno">Nombre del alumno</label>
       <input id="campoBusquedaAlumno" class="buscador" type="search" placeholder="Escribe un nombre..." autocomplete="off">
-      <p id="contadorAlumnos" class="contador">Cargando alumnos...</p>
-      <div id="listaAlumnos" class="lista-alumnos"></div>
+      <p id="contadorAlumnos" class="contador oculto"></p>
+      <div id="listaAlumnos" class="lista-alumnos oculto"></div>
 
       <section id="fichaAlumno" class="ficha oculto">
         <div class="ficha-cabecera">
@@ -123,5 +123,6 @@
   </main>
 
   <script src="script.js?v=13"></script>
+  <script src="ui-fixes.js?v=1"></script>
 </body>
 </html>
