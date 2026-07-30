@@ -4,6 +4,7 @@ const $ = (id) => document.getElementById(id);
 const botonesModulos = document.querySelectorAll('.modulo');
 const botonEscanear = $('btnEscanear');
 const btnBuscarManual = $('btnBuscarManual');
+const btnCambiarModulo = $('btnCambiarModulo');
 const resultadoConsultaHistorial = $('resultadoConsultaHistorial');
 const listaHistorialGeneral = $('listaHistorialGeneral');
 const btnDesplegarLista = $('btnDesplegarLista');
@@ -38,6 +39,7 @@ btnBuscarManual.addEventListener('click', abrirRegistroManual);
 $('campoBusquedaManual').addEventListener('input', () => renderizarBusquedaManual($('campoBusquedaManual').value));
 $('btnGuardarManual').addEventListener('click', guardarRegistroManual);
 botonEscanear.addEventListener('click', alternarLectorNFC);
+btnCambiarModulo.addEventListener('click', mostrarTodosLosModulos);
 
 botonesModulos.forEach((boton) => {
   boton.addEventListener('click', () => {
@@ -46,6 +48,7 @@ botonesModulos.forEach((boton) => {
     moduloSeleccionado = boton.dataset.modulo || '';
     $('moduloActivo').textContent = formatearModulo(moduloSeleccionado);
     mostrarOpcionesModulo();
+    enfocarModuloSeleccionado(boton);
     botonEscanear.disabled = false;
     btnBuscarManual.disabled = false;
     $('resultado').innerHTML = '';
@@ -54,6 +57,36 @@ botonesModulos.forEach((boton) => {
       : 'Módulo listo. Activa el lector NFC o usa el registro manual.';
   });
 });
+
+function enfocarModuloSeleccionado(botonSeleccionado) {
+  botonesModulos.forEach((boton) => {
+    const esSeleccionado = boton === botonSeleccionado;
+    boton.classList.toggle('modulo-seleccionado', esSeleccionado);
+    boton.classList.toggle('modulo-oculto', !esSeleccionado);
+  });
+
+  btnCambiarModulo.classList.remove('oculto');
+}
+
+function mostrarTodosLosModulos() {
+  botonesModulos.forEach((boton) => {
+    boton.classList.remove('activo', 'modulo-seleccionado', 'modulo-oculto');
+  });
+
+  moduloSeleccionado = '';
+  $('moduloActivo').textContent = 'Ninguno';
+
+  $('opcionesTareas').classList.add('oculto');
+  $('opcionesParticipacion').classList.add('oculto');
+  $('opcionesConducta').classList.add('oculto');
+  $('opcionesLectura').classList.add('oculto');
+
+  btnCambiarModulo.classList.add('oculto');
+  botonEscanear.disabled = true;
+  btnBuscarManual.disabled = true;
+  $('resultado').innerHTML = '';
+  $('estado').textContent = 'Selecciona el tipo de registro que deseas realizar.';
+}
 
 function mostrarOpcionesModulo() {
   $('opcionesTareas').classList.toggle('oculto', moduloSeleccionado !== 'tareas');
@@ -366,48 +399,15 @@ function procesarTarjeta(evento) {
 
 async function enviarRegistroNFC(uid) {
   if (!validarModulo() || envioEnProceso) return;
-
   envioEnProceso = true;
   $('estado').textContent = '⏳ Enviando registro...';
-
   try {
-    const parametros = construirParametrosRegistro({ uid });
-
-    // Refuerzo específico para Participación por NFC
-    if (moduloSeleccionado === 'participacion') {
-      parametros.campoFormativo =
-        String($('campoFormativo').value || '').trim();
-
-      parametros.tipoParticipacion =
-        String($('tipoParticipacion').value || '').trim();
-
-      // Alias adicional para Apps Script
-      parametros.tipoRegistro =
-        parametros.tipoParticipacion;
-    }
-
-    const respuesta = await solicitarJSONP(
-      'registrarNFC',
-      parametros
-    );
-
+    const respuesta = await solicitarJSONP('registrarNFC', construirParametrosRegistro({ uid }));
     validarRespuesta(respuesta);
-
-    confirmarRegistro(
-      respuesta.nombre ||
-      respuesta.nombreCompleto ||
-      'Alumno',
-      moduloSeleccionado,
-      'NFC'
-    );
-
+    confirmarRegistro(respuesta.nombre || respuesta.nombreCompleto || 'Alumno', moduloSeleccionado, 'NFC');
   } catch (error) {
-    $('estado').textContent =
-      '❌ No se pudo confirmar el registro.';
-
-    $('resultado').textContent =
-      error.message;
-
+    $('estado').textContent = '❌ No se pudo confirmar el registro.';
+    $('resultado').textContent = error.message;
   } finally {
     envioEnProceso = false;
   }
