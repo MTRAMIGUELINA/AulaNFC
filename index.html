@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AulaNFC</title>
-  <link rel="stylesheet" href="style.css?v=12">
+  <link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
   <main class="contenedor">
@@ -13,10 +13,71 @@
       <p>Registro y consulta del aula</p>
     </header>
 
-    <nav class="navegacion" aria-label="Secciones de AulaNFC">
-      <button id="tabEscaner" class="tab activo" type="button">📱 Escáner</button>
-      <button id="tabBuscar" class="tab" type="button">🔎 Buscar alumno</button>
-    </nav>
+    <section class="panel-historial" aria-labelledby="tituloHistorialGeneral">
+      <div class="titulo-historial">
+        <div>
+          <span class="seccion-fija">HISTORIAL</span>
+          <h2 id="tituloHistorialGeneral">Historial del día</h2>
+        </div>
+        <button id="btnAbrirBuscar" class="boton-consulta" type="button">🔎 Buscar alumno</button>
+      </div>
+
+      <div class="controles-historial">
+        <label for="fechaHistorial">Fecha que deseas consultar</label>
+        <input id="fechaHistorial" type="date">
+        <button id="btnConsultarFecha" type="button">Ver historial</button>
+        <button id="btnHistorialGeneral" class="boton-secundario" type="button">📚 Ver historial general</button>
+      </div>
+
+      <div id="resumenHistorial" class="resumen-historial" aria-live="polite">
+        <article><span>🟢 Asistencias</span><strong id="totalAsistencias">0</strong></article>
+        <article><span>🟡 Tareas</span><strong id="totalTareas">0</strong></article>
+        <article><span>🔵 Participaciones</span><strong id="totalParticipaciones">0</strong></article>
+        <article><span>🟣 Conductas</span><strong id="totalConductas">0</strong></article>
+        <article><span>🟠 Lecturas</span><strong id="totalLecturas">0</strong></article>
+        <article class="total-general"><span>Total</span><strong id="totalRegistrosConsulta">0</strong></article>
+      </div>
+
+      <p id="estadoHistorial" class="estado-historial">Selecciona una fecha o consulta el historial general.</p>
+      <div id="listaHistorialGeneral" class="lista-historial">
+        <div class="mensaje-lista">Todavía no se ha realizado una consulta.</div>
+      </div>
+    </section>
+
+    <section id="vistaBuscar" class="panel-buscar oculto">
+      <div class="buscar-encabezado-con-boton">
+        <div class="buscar-encabezado">
+          <h2>Buscar alumno</h2>
+          <p>Consulta la ficha y el historial completo.</p>
+        </div>
+        <button id="btnCerrarBuscar" class="boton-cerrar" type="button" aria-label="Cerrar consulta">✕</button>
+      </div>
+
+      <label class="etiqueta" for="campoBusquedaAlumno">Nombre del alumno</label>
+      <input id="campoBusquedaAlumno" class="buscador" type="search" placeholder="Escribe un nombre..." autocomplete="off">
+      <p id="contadorAlumnos" class="contador">Cargando alumnos...</p>
+      <div id="listaAlumnos" class="lista-alumnos"></div>
+
+      <section id="fichaAlumno" class="ficha oculto">
+        <div class="ficha-cabecera">
+          <div id="inicialesAlumno" class="avatar">AL</div>
+          <div>
+            <h2 id="nombreAlumno">Alumno</h2>
+            <p id="gradoGrupoAlumno">—</p>
+          </div>
+        </div>
+        <div class="datos-alumno">
+          <div><span>ID</span><strong id="idAlumno">—</strong></div>
+          <div><span>UID NFC</span><strong id="uidAlumno">—</strong></div>
+          <div><span>Estado</span><strong id="estadoAlumno">—</strong></div>
+        </div>
+        <div class="historial-cabecera">
+          <h2>Historial del alumno</h2>
+          <span id="totalHistorial">0 registros</span>
+        </div>
+        <div id="listaHistorial" class="lista-historial"></div>
+      </section>
+    </section>
 
     <section id="vistaEscaner">
       <section class="seccion">
@@ -59,40 +120,8 @@
         <div id="resultado"></div>
       </section>
     </section>
-
-    <section id="vistaBuscar" class="oculto">
-      <div class="buscar-encabezado">
-        <h2>Buscar alumno</h2>
-        <p>Consulta la ficha y el historial completo.</p>
-      </div>
-
-      <label class="etiqueta" for="campoBusquedaAlumno">Nombre del alumno</label>
-      <input id="campoBusquedaAlumno" class="buscador" type="search" placeholder="Escribe un nombre..." autocomplete="off">
-      <p id="contadorAlumnos" class="contador">Cargando alumnos...</p>
-      <div id="listaAlumnos" class="lista-alumnos"></div>
-
-      <section id="fichaAlumno" class="ficha oculto">
-        <div class="ficha-cabecera">
-          <div id="inicialesAlumno" class="avatar">AL</div>
-          <div>
-            <h2 id="nombreAlumno">Alumno</h2>
-            <p id="gradoGrupoAlumno">—</p>
-          </div>
-        </div>
-        <div class="datos-alumno">
-          <div><span>ID</span><strong id="idAlumno">—</strong></div>
-          <div><span>UID NFC</span><strong id="uidAlumno">—</strong></div>
-          <div><span>Estado</span><strong id="estadoAlumno">—</strong></div>
-        </div>
-        <div class="historial-cabecera">
-          <h2>Historial</h2>
-          <span id="totalHistorial">0 registros</span>
-        </div>
-        <div id="listaHistorial" class="lista-historial"></div>
-      </section>
-    </section>
   </main>
 
-  <script src="script.js?v=12"></script>
+  <script src="script.js?v=13"></script>
 </body>
 </html>
