@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#1976d2">
   <title>AulaNFC V2.0</title>
-  <link rel="stylesheet" href="style.css?v=17">
+  <link rel="stylesheet" href="style.css?v=18">
 </head>
 <body>
   <main class="contenedor">
@@ -14,10 +14,17 @@
       <p>Registro y consulta del aula</p>
     </header>
 
-    <section class="panel-historial">
+    <button id="btnAbrirHistorial" class="boton-historial-principal" type="button" aria-expanded="false" aria-controls="pantallaHistorial">
+      📚 HISTORIAL
+    </button>
+
+    <section id="pantallaHistorial" class="panel-historial oculto">
       <div class="titulo-historial">
         <div><span class="seccion-fija">HISTORIAL</span><h2>Historial del día</h2></div>
-        <button id="btnAbrirBuscar" class="boton-consulta" type="button">🔎 Buscar alumno</button>
+        <div class="acciones-historial">
+          <button id="btnAbrirBuscar" class="boton-consulta" type="button">🔎 Buscar alumno</button>
+          <button id="btnCerrarHistorial" class="boton-cerrar" type="button" aria-label="Cerrar historial">✕</button>
+        </div>
       </div>
 
       <section id="vistaBuscar" class="consulta-alumno-superior oculto">
@@ -125,5 +132,6 @@
   </main>
   <script src="script.js?v=17"></script>
   <script src="fix-registro-manual.js?v=2"></script>
+  <script src="pantalla-historial.js?v=1"></script>
 </body>
 </html>
