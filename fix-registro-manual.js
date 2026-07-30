@@ -1,4 +1,36 @@
 (() => {
+  const construirParametrosOriginal = construirParametrosRegistro;
+
+  construirParametrosRegistro = function(base) {
+    const parametros = construirParametrosOriginal(base);
+
+    const tipoRegistro = moduloSeleccionado === 'conducta'
+      ? document.getElementById('tipoConducta')?.value || ''
+      : moduloSeleccionado === 'lectura'
+        ? document.getElementById('tipoLectura')?.value || ''
+        : moduloSeleccionado === 'participacion'
+          ? document.getElementById('tipoParticipacion')?.value || ''
+          : moduloSeleccionado === 'tareas'
+            ? document.getElementById('tipoTarea')?.value || ''
+            : moduloSeleccionado === 'asistencia'
+              ? 'Asistencia'
+              : '';
+
+    return {
+      ...parametros,
+      tipoRegistro,
+      resultado: tipoRegistro,
+      detalle: tipoRegistro,
+      valor: tipoRegistro,
+      registro: tipoRegistro,
+      tipo: tipoRegistro,
+      resultadoLectura: moduloSeleccionado === 'lectura' ? tipoRegistro : '',
+      resultadoConducta: moduloSeleccionado === 'conducta' ? tipoRegistro : '',
+      resultadoParticipacion: moduloSeleccionado === 'participacion' ? tipoRegistro : '',
+      tarea: moduloSeleccionado === 'tareas' ? tipoRegistro : ''
+    };
+  };
+
   const botonAnterior = document.getElementById('btnGuardarManual');
   if (!botonAnterior) return;
 
