@@ -13,6 +13,9 @@
   const listaAlumnos = document.getElementById('listaAlumnos');
   const campoBusquedaAlumno = document.getElementById('campoBusquedaAlumno');
   const contadorAlumnos = document.getElementById('contadorAlumnos');
+  const listaManual = document.getElementById('listaManual');
+  const campoBusquedaManual = document.getElementById('campoBusquedaManual');
+  const contadorManual = document.getElementById('contadorManual');
 
   let consultaFechaPendiente = false;
   let listaFechaActiva = false;
@@ -66,6 +69,23 @@
 
       if (contadorAlumnos) {
         contadorAlumnos.textContent = 'Alumno seleccionado.';
+      }
+    });
+  }
+
+  if (listaManual) {
+    listaManual.addEventListener('click', (evento) => {
+      const alumnoSeleccionado = evento.target.closest('[data-manual-id]');
+      if (!alumnoSeleccionado) return;
+
+      listaManual.classList.add('oculto');
+
+      if (campoBusquedaManual) {
+        campoBusquedaManual.value = '';
+      }
+
+      if (contadorManual) {
+        contadorManual.textContent = 'Alumno seleccionado.';
       }
     });
   }
