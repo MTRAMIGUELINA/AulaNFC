@@ -5,6 +5,15 @@
 
   if (!botonAbrir || !botonCerrar || !pantalla) return;
 
+  const botonConsultarFecha = document.getElementById('btnConsultarFecha');
+  const botonHistorialGeneral = document.getElementById('btnHistorialGeneral');
+  const estadoHistorial = document.getElementById('estadoHistorial');
+  const listaHistorial = document.getElementById('listaHistorialGeneral');
+  const botonDesplegar = document.getElementById('btnDesplegarLista');
+
+  let consultaFechaPendiente = false;
+  let listaFechaActiva = false;
+
   function abrirHistorial() {
     pantalla.classList.remove('oculto');
     botonAbrir.setAttribute('aria-expanded', 'true');
@@ -26,6 +35,9 @@
     if (resultado) resultado.classList.add('oculto');
     if (lista) lista.classList.add('oculto');
     if (desplegar) desplegar.classList.add('oculto');
+
+    consultaFechaPendiente = false;
+    listaFechaActiva = false;
   }
 
   botonAbrir.addEventListener('click', () => {
@@ -37,4 +49,48 @@
   });
 
   botonCerrar.addEventListener('click', cerrarHistorial);
+
+  if (botonConsultarFecha && estadoHistorial && listaHistorial && botonDesplegar) {
+    botonConsultarFecha.addEventListener('click', () => {
+      consultaFechaPendiente = true;
+      listaFechaActiva = true;
+    });
+
+    if (botonHistorialGeneral) {
+      botonHistorialGeneral.addEventListener('click', () => {
+        consultaFechaPendiente = false;
+        listaFechaActiva = false;
+      });
+    }
+
+    const observadorHistorial = new MutationObserver(() => {
+      const texto = estadoHistorial.textContent || '';
+
+      if (
+        consultaFechaPendiente &&
+        !texto.includes('Consultando') &&
+        /\bregistro(s)?\b/i.test(texto)
+      ) {
+        listaHistorial.classList.add('oculto');
+        botonDesplegar.classList.remove('oculto');
+        botonDesplegar.textContent = 'Desplegar lista completa';
+        consultaFechaPendiente = false;
+      }
+    });
+
+    observadorHistorial.observe(estadoHistorial, {
+      childList: true,
+      characterData: true,
+      subtree: true
+    });
+
+    botonDesplegar.addEventListener('click', () => {
+      if (!listaFechaActiva) return;
+
+      const estaOculta = listaHistorial.classList.toggle('oculto');
+      botonDesplegar.textContent = estaOculta
+        ? 'Desplegar lista completa'
+        : 'Ocultar lista completa';
+    });
+  }
 })();
