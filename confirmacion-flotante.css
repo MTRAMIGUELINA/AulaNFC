@@ -1,0 +1,77 @@
+/* Confirmación visual flotante. No modifica la lógica de registro. */
+.confirmacion-flotante {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.32);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 160ms ease, visibility 160ms ease;
+}
+
+.confirmacion-flotante.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.confirmacion-flotante.saliendo {
+  opacity: 0;
+}
+
+.confirmacion-flotante__tarjeta {
+  width: min(88vw, 420px);
+  padding: 28px 24px;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.34);
+  text-align: center;
+  transform: translateY(12px) scale(0.96);
+  transition: transform 160ms ease;
+}
+
+.confirmacion-flotante.visible .confirmacion-flotante__tarjeta {
+  transform: translateY(0) scale(1);
+}
+
+.confirmacion-flotante__icono {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  background: #2e7d32;
+  color: #ffffff;
+  font-size: 44px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.confirmacion-flotante__mensaje {
+  margin: 0;
+  color: #1f2937;
+  font-size: clamp(20px, 5vw, 28px);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.confirmacion-flotante__alumno {
+  margin: 14px 0 0;
+  color: #1976d2;
+  font-size: clamp(22px, 6vw, 32px);
+  font-weight: 900;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confirmacion-flotante,
+  .confirmacion-flotante__tarjeta {
+    transition: none;
+  }
+}
