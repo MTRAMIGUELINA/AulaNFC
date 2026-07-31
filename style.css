@@ -35,6 +35,10 @@ button, input, select { font: inherit; }
 .modulo span { display: block; margin-bottom: 4px; font-size: 25px; }
 .modulo:last-child { grid-column: 1 / 3; }
 .modulo.activo { border-color: #1976d2; background: #e3f2fd; transform: scale(1.02); }
+.modulo.modulo-oculto { display: none; }
+.modulo.modulo-seleccionado { grid-column: 1 / -1; width: 100%; min-height: 88px; transform: none; cursor: default; }
+.btn-cambiar-modulo { width: 100%; margin-top: 14px; padding: 14px 18px; border: 2px solid #1976d2; border-radius: 14px; background: #fff; color: #1976d2; font-size: 17px; font-weight: 800; cursor: pointer; }
+.btn-cambiar-modulo:active { transform: scale(.98); }
 .seleccion { margin-top: 22px; padding: 16px; text-align: center; background: #f5f7fa; border-radius: 14px; }
 .seleccion p { margin: 0 0 8px; color: #666; }
 #moduloActivo { color: #1976d2; font-size: 22px; font-weight: bold; text-transform: capitalize; }
@@ -105,5 +109,6 @@ select:focus, .buscador:focus, #fechaHistorial:focus { border-color: #1976d2; bo
 @media (max-width: 380px) {
   .modulos { grid-template-columns: 1fr; }
   .modulo:last-child { grid-column: auto; }
+  .modulo.modulo-seleccionado { grid-column: auto; }
   .resumen-historial { grid-template-columns: 1fr; }
 }
