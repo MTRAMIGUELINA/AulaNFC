@@ -88,7 +88,7 @@ select:focus, .buscador:focus, #fechaHistorial:focus { border-color: #1976d2; bo
 .historial-cabecera { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
 .historial-cabecera h2 { margin: 0; font-size: 19px; }
 .historial-cabecera span { color: #1565c0; font-size: 13px; font-weight: 800; }
-.lista-historial { display: grid; gap: 10px; max-height: 560px; overflow-y: auto; }
+.lista-historial { display: grid; gap: 10px; max-height: 238px; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; padding-right: 4px; }
 .historial-item { display: grid; grid-template-columns: 42px 1fr auto; align-items: center; gap: 11px; padding: 13px; border: 1px solid #dce4eb; border-radius: 12px; background: #fff; }
 .historial-icono { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 10px; background: #f3f6f9; font-size: 20px; }
 .historial-item p { margin: 4px 0 0; color: #607d8b; font-size: 13px; }
