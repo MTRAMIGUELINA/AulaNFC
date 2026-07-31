@@ -69,6 +69,85 @@
   overflow-wrap: anywhere;
 }
 
+/* Botones de módulos: contorno al inicio y color intenso al seleccionar. */
+.modulo {
+  background: #ffffff !important;
+  text-shadow: none !important;
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.09) !important;
+}
+
+.modulo::before {
+  opacity: 0;
+}
+
+.modulo.asistencia {
+  border-color: #28a745 !important;
+  color: #238b3d !important;
+}
+
+.modulo.tareas {
+  border-color: #f4b400 !important;
+  color: #8a6500 !important;
+}
+
+.modulo.participacion {
+  border-color: #1976d2 !important;
+  color: #1565c0 !important;
+}
+
+.modulo.conducta {
+  border-color: #8e24aa !important;
+  color: #7b1fa2 !important;
+}
+
+.modulo.lectura {
+  border-color: #ef6c00 !important;
+  color: #d85f00 !important;
+}
+
+.modulo:hover {
+  filter: none !important;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 12px rgba(15, 23, 42, 0.13) !important;
+}
+
+.modulo:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.modulo.activo {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.96) !important;
+  filter: saturate(1.28) brightness(0.92) contrast(1.06) !important;
+  transform: scale(1.03);
+  box-shadow: 0 9px 20px rgba(15, 23, 42, 0.28), 0 0 0 3px rgba(255, 255, 255, 0.5) !important;
+}
+
+.modulo.asistencia.activo {
+  background: linear-gradient(135deg, #45c96b, #28a745) !important;
+}
+
+.modulo.tareas.activo {
+  background: linear-gradient(135deg, #ffd84d, #f4b400) !important;
+  color: #4a3800 !important;
+}
+
+.modulo.participacion.activo {
+  background: linear-gradient(135deg, #42a5f5, #1565c0) !important;
+}
+
+.modulo.conducta.activo {
+  background: linear-gradient(135deg, #ab47bc, #6a1b9a) !important;
+}
+
+.modulo.lectura.activo {
+  background: linear-gradient(135deg, #ffad33, #ef6c00) !important;
+}
+
+.modulo.activo::before {
+  opacity: 1;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .confirmacion-flotante,
   .confirmacion-flotante__tarjeta {
