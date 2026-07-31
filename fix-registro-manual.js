@@ -127,3 +127,25 @@
     }
   });
 })();
+
+// Cambio visual: ocultar el recuadro "Módulo seleccionado"
+// mientras un módulo está activo y mostrarlo de nuevo al cambiar de módulo.
+(() => {
+  const panelSeleccion = document.querySelector('.seleccion');
+  const botones = document.querySelectorAll('.modulo');
+  const botonCambiar = document.getElementById('btnCambiarModulo');
+
+  if (!panelSeleccion) return;
+
+  botones.forEach((boton) => {
+    boton.addEventListener('click', () => {
+      panelSeleccion.classList.add('oculto');
+    });
+  });
+
+  if (botonCambiar) {
+    botonCambiar.addEventListener('click', () => {
+      panelSeleccion.classList.remove('oculto');
+    });
+  }
+})();
