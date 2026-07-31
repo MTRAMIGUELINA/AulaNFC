@@ -1,0 +1,95 @@
+/* Tarjeta grande de confirmación. Solo afecta la presentación. */
+#resultado {
+  color: inherit;
+}
+
+.tarjeta-confirmacion {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 22px;
+  border: 2px solid #81c784;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #f1fff4 0%, #e8f5e9 100%);
+  box-shadow: 0 10px 24px rgba(46, 125, 50, .18);
+  text-align: left;
+  animation: aparecer-confirmacion .22s ease-out;
+}
+
+.confirmacion-icono {
+  display: grid;
+  place-items: center;
+  flex: 0 0 72px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #2e7d32;
+  color: #fff;
+  font-size: 46px;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 6px 16px rgba(46, 125, 50, .28);
+}
+
+.confirmacion-contenido {
+  min-width: 0;
+}
+
+.confirmacion-mensaje {
+  margin: 0 0 6px;
+  color: #2e7d32;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.confirmacion-alumno {
+  margin: 0;
+  color: #1f2933;
+  font-size: 26px;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.confirmacion-detalle {
+  margin: 8px 0 0;
+  color: #52606d;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+@keyframes aparecer-confirmacion {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 480px) {
+  .tarjeta-confirmacion {
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .confirmacion-icono {
+    flex-basis: 60px;
+    width: 60px;
+    height: 60px;
+    font-size: 38px;
+  }
+
+  .confirmacion-alumno {
+    font-size: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tarjeta-confirmacion {
+    animation: none;
+  }
+}
