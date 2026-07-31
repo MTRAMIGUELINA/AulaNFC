@@ -46,6 +46,16 @@
   box-shadow: 0 8px 20px rgba(198,40,40,.34), inset 0 1px 0 rgba(255,255,255,.28);
 }
 
+/* La sección de últimos registros permanece oculta en la pantalla principal. */
+#vistaEscaner .sesion {
+  display: none;
+}
+
+/* Se muestra únicamente después de seleccionar cualquier módulo de registro. */
+#vistaEscaner:has(.modulo.activo) .sesion {
+  display: block;
+}
+
 @media (max-width: 600px) {
   .boton-historial-principal {
     min-height: 60px;
