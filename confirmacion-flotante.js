@@ -89,3 +89,14 @@
     if ('vibrate' in navigator) navigator.vibrate(180);
   };
 })();
+
+/* Carga independiente del menú lateral para no alterar el archivo principal. */
+(() => {
+  if (document.querySelector('script[data-menu-aulanfc]')) return;
+
+  const scriptMenu = document.createElement('script');
+  scriptMenu.src = 'menu-lateral.js?v=1';
+  scriptMenu.defer = true;
+  scriptMenu.dataset.menuAulanfc = 'true';
+  document.body.appendChild(scriptMenu);
+})();
