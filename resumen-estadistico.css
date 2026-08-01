@@ -1,0 +1,294 @@
+/* Vista visual del Resumen estadístico de AulaNFC v2.1. */
+.vista-resumen-estadistico {
+  margin-top: 8px;
+  padding: 20px;
+  border: 2px solid #dbe7f3;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.resumen-estadistico__cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.resumen-estadistico__cabecera h2 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 26px;
+}
+
+.resumen-estadistico__cabecera p {
+  margin: 6px 0 0;
+  color: #607d8b;
+  font-size: 14px;
+}
+
+.resumen-estadistico__cerrar {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 50%;
+  background: #e7ebf1;
+  color: #455a64;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.resumen-estadistico__busqueda,
+.resumen-estadistico__periodo {
+  padding: 16px;
+  border: 1px solid #dbe7f3;
+  border-radius: 14px;
+  background: #f8fbff;
+}
+
+.resumen-estadistico__periodo {
+  margin-top: 14px;
+}
+
+.resumen-estadistico__etiqueta {
+  display: block;
+  margin-bottom: 8px;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.resumen-estadistico__buscador,
+.resumen-estadistico__selector,
+.resumen-estadistico__fecha {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 2px solid #cbd5e1;
+  border-radius: 11px;
+  background: #fff;
+  color: #263238;
+  font-size: 16px;
+  outline: none;
+}
+
+.resumen-estadistico__buscador:focus,
+.resumen-estadistico__selector:focus,
+.resumen-estadistico__fecha:focus {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, .12);
+}
+
+.resumen-estadistico__contador {
+  margin: 8px 0 0;
+  color: #6f7f95;
+  font-size: 13px;
+}
+
+.resumen-estadistico__lista {
+  max-height: 235px;
+  margin-top: 10px;
+  overflow-y: auto;
+  border: 1px solid #dce4eb;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.resumen-estadistico__alumno-opcion {
+  width: 100%;
+  padding: 13px 14px;
+  border: 0;
+  border-bottom: 1px solid #edf1f5;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.resumen-estadistico__alumno-opcion:last-child {
+  border-bottom: 0;
+}
+
+.resumen-estadistico__alumno-opcion:hover {
+  background: #eaf4ff;
+}
+
+.resumen-estadistico__alumno-opcion strong,
+.resumen-estadistico__alumno-opcion small {
+  display: block;
+}
+
+.resumen-estadistico__alumno-opcion small {
+  margin-top: 4px;
+  color: #78909c;
+}
+
+.resumen-estadistico__seleccionado {
+  margin-top: 12px;
+  padding: 13px 14px;
+  border-left: 5px solid #1976d2;
+  border-radius: 10px;
+  background: #e3f2fd;
+  color: #0d47a1;
+}
+
+.resumen-estadistico__seleccionado strong,
+.resumen-estadistico__seleccionado span {
+  display: block;
+}
+
+.resumen-estadistico__seleccionado span {
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.resumen-estadistico__fechas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.resumen-estadistico__aplicar {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  border: 0;
+  border-radius: 11px;
+  background: #1976d2;
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.resumen-estadistico__leyenda-periodo {
+  margin: 10px 0 0;
+  color: #607d8b;
+  font-size: 13px;
+}
+
+.resumen-estadistico__contenido {
+  margin-top: 22px;
+}
+
+.bloque-estadistico {
+  padding: 18px 0;
+  border-top: 2px solid #edf1f5;
+}
+
+.bloque-estadistico:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.bloque-estadistico__titulo {
+  margin: 0 0 14px;
+  font-size: 19px;
+  font-weight: 900;
+}
+
+.bloque-estadistico--asistencia .bloque-estadistico__titulo { color: #2e7d32; }
+.bloque-estadistico--tareas .bloque-estadistico__titulo { color: #9a6b00; }
+.bloque-estadistico--participacion .bloque-estadistico__titulo { color: #1565c0; }
+.bloque-estadistico--conducta .bloque-estadistico__titulo { color: #7b1fa2; }
+.bloque-estadistico--lectura .bloque-estadistico__titulo { color: #ef6c00; }
+
+.estadisticas-dos-columnas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.estadistica-simple {
+  padding: 12px;
+  border-radius: 11px;
+  background: #f7f9fb;
+}
+
+.estadistica-simple span,
+.estadistica-simple strong {
+  display: block;
+}
+
+.estadistica-simple span {
+  color: #607d8b;
+  font-size: 12px;
+}
+
+.estadistica-simple strong {
+  margin-top: 5px;
+  color: #263238;
+  font-size: 23px;
+}
+
+.progreso-estadistico {
+  margin-top: 14px;
+}
+
+.progreso-estadistico__cabecera {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 7px;
+  color: #455a64;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.progreso-estadistico__pista {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e4e9ef;
+}
+
+.progreso-estadistico__barra {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  transition: width .35s ease;
+}
+
+.bloque-estadistico--tareas .progreso-estadistico__barra { background: linear-gradient(90deg, #ffd84d, #f4b400); }
+.bloque-estadistico--participacion .progreso-estadistico__barra { background: linear-gradient(90deg, #42a5f5, #1565c0); }
+
+.participaciones-lista,
+.conducta-lista,
+.lectura-lista {
+  display: grid;
+  gap: 12px;
+}
+
+.estadistica-renglon {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.estadistica-renglon span {
+  color: #455a64;
+  font-size: 14px;
+}
+
+.estadistica-renglon strong {
+  min-width: 32px;
+  text-align: right;
+  font-size: 18px;
+}
+
+.resumen-estadistico__aviso {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fff8e1;
+  color: #7a5b00;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@media (max-width: 520px) {
+  .vista-resumen-estadistico { padding: 16px; }
+  .resumen-estadistico__cabecera h2 { font-size: 23px; }
+  .resumen-estadistico__fechas { grid-template-columns: 1fr; }
+}
