@@ -1,0 +1,220 @@
+/* Menú lateral de AulaNFC v2.1. No modifica la lógica de registro. */
+.boton-menu-lateral {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 10020;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #1565c0;
+  font-size: 27px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 7px 20px rgba(13, 71, 161, 0.28);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.boton-menu-lateral:active {
+  transform: scale(0.94);
+  box-shadow: 0 4px 12px rgba(13, 71, 161, 0.24);
+}
+
+.fondo-menu-lateral {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(15, 23, 42, 0.42);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 190ms ease, visibility 190ms ease;
+}
+
+.fondo-menu-lateral.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.menu-lateral {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10010;
+  width: min(82vw, 320px);
+  height: 100dvh;
+  padding: 22px 16px 28px;
+  overflow-y: auto;
+  background: #ffffff;
+  box-shadow: 16px 0 42px rgba(15, 23, 42, 0.30);
+  transform: translateX(-105%);
+  transition: transform 210ms ease;
+}
+
+.menu-lateral.abierto {
+  transform: translateX(0);
+}
+
+.menu-lateral__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 4px 18px;
+  border-bottom: 1px solid #e6edf5;
+}
+
+.menu-lateral__marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-lateral__logo {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #42a5f5, #1565c0);
+  color: #ffffff;
+  font-size: 22px;
+  box-shadow: 0 6px 14px rgba(21, 101, 192, 0.25);
+}
+
+.menu-lateral__titulo {
+  margin: 0;
+  color: #16324f;
+  font-size: 21px;
+  font-weight: 900;
+}
+
+.menu-lateral__version {
+  display: block;
+  margin-top: 2px;
+  color: #78909c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.menu-lateral__cerrar {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: #eef3f8;
+  color: #455a64;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.menu-lateral__navegacion {
+  display: grid;
+  gap: 9px;
+  margin-top: 20px;
+}
+
+.menu-lateral__opcion {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-height: 54px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  color: #263238;
+  text-align: left;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+
+.menu-lateral__opcion:hover,
+.menu-lateral__opcion:focus-visible {
+  background: #edf6ff;
+  border-color: #bbdefb;
+  outline: none;
+}
+
+.menu-lateral__opcion:active {
+  transform: scale(0.98);
+}
+
+.menu-lateral__opcion.activa {
+  background: #e3f2fd;
+  border-color: #90caf9;
+  color: #0d47a1;
+}
+
+.menu-lateral__icono {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  background: #f1f5f9;
+  font-size: 19px;
+}
+
+.menu-lateral__opcion.activa .menu-lateral__icono {
+  background: #ffffff;
+}
+
+.menu-lateral__opcion[aria-disabled="true"] {
+  opacity: 0.58;
+  cursor: default;
+}
+
+.menu-lateral__opcion[aria-disabled="true"]:active {
+  transform: none;
+}
+
+.menu-lateral__etiqueta-proxima {
+  margin-left: auto;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: #fff3e0;
+  color: #e65100;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.menu-disparador-oculto {
+  display: none !important;
+}
+
+body.menu-abierto {
+  overflow: hidden;
+}
+
+@media (max-width: 600px) {
+  .boton-menu-lateral {
+    top: 10px;
+    left: 10px;
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    font-size: 25px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boton-menu-lateral,
+  .fondo-menu-lateral,
+  .menu-lateral,
+  .menu-lateral__opcion {
+    transition: none;
+  }
+}
