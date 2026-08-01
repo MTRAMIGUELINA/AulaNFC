@@ -100,3 +100,14 @@
   scriptMenu.dataset.menuAulanfc = 'true';
   document.body.appendChild(scriptMenu);
 })();
+
+/* Carga aislada de la conexión estadística. */
+(() => {
+  if (document.querySelector('script[data-resumen-estadistico-conexion]')) return;
+
+  const scriptResumen = document.createElement('script');
+  scriptResumen.src = 'resumen-estadistico-conexion.js?v=1';
+  scriptResumen.defer = true;
+  scriptResumen.dataset.resumenEstadisticoConexion = 'true';
+  document.body.appendChild(scriptResumen);
+})();
