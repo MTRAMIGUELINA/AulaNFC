@@ -95,7 +95,7 @@
   if (document.querySelector('script[data-menu-aulanfc]')) return;
 
   const scriptMenu = document.createElement('script');
-  scriptMenu.src = 'menu-lateral.js?v=1';
+  scriptMenu.src = 'menu-lateral.js?v=2';
   scriptMenu.defer = true;
   scriptMenu.dataset.menuAulanfc = 'true';
   document.body.appendChild(scriptMenu);
