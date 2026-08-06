@@ -111,3 +111,14 @@
   scriptResumen.dataset.resumenEstadisticoConexion = 'true';
   document.body.appendChild(scriptResumen);
 })();
+
+/* Carga aislada de la opción Ficha del alumno. */
+(() => {
+  if (document.querySelector('script[data-ficha-alumno-menu]')) return;
+
+  const scriptFicha = document.createElement('script');
+  scriptFicha.src = 'ficha-alumno-menu.js?v=1';
+  scriptFicha.defer = true;
+  scriptFicha.dataset.fichaAlumnoMenu = 'true';
+  document.body.appendChild(scriptFicha);
+})();
