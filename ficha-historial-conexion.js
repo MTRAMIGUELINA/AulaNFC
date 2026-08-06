@@ -1,5 +1,18 @@
-/* AulaNFC v2.1 - Conecta la Ficha del alumno con el historial general existente. */
+/* AulaNFC v2.1 - Conecta la Ficha del alumno con el Resumen estadístico existente. */
 (() => {
+  function esperar(ms) {
+    return new Promise((resolver) => setTimeout(resolver, ms));
+  }
+
+  async function esperarHasta(condicion, limiteMs = 5000, intervaloMs = 100) {
+    const inicio = Date.now();
+    while (Date.now() - inicio < limiteMs) {
+      if (condicion()) return true;
+      await esperar(intervaloMs);
+    }
+    return false;
+  }
+
   function esperarElementos() {
     const boton = document.getElementById('btnFichaHistorial');
     const ficha = document.getElementById('vistaFichaAlumno');
@@ -9,8 +22,11 @@
       return;
     }
 
-    if (boton.dataset.historialFichaInicializado === 'true') return;
-    boton.dataset.historialFichaInicializado = 'true';
+    // El botón ahora abre el detalle estadístico completo del alumno.
+    boton.innerHTML = '📊 Ver resumen completo';
+
+    if (boton.dataset.resumenFichaInicializado === 'true') return;
+    boton.dataset.resumenFichaInicializado = 'true';
 
     const observarSeleccion = new MutationObserver(() => {
       const id = String(document.getElementById('idFichaAlumno')?.textContent || '').trim();
@@ -26,62 +42,77 @@
       });
     }
 
-    boton.addEventListener('click', abrirHistorialDesdeFicha);
+    boton.addEventListener('click', abrirResumenDesdeFicha);
   }
 
-  async function abrirHistorialDesdeFicha() {
+  async function abrirResumenDesdeFicha() {
     const boton = document.getElementById('btnFichaHistorial');
     const id = String(document.getElementById('idFichaAlumno')?.textContent || '').trim();
+    const nombre = String(document.getElementById('nombreFichaAlumno')?.textContent || '').trim();
     const estado = document.getElementById('estadoFichaAlumno');
 
     if (!id || id === '—') return;
 
     boton.disabled = true;
-    if (estado) estado.textContent = '⏳ Abriendo historial completo...';
+    if (estado) estado.textContent = '⏳ Abriendo resumen completo...';
 
     try {
-      if (typeof cargarAlumnos !== 'function' ||
-          typeof mostrarFichaBasica !== 'function' ||
-          typeof alternarHistorialGeneral !== 'function') {
-        throw new Error('El historial todavía no está disponible.');
-      }
-
-      await cargarAlumnos();
-      mostrarFichaBasica(id);
-
-      const vistaFicha = document.getElementById('vistaFichaAlumno');
+      const opcionResumen = document.getElementById('menuResumenEstadistico');
       const vistaResumen = document.getElementById('vistaResumenEstadistico');
-      const vistaEscaner = document.getElementById('vistaEscaner');
-      const pantallaHistorial = document.getElementById('pantallaHistorial');
-      const botonAbrirHistorial = document.getElementById('btnAbrirHistorial');
-      const vistaBuscar = document.getElementById('vistaBuscar');
 
-      if (vistaFicha) vistaFicha.classList.add('oculto');
-      if (vistaResumen) vistaResumen.classList.add('oculto');
-      if (vistaEscaner) vistaEscaner.classList.add('oculto');
-
-      if (pantallaHistorial?.classList.contains('oculto') && botonAbrirHistorial) {
-        botonAbrirHistorial.click();
+      if (!opcionResumen || !vistaResumen) {
+        throw new Error('El Resumen estadístico todavía no está disponible.');
       }
 
-      // Mostramos también la ficha básica del alumno dentro del historial.
-      if (vistaBuscar) vistaBuscar.classList.remove('oculto');
+      // Reutilizamos la navegación existente del menú para abrir la vista.
+      opcionResumen.click();
 
-      document.querySelectorAll('.menu-lateral__opcion').forEach((opcion) => {
-        opcion.classList.toggle('activa', opcion.id === 'menuHistorial');
+      const listo = await esperarHasta(() => {
+        const buscador = document.getElementById('busquedaAlumnoEstadisticas');
+        const contador = document.getElementById('contadorAlumnosEstadisticas');
+        return buscador && contador && !/cargando alumnos/i.test(contador.textContent || '');
       });
 
-      await alternarHistorialGeneral();
-
-      if (pantallaHistorial) {
-        pantallaHistorial.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (!listo) {
+        throw new Error('No fue posible preparar la búsqueda del alumno.');
       }
 
-      if (estado) estado.textContent = '✅ Historial abierto.';
+      // El resumen completo que sale desde la ficha abre por defecto todo el ciclo escolar.
+      const selector = document.getElementById('periodoResumenEstadistico');
+      if (selector) {
+        selector.value = 'ciclo';
+        selector.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      // Usamos el mismo buscador ya existente para que tanto menu-lateral.js como
+      // resumen-estadistico-conexion.js reciban la selección de forma normal.
+      const buscador = document.getElementById('busquedaAlumnoEstadisticas');
+      buscador.value = nombre || id;
+      buscador.dispatchEvent(new Event('input', { bubbles: true }));
+
+      const opcionEncontrada = await esperarHasta(() =>
+        document.querySelector(`[data-id-alumno-estadisticas="${CSS.escape(id)}"]`)
+      );
+
+      if (!opcionEncontrada) {
+        throw new Error('No fue posible localizar al alumno en el Resumen estadístico.');
+      }
+
+      const botonAlumno = document.querySelector(
+        `[data-id-alumno-estadisticas="${CSS.escape(id)}"]`
+      );
+
+      botonAlumno.click();
+
+      if (vistaResumen) {
+        vistaResumen.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      if (estado) estado.textContent = '✅ Resumen completo abierto.';
 
     } catch (error) {
       if (estado) {
-        estado.textContent = `❌ ${error?.message || 'No fue posible abrir el historial.'}`;
+        estado.textContent = `❌ ${error?.message || 'No fue posible abrir el resumen completo.'}`;
       }
       boton.disabled = false;
     }
