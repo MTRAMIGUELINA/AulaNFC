@@ -115,10 +115,18 @@
 
   function validarRespuestaEstadistica(respuesta) {
     if (!respuesta || (respuesta.ok !== true && respuesta.exito !== true)) {
+      const mensajeBase = respuesta && respuesta.mensaje
+        ? respuesta.mensaje
+        : 'La consulta estadística no pudo completarse.';
+
+      const detalle = respuesta && respuesta.error
+        ? String(respuesta.error).trim()
+        : '';
+
       throw new Error(
-        respuesta && respuesta.mensaje
-          ? respuesta.mensaje
-          : 'La consulta estadística no pudo completarse.'
+        detalle
+          ? `${mensajeBase} Detalle: ${detalle}`
+          : mensajeBase
       );
     }
   }
