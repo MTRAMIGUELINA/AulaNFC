@@ -155,3 +155,14 @@
   scriptDashboard.dataset.dashboardAulanfc = 'true';
   document.body.appendChild(scriptDashboard);
 })();
+
+/* Conexión del Dashboard con los registros diarios reales. */
+(() => {
+  if (document.querySelector('script[data-dashboard-conexion]')) return;
+
+  const scriptDashboardConexion = document.createElement('script');
+  scriptDashboardConexion.src = 'dashboard-conexion.js?v=1';
+  scriptDashboardConexion.defer = true;
+  scriptDashboardConexion.dataset.dashboardConexion = 'true';
+  document.body.appendChild(scriptDashboardConexion);
+})();
