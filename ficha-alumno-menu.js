@@ -1,7 +1,9 @@
-/* AulaNFC v2.1 - Opción y vista visual Ficha del alumno. */
+/* AulaNFC v2.1 - Opción y vista Ficha del alumno conectada al motor estadístico. */
 (() => {
   let alumnosFicha = [];
   let alumnosFichaCargados = false;
+  let alumnoFichaSeleccionado = null;
+  let consultaFichaEnProceso = false;
 
   function cargarEstiloFicha() {
     if (document.getElementById('estilosFichaAlumno')) return;
@@ -42,8 +44,13 @@
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
+      .replace(/\"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  }
+
+  function numero(valor) {
+    const n = Number(valor);
+    return Number.isFinite(n) ? n : 0;
   }
 
   function agregarBotonFichaAlumno() {
@@ -103,6 +110,8 @@
             </div>
           </div>
         </section>
+
+        <p id="estadoFichaAlumno" class="ficha-alumno__contador" aria-live="polite"></p>
 
         <section class="ficha-alumno__resumen">
           <h3>Resumen rápido</h3>
@@ -174,10 +183,11 @@
       : '<div class="mensaje-lista">No se encontraron alumnos.</div>';
   }
 
-  function seleccionarAlumnoFicha(id) {
+  async function seleccionarAlumnoFicha(id) {
     const alumno = alumnosFicha.find((item) => String(item.id) === String(id));
     if (!alumno) return;
 
+    alumnoFichaSeleccionado = alumno;
     const nombre = nombreAlumno(alumno);
     const foto = alumno.foto || alumno.fotoUrl || alumno.fotografia || alumno.imagen || '';
 
@@ -195,6 +205,76 @@
     document.getElementById('listaFichaAlumno').classList.add('oculto');
     document.getElementById('busquedaFichaAlumno').value = '';
     document.getElementById('contadorFichaAlumno').textContent = 'Alumno seleccionado.';
+
+    await cargarResumenFicha(alumno);
+  }
+
+  function limpiarResumenFicha() {
+    ['fichaAsistencia', 'fichaTareas', 'fichaParticipaciones', 'fichaConducta', 'fichaLectura']
+      .forEach((id) => {
+        const elemento = document.getElementById(id);
+        if (elemento) elemento.textContent = '—';
+      });
+  }
+
+  async function cargarResumenFicha(alumno) {
+    if (!alumno || !alumno.id || consultaFichaEnProceso || typeof solicitarJSONP !== 'function') return;
+
+    consultaFichaEnProceso = true;
+    limpiarResumenFicha();
+
+    const estado = document.getElementById('estadoFichaAlumno');
+    if (estado) estado.textContent = '⏳ Consultando resumen del alumno...';
+
+    try {
+      const respuesta = await solicitarJSONP('obtenerResumenEstadistico', {
+        idAlumno: String(alumno.id),
+        periodo: 'ciclo'
+      });
+
+      if (!respuesta || (respuesta.ok !== true && respuesta.exito !== true)) {
+        throw new Error(respuesta?.mensaje || 'No fue posible obtener el resumen del alumno.');
+      }
+
+      pintarResumenFicha(respuesta);
+      if (estado) estado.textContent = '✅ Resumen actualizado.';
+
+    } catch (error) {
+      if (estado) {
+        const detalle = error?.message || 'No fue posible obtener el resumen del alumno.';
+        estado.textContent = `❌ ${detalle}`;
+      }
+    } finally {
+      consultaFichaEnProceso = false;
+    }
+  }
+
+  function pintarResumenFicha(respuesta) {
+    const asistencia = respuesta.asistencia || {};
+    const tareas = respuesta.tareas || {};
+    const participaciones = respuesta.participaciones || {};
+    const conducta = respuesta.conducta || {};
+    const lectura = respuesta.lectura || {};
+
+    const presentes = numero(asistencia.presentes);
+    const faltas = numero(asistencia.faltas);
+    const diasEscolares = numero(asistencia.diasEscolares);
+    const porcentajeAsistencia = diasEscolares > 0
+      ? Math.round((presentes / diasEscolares) * 100)
+      : numero(asistencia.porcentajeAsistencia);
+
+    document.getElementById('fichaAsistencia').textContent = diasEscolares > 0
+      ? `${porcentajeAsistencia}% · ${presentes} presentes / ${faltas} faltas`
+      : `${presentes} presentes`;
+
+    document.getElementById('fichaTareas').textContent = `${numero(tareas.porcentajeCumplimiento)}%`;
+    document.getElementById('fichaParticipaciones').textContent = String(numero(participaciones.total));
+
+    const resumenConducta = String(conducta.resumen || '').trim();
+    document.getElementById('fichaConducta').textContent = resumenConducta || 'Sin resumen';
+
+    const nivelLectura = String(lectura.nivelPredominante || '').trim();
+    document.getElementById('fichaLectura').textContent = nivelLectura || 'Sin registros';
   }
 
   function ocultarFicha() {
