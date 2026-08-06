@@ -122,3 +122,14 @@
   scriptFicha.dataset.fichaAlumnoMenu = 'true';
   document.body.appendChild(scriptFicha);
 })();
+
+/* Compatibilidad de fotos de la ficha con enlaces de Google Drive. */
+(() => {
+  if (document.querySelector('script[data-ficha-alumno-foto-drive]')) return;
+
+  const scriptFoto = document.createElement('script');
+  scriptFoto.src = 'ficha-alumno-foto-drive.js?v=1';
+  scriptFoto.defer = true;
+  scriptFoto.dataset.fichaAlumnoFotoDrive = 'true';
+  document.body.appendChild(scriptFoto);
+})();
