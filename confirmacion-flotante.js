@@ -144,3 +144,14 @@
   scriptFichaHistorial.dataset.fichaHistorialConexion = 'true';
   document.body.appendChild(scriptFichaHistorial);
 })();
+
+/* Carga aislada del Dashboard diario. */
+(() => {
+  if (document.querySelector('script[data-dashboard-aulanfc]')) return;
+
+  const scriptDashboard = document.createElement('script');
+  scriptDashboard.src = 'dashboard.js?v=1';
+  scriptDashboard.defer = true;
+  scriptDashboard.dataset.dashboardAulanfc = 'true';
+  document.body.appendChild(scriptDashboard);
+})();
