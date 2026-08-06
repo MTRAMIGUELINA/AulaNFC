@@ -117,7 +117,7 @@
   if (document.querySelector('script[data-ficha-alumno-menu]')) return;
 
   const scriptFicha = document.createElement('script');
-  scriptFicha.src = 'ficha-alumno-menu.js?v=1';
+  scriptFicha.src = 'ficha-alumno-menu.js?v=2';
   scriptFicha.defer = true;
   scriptFicha.dataset.fichaAlumnoMenu = 'true';
   document.body.appendChild(scriptFicha);
@@ -132,4 +132,15 @@
   scriptFoto.defer = true;
   scriptFoto.dataset.fichaAlumnoFotoDrive = 'true';
   document.body.appendChild(scriptFoto);
+})();
+
+/* Carga aislada de la conexión Ficha → Historial. */
+(() => {
+  if (document.querySelector('script[data-ficha-historial-conexion]')) return;
+
+  const scriptFichaHistorial = document.createElement('script');
+  scriptFichaHistorial.src = 'ficha-historial-conexion.js?v=1';
+  scriptFichaHistorial.defer = true;
+  scriptFichaHistorial.dataset.fichaHistorialConexion = 'true';
+  document.body.appendChild(scriptFichaHistorial);
 })();
