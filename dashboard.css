@@ -1,0 +1,146 @@
+/* AulaNFC v2.1 - Dashboard diario */
+.vista-dashboard {
+  margin-top: 8px;
+  padding: 20px;
+  border: 2px solid #dbe7f3;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.dashboard__cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.dashboard__cabecera h2 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 26px;
+}
+
+.dashboard__cabecera p {
+  margin: 6px 0 0;
+  color: #607d8b;
+  font-size: 14px;
+}
+
+.dashboard__cerrar {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 50%;
+  background: #e7ebf1;
+  color: #455a64;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.dashboard__fecha {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  background: #f8fbff;
+  color: #455a64;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.dashboard__rejilla {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.dashboard__tarjeta {
+  width: 100%;
+  min-height: 132px;
+  padding: 18px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, .08);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.dashboard__tarjeta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 9px 24px rgba(15, 23, 42, .12);
+}
+
+.dashboard__tarjeta span,
+.dashboard__tarjeta strong,
+.dashboard__tarjeta small {
+  display: block;
+}
+
+.dashboard__tarjeta span {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.dashboard__tarjeta strong {
+  margin-top: 8px;
+  font-size: 34px;
+  color: #1f2937;
+}
+
+.dashboard__tarjeta small {
+  margin-top: 7px;
+  color: #607d8b;
+  font-size: 12px;
+}
+
+.dashboard__tarjeta--presentes { border-color: #a5d6a7; background: #f1f8f2; }
+.dashboard__tarjeta--faltantes { border-color: #ef9a9a; background: #fff5f5; }
+.dashboard__tarjeta--participacion { border-color: #90caf9; background: #f3f9ff; }
+.dashboard__tarjeta--tareas { border-color: #ffe082; background: #fffaf0; }
+
+.dashboard__detalle {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid #dbe7f3;
+  border-radius: 14px;
+  background: #f8fbff;
+}
+
+.dashboard__detalle h3 {
+  margin: 0 0 12px;
+  color: #263238;
+  font-size: 18px;
+}
+
+.dashboard__lista {
+  display: grid;
+  gap: 8px;
+}
+
+.dashboard__alumno {
+  padding: 11px 12px;
+  border-radius: 10px;
+  background: #fff;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.dashboard__aviso {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fff8e1;
+  color: #7a5b00;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@media (max-width: 620px) {
+  .vista-dashboard { padding: 16px; }
+  .dashboard__cabecera h2 { font-size: 23px; }
+  .dashboard__rejilla { grid-template-columns: 1fr; }
+}
