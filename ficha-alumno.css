@@ -1,0 +1,219 @@
+/* AulaNFC v2.1 - Vista visual Ficha del alumno */
+.vista-ficha-alumno {
+  margin-top: 8px;
+  padding: 20px;
+  border: 2px solid #dbe7f3;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.ficha-alumno__cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.ficha-alumno__cabecera h2 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 26px;
+}
+
+.ficha-alumno__cabecera p {
+  margin: 6px 0 0;
+  color: #607d8b;
+  font-size: 14px;
+}
+
+.ficha-alumno__cerrar {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 50%;
+  background: #e7ebf1;
+  color: #455a64;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.ficha-alumno__busqueda {
+  padding: 16px;
+  border: 1px solid #dbe7f3;
+  border-radius: 14px;
+  background: #f8fbff;
+}
+
+.ficha-alumno__etiqueta {
+  display: block;
+  margin-bottom: 8px;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.ficha-alumno__buscador {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 2px solid #cbd5e1;
+  border-radius: 11px;
+  background: #fff;
+  color: #263238;
+  font-size: 16px;
+  outline: none;
+}
+
+.ficha-alumno__buscador:focus {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25,118,210,.12);
+}
+
+.ficha-alumno__contador {
+  margin: 8px 0 0;
+  color: #6f7f95;
+  font-size: 13px;
+}
+
+.ficha-alumno__lista {
+  max-height: 235px;
+  margin-top: 10px;
+  overflow-y: auto;
+  border: 1px solid #dce4eb;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.ficha-alumno__opcion {
+  width: 100%;
+  padding: 13px 14px;
+  border: 0;
+  border-bottom: 1px solid #edf1f5;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ficha-alumno__opcion:last-child { border-bottom: 0; }
+.ficha-alumno__opcion:hover { background: #eaf4ff; }
+.ficha-alumno__opcion strong,
+.ficha-alumno__opcion small { display: block; }
+.ficha-alumno__opcion small { margin-top: 4px; color: #78909c; }
+
+.ficha-alumno__contenido { margin-top: 20px; }
+
+.ficha-alumno__identidad {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 18px;
+  align-items: center;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #edf1f5;
+}
+
+.ficha-alumno__foto {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: #e3f2fd;
+  color: #1565c0;
+  border: 4px solid #fff;
+  box-shadow: 0 3px 12px rgba(38,50,56,.18);
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.ficha-alumno__foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ficha-alumno__nombre {
+  margin: 0;
+  color: #1f2937;
+  font-size: 24px;
+}
+
+.ficha-alumno__datos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 8px;
+  color: #607d8b;
+  font-size: 14px;
+}
+
+.ficha-alumno__resumen {
+  padding: 20px 0;
+  border-bottom: 2px solid #edf1f5;
+}
+
+.ficha-alumno__resumen h3 {
+  margin: 0 0 14px;
+  color: #374151;
+  font-size: 19px;
+}
+
+.ficha-alumno__indicadores {
+  display: grid;
+  gap: 12px;
+}
+
+.ficha-alumno__indicador {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #edf1f5;
+}
+
+.ficha-alumno__indicador:last-child { border-bottom: 0; }
+.ficha-alumno__indicador span { color: #455a64; font-size: 14px; }
+.ficha-alumno__indicador strong { color: #263238; text-align: right; font-size: 17px; }
+
+.ficha-alumno__acciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.ficha-alumno__accion {
+  min-height: 48px;
+  padding: 13px 15px;
+  border: 0;
+  border-radius: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.ficha-alumno__accion--historial {
+  background: #e3f2fd;
+  color: #0d47a1;
+}
+
+.ficha-alumno__accion--pdf {
+  background: #1976d2;
+  color: #fff;
+}
+
+.ficha-alumno__accion:disabled {
+  opacity: .48;
+  cursor: not-allowed;
+}
+
+@media (max-width: 520px) {
+  .vista-ficha-alumno { padding: 16px; }
+  .ficha-alumno__cabecera h2 { font-size: 23px; }
+  .ficha-alumno__identidad { grid-template-columns: 78px 1fr; gap: 14px; }
+  .ficha-alumno__foto { width: 78px; height: 78px; font-size: 25px; }
+  .ficha-alumno__nombre { font-size: 21px; }
+  .ficha-alumno__acciones { grid-template-columns: 1fr; }
+}
