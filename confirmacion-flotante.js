@@ -177,3 +177,14 @@
   scriptDashboardConexion.dataset.dashboardConexion = 'true';
   document.body.appendChild(scriptDashboardConexion);
 })();
+
+/* Módulo visual de Reporte de incidencias. */
+(() => {
+  if (document.querySelector('script[data-reporte-incidencias]')) return;
+
+  const scriptIncidencias = document.createElement('script');
+  scriptIncidencias.src = 'reporte-incidencias.js?v=1';
+  scriptIncidencias.defer = true;
+  scriptIncidencias.dataset.reporteIncidencias = 'true';
+  document.body.appendChild(scriptIncidencias);
+})();
