@@ -1,94 +1,23 @@
-/* AulaNFC - Historial de incidencias. Interfaz preparada para conectar con Apps Script. */
+/* AulaNFC - Historial de incidencias con detalle e impresión. */
 (() => {
+  let registrosActuales=[];
   function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
+  function fechaVisible(v){if(!v)return '';const p=String(v).split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:String(v)}
 
-  function insertarBoton(){
-    if(document.getElementById('btnHistorialIncidencias')) return true;
-    const form=document.getElementById('formReporteIncidencias');
-    const acciones=form?.querySelector('.incidencias__acciones');
-    if(!form||!acciones) return false;
-    const b=document.createElement('button');
-    b.id='btnHistorialIncidencias'; b.type='button';
-    b.className='incidencias__boton';
-    b.style.cssText='width:100%;margin:0 0 14px;background:#0f6fbd;color:#fff;';
-    b.innerHTML='📋 Ver historial de incidencias';
-    acciones.insertAdjacentElement('beforebegin',b);
-    return true;
-  }
+  function insertarBoton(){if(document.getElementById('btnHistorialIncidencias'))return true;const form=document.getElementById('formReporteIncidencias'),acciones=form?.querySelector('.incidencias__acciones');if(!form||!acciones)return false;const b=document.createElement('button');b.id='btnHistorialIncidencias';b.type='button';b.className='incidencias__boton';b.style.cssText='width:100%;margin:0 0 14px;background:#0f6fbd;color:#fff;';b.innerHTML='📋 Ver historial de incidencias';acciones.insertAdjacentElement('beforebegin',b);return true}
 
-  function crearVista(){
-    if(document.getElementById('panelHistorialIncidencias')) return true;
-    const vista=document.getElementById('vistaReporteIncidencias');
-    const form=document.getElementById('formReporteIncidencias');
-    if(!vista||!form) return false;
-    const p=document.createElement('section');
-    p.id='panelHistorialIncidencias'; p.className='oculto';
-    p.innerHTML=`
-      <header class="incidencias__cabecera"><div><h2>📋 Historial de incidencias</h2><p>Consulta los reportes registrados y vuelve a abrirlos cuando sea necesario.</p></div><button id="btnCerrarHistorialIncidencias" class="incidencias__cerrar" type="button">✕</button></header>
-      <section class="incidencias__bloque">
-        <div class="incidencias__grid">
-          <div class="incidencias__campo incidencias__campo--completo"><label for="historialIncidenciasAlumno">Alumno</label><select id="historialIncidenciasAlumno" class="incidencias__select"><option value="">Todos los alumnos</option></select></div>
-          <div class="incidencias__campo"><label for="historialIncidenciasDesde">Desde</label><input id="historialIncidenciasDesde" class="incidencias__input" type="date"></div>
-          <div class="incidencias__campo"><label for="historialIncidenciasHasta">Hasta</label><input id="historialIncidenciasHasta" class="incidencias__input" type="date"></div>
-        </div>
-        <button id="btnBuscarHistorialIncidencias" type="button" class="incidencias__boton incidencias__boton--guardar" style="margin-top:14px">🔎 Buscar reportes</button>
-      </section>
-      <p id="estadoHistorialIncidencias" class="incidencias__aviso">Selecciona un alumno o un periodo para consultar.</p>
-      <div id="listaHistorialIncidencias"></div>`;
-    form.insertAdjacentElement('afterend',p);
-    return true;
-  }
+  function crearVista(){if(document.getElementById('panelHistorialIncidencias'))return true;const form=document.getElementById('formReporteIncidencias');if(!form)return false;const p=document.createElement('section');p.id='panelHistorialIncidencias';p.className='oculto';p.innerHTML=`<header class="incidencias__cabecera"><div><h2>📋 Historial de incidencias</h2><p>Consulta los reportes registrados y vuelve a imprimirlos cuando sea necesario.</p></div><button id="btnCerrarHistorialIncidencias" class="incidencias__cerrar" type="button">✕</button></header><section class="incidencias__bloque"><div class="incidencias__grid"><div class="incidencias__campo incidencias__campo--completo"><label for="historialIncidenciasAlumno">Alumno</label><select id="historialIncidenciasAlumno" class="incidencias__select"><option value="">Todos los alumnos</option></select></div><div class="incidencias__campo"><label for="historialIncidenciasDesde">Desde</label><input id="historialIncidenciasDesde" class="incidencias__input" type="date"></div><div class="incidencias__campo"><label for="historialIncidenciasHasta">Hasta</label><input id="historialIncidenciasHasta" class="incidencias__input" type="date"></div></div><button id="btnBuscarHistorialIncidencias" type="button" class="incidencias__boton incidencias__boton--guardar" style="margin-top:14px">🔎 Buscar reportes</button></section><p id="estadoHistorialIncidencias" class="incidencias__aviso">Selecciona un alumno o un periodo para consultar.</p><div id="listaHistorialIncidencias"></div><section id="detalleHistorialIncidencia" class="incidencias__bloque oculto" style="margin-top:16px"></section>`;form.insertAdjacentElement('afterend',p);return true}
 
-  async function cargarAlumnos(){
-    const s=document.getElementById('historialIncidenciasAlumno');
-    if(!s||s.dataset.cargado==='1'||typeof solicitarJSONP!=='function') return;
-    try{
-      const r=await solicitarJSONP('obtenerAlumnos');
-      const alumnos=(Array.isArray(r?.alumnos)?r.alumnos:[]).filter(a=>a.activo!==false);
-      s.innerHTML='<option value="">Todos los alumnos</option>'+alumnos.map(a=>{const n=a.nombreCompleto||[a.nombre,a.apellidoPaterno,a.apellidoMaterno].filter(Boolean).join(' ');return `<option value="${esc(a.id)}">${esc(n)}</option>`}).join('');
-      s.dataset.cargado='1';
-    }catch(e){}
-  }
+  async function cargarAlumnos(){const s=document.getElementById('historialIncidenciasAlumno');if(!s||s.dataset.cargado==='1'||typeof solicitarJSONP!=='function')return;try{const r=await solicitarJSONP('obtenerAlumnos');const a=(Array.isArray(r?.alumnos)?r.alumnos:[]).filter(x=>x.activo!==false);s.innerHTML='<option value="">Todos los alumnos</option>'+a.map(x=>{const n=x.nombreCompleto||[x.nombre,x.apellidoPaterno,x.apellidoMaterno].filter(Boolean).join(' ');return `<option value="${esc(x.id)}">${esc(n)}</option>`}).join('');s.dataset.cargado='1'}catch(e){}}
+  function abrir(){document.getElementById('formReporteIncidencias')?.classList.add('oculto');document.getElementById('panelHistorialIncidencias')?.classList.remove('oculto');cargarAlumnos()}
+  function cerrar(){document.getElementById('panelHistorialIncidencias')?.classList.add('oculto');document.getElementById('formReporteIncidencias')?.classList.remove('oculto')}
 
-  function abrir(){
-    document.getElementById('formReporteIncidencias')?.classList.add('oculto');
-    document.getElementById('panelHistorialIncidencias')?.classList.remove('oculto');
-    cargarAlumnos();
-  }
-  function cerrar(){
-    document.getElementById('panelHistorialIncidencias')?.classList.add('oculto');
-    document.getElementById('formReporteIncidencias')?.classList.remove('oculto');
-  }
+  async function buscar(){const estado=document.getElementById('estadoHistorialIncidencias'),lista=document.getElementById('listaHistorialIncidencias'),detalle=document.getElementById('detalleHistorialIncidencia');estado.textContent='⏳ Consultando historial...';lista.innerHTML='';detalle.classList.add('oculto');try{const r=await solicitarJSONP('obtenerHistorialIncidencias',{idAlumno:document.getElementById('historialIncidenciasAlumno')?.value||'',desde:document.getElementById('historialIncidenciasDesde')?.value||'',hasta:document.getElementById('historialIncidenciasHasta')?.value||''});if(!r||(r.ok===false||r.exito===false))throw new Error(r?.mensaje||'No fue posible obtener el historial.');registrosActuales=Array.isArray(r.registros)?r.registros:[];estado.textContent=registrosActuales.length?`✅ ${registrosActuales.length} reporte(s) encontrado(s).`:'No hay incidencias registradas con esos filtros.';lista.innerHTML=registrosActuales.map((x,i)=>`<article class="incidencias__bloque" style="margin-top:12px"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><strong>${esc(x.folio||'Sin folio')}</strong><span>${esc(fechaVisible(x.fecha))}</span></div><h3 style="margin-top:10px">${esc(x.nombre||'Alumno')}</h3><p><b>Incidencia:</b> ${esc(x.incidencia||'')}</p><p>${esc(x.descripcion||'')}</p><button type="button" class="incidencias__boton btnDetalleIncidencia" data-indice="${i}">👁️ Ver detalle</button></article>`).join('')}catch(e){estado.textContent=`❌ ${e?.message||'No fue posible obtener el historial.'}`}}
 
-  async function buscar(){
-    const estado=document.getElementById('estadoHistorialIncidencias');
-    const lista=document.getElementById('listaHistorialIncidencias');
-    if(typeof solicitarJSONP!=='function') return;
-    estado.textContent='⏳ Consultando historial...'; lista.innerHTML='';
-    try{
-      const r=await solicitarJSONP('obtenerHistorialIncidencias',{
-        idAlumno:document.getElementById('historialIncidenciasAlumno')?.value||'',
-        desde:document.getElementById('historialIncidenciasDesde')?.value||'',
-        hasta:document.getElementById('historialIncidenciasHasta')?.value||''
-      });
-      if(!r||(r.ok===false||r.exito===false)) throw new Error(r?.mensaje||'No fue posible obtener el historial.');
-      const registros=Array.isArray(r.registros)?r.registros:[];
-      estado.textContent=registros.length?`✅ ${registros.length} reporte(s) encontrado(s).`:'No hay incidencias registradas con esos filtros.';
-      lista.innerHTML=registros.map(x=>`<article class="incidencias__bloque" style="margin-top:12px"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><strong>${esc(x.folio||'Sin folio')}</strong><span>${esc(x.fecha||'')}</span></div><h3 style="margin-top:10px">${esc(x.nombre||'Alumno')}</h3><p><b>Incidencia:</b> ${esc(x.incidencia||'')}</p><p>${esc(x.descripcion||'')}</p><button type="button" class="incidencias__boton btnDetalleIncidencia" data-folio="${esc(x.folio||'')}">👁️ Ver detalle</button></article>`).join('');
-    }catch(e){estado.textContent=`❌ ${e?.message||'No fue posible obtener el historial.'}`}
-  }
+  function verDetalle(i){const x=registrosActuales[Number(i)];if(!x)return;const d=document.getElementById('detalleHistorialIncidencia');d.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;align-items:start"><div><h2 style="margin:0">📄 ${esc(x.folio)}</h2><p>${esc(fechaVisible(x.fecha))}</p></div><button id="btnCerrarDetalleIncidencia" class="incidencias__cerrar" type="button">✕</button></div><h3>👤 ${esc(x.nombre)}</h3><p><b>ID:</b> ${esc(x.idAlumno)} · <b>Grado:</b> ${esc(x.grado)}° · <b>Grupo:</b> ${esc(x.grupo)}</p><hr><p><b>📌 Incidencia reportada</b><br>${esc(x.incidencia)}</p><p><b>📝 Descripción del incidente</b><br>${esc(x.descripcion)}</p><p><b>⚙️ Acciones tomadas</b><br>${esc(x.accionesTomadas)}</p><p><b>🤝 Acuerdos y compromisos</b><br>${esc(x.acuerdos)}</p><button id="btnImprimirHistorialIncidencia" type="button" class="incidencias__boton incidencias__boton--pdf">📄 Generar PDF / Imprimir</button>`;d.classList.remove('oculto');d.scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('btnCerrarDetalleIncidencia').onclick=()=>d.classList.add('oculto');document.getElementById('btnImprimirHistorialIncidencia').onclick=()=>imprimir(x)}
 
-  function iniciar(){
-    if(!insertarBoton()||!crearVista()) return false;
-    const b=document.getElementById('btnHistorialIncidencias');
-    if(b.dataset.iniciado==='1') return true;
-    b.dataset.iniciado='1';
-    b.addEventListener('click',abrir);
-    document.getElementById('btnCerrarHistorialIncidencias')?.addEventListener('click',cerrar);
-    document.getElementById('btnBuscarHistorialIncidencias')?.addEventListener('click',buscar);
-    return true;
-  }
-  if(iniciar()) return;
-  const o=new MutationObserver(()=>{if(iniciar())o.disconnect()});
-  o.observe(document.documentElement,{childList:true,subtree:true});
+  function imprimir(x){const w=window.open('','_blank');if(!w)return;w.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${esc(x.folio)} - Reporte de incidencia</title><style>@page{size:letter portrait;margin:12mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#263238;margin:0}.acciones{text-align:center;padding:10px}.hoja{max-width:190mm;margin:auto}.enc{text-align:center;padding:16px;border:3px solid #76c9f4;border-radius:20px;background:#eef9ff}.enc h1{color:#ef5350;margin:5px}.folio,.alumno,.tipo,.bloque{margin-top:12px;padding:12px 14px;border:2px solid #90caf9;border-radius:16px}.folio{display:flex;justify-content:space-between;background:#fff8d9;border-color:#ffd45c}.tipo{background:#fff4e5;border-color:#ffb74d}.accionesT{background:#fff8e8;border-color:#ffd166}.acuerdos{background:#f5ecff;border-color:#c7a3f3}.texto{white-space:pre-wrap;line-height:1.5}.firmas{display:grid;grid-template-columns:1fr 1fr;gap:50px;margin-top:55px}.firma{border-top:1px solid;text-align:center;padding-top:7px;font-size:11px}@media print{.acciones{display:none}.enc,.folio,.alumno,.tipo,.bloque{print-color-adjust:exact;-webkit-print-color-adjust:exact}}</style></head><body><div class="acciones"><button onclick="window.print()">🖨️ Imprimir / Guardar como PDF</button></div><main class="hoja"><header class="enc"><b>ESCUELA PRIMARIA BENITO JUÁREZ</b><h1>Reporte de Incidencia</h1><small>C.C.T. 18DPR0099W · Zona Escolar 29 · Sector 08 · AulaNFC</small></header><section class="folio"><b>Folio: ${esc(x.folio)}</b><b>Fecha: ${esc(fechaVisible(x.fecha))}</b></section><section class="alumno"><h2>${esc(x.nombre)}</h2><span>ID: ${esc(x.idAlumno)} · Grado: ${esc(x.grado)}° · Grupo: ${esc(x.grupo)}</span></section><section class="tipo"><b>📌 Incidencia reportada</b><h3>${esc(x.incidencia)}</h3></section><section class="bloque"><b>📝 Descripción del incidente</b><div class="texto">${esc(x.descripcion)}</div></section><section class="bloque accionesT"><b>⚙️ Acciones tomadas</b><div class="texto">${esc(x.accionesTomadas)}</div></section><section class="bloque acuerdos"><b>🤝 Acuerdos y compromisos</b><div class="texto">${esc(x.acuerdos)}</div></section><section class="firmas"><div class="firma">Firma del docente</div><div class="firma">Firma del padre, madre o tutor</div></section></main></body></html>`);w.document.close()}
+
+  function iniciar(){if(!insertarBoton()||!crearVista())return false;const b=document.getElementById('btnHistorialIncidencias');if(b.dataset.iniciado==='1')return true;b.dataset.iniciado='1';b.addEventListener('click',abrir);document.getElementById('btnCerrarHistorialIncidencias')?.addEventListener('click',cerrar);document.getElementById('btnBuscarHistorialIncidencias')?.addEventListener('click',buscar);document.getElementById('listaHistorialIncidencias')?.addEventListener('click',e=>{const btn=e.target.closest('.btnDetalleIncidencia');if(btn)verDetalle(btn.dataset.indice)});return true}
+  if(iniciar())return;const o=new MutationObserver(()=>{if(iniciar())o.disconnect()});o.observe(document.documentElement,{childList:true,subtree:true});
 })();
