@@ -145,6 +145,17 @@
   document.body.appendChild(scriptFichaHistorial);
 })();
 
+/* Exportación imprimible / PDF desde la Ficha del alumno. */
+(() => {
+  if (document.querySelector('script[data-ficha-pdf]')) return;
+
+  const scriptFichaPDF = document.createElement('script');
+  scriptFichaPDF.src = 'ficha-pdf.js?v=1';
+  scriptFichaPDF.defer = true;
+  scriptFichaPDF.dataset.fichaPdf = 'true';
+  document.body.appendChild(scriptFichaPDF);
+})();
+
 /* Carga aislada del Dashboard diario. */
 (() => {
   if (document.querySelector('script[data-dashboard-aulanfc]')) return;
