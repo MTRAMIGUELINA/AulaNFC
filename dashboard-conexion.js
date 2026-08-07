@@ -39,40 +39,64 @@
   function pintarDashboard(respuesta) {
     const presentes = lista(respuesta.presentes || respuesta.alumnosPresentes);
     const faltantes = lista(respuesta.faltantes || respuesta.alumnosFaltantes);
-    const sinParticipacion = lista(respuesta.sinParticipacion || respuesta.alumnosSinParticipacion);
+    const participacionPendiente = lista(
+      respuesta.participacionPendiente ||
+      respuesta.sinParticipacion ||
+      respuesta.alumnosSinParticipacion
+    );
     const tareasPendientes = lista(respuesta.tareasPendientes || respuesta.noCumplieronTareas);
 
     datosDashboard = {
       presentes,
       faltantes,
-      participacion: sinParticipacion,
-      tareas: tareasPendientes
+      participacion: participacionPendiente,
+      tareas: tareasPendientes,
+      camposActivos: lista(respuesta.camposActivos)
     };
 
     ponerNumero('dashboardPresentes', presentes.length);
     ponerNumero('dashboardFaltantes', faltantes.length);
-    ponerNumero('dashboardSinParticipacion', sinParticipacion.length);
+    ponerNumero('dashboardSinParticipacion', participacionPendiente.length);
     ponerNumero('dashboardTareasPendientes', tareasPendientes.length);
 
     const aviso = document.querySelector('.dashboard__aviso');
-    if (aviso) aviso.textContent = '✅ Dashboard actualizado con los registros de hoy.';
+    if (aviso) {
+      const campos = datosDashboard.camposActivos;
+      aviso.textContent = campos.length
+        ? `✅ Dashboard actualizado. Campos trabajados hoy: ${campos.join(', ')}.`
+        : 'ℹ️ Aún no hay campos formativos con participaciones registradas hoy.';
+    }
   }
 
   function textoDetalle(tipo, alumno) {
-    if (tipo !== 'tareas') return '';
-    const resultado = String(
-      alumno?.resultado ||
-      alumno?.resultadoTarea ||
-      alumno?.tipoTarea ||
-      alumno?.detalle ||
-      ''
-    ).trim();
-    return resultado;
+    if (tipo === 'tareas') {
+      return String(
+        alumno?.resultado ||
+        alumno?.resultadoTarea ||
+        alumno?.tipoTarea ||
+        alumno?.detalle ||
+        ''
+      ).trim();
+    }
+
+    if (tipo === 'participacion') {
+      const campos = lista(alumno?.camposPendientes || alumno?.pendientes || alumno?.camposFaltantes);
+      return campos.length
+        ? `Pendiente: ${campos.join(' · ')}`
+        : '';
+    }
+
+    return '';
   }
 
   function renderizarDetalle(tipo) {
     const listaDetalle = document.getElementById('listaDetalleDashboard');
     if (!listaDetalle) return;
+
+    if (tipo === 'participacion' && !lista(datosDashboard?.camposActivos).length) {
+      listaDetalle.innerHTML = '<div class="dashboard__alumno">Aún no hay campos formativos con participaciones registradas hoy.</div>';
+      return;
+    }
 
     const alumnos = lista(datosDashboard?.[tipo]);
 
@@ -155,7 +179,6 @@
       });
     });
 
-    // Primera carga si la vista ya está abierta cuando se inicializa la conexión.
     if (!vista.classList.contains('oculto')) cargarDashboardDiario(true);
   }
 
