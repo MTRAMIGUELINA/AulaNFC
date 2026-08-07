@@ -188,3 +188,14 @@
   scriptIncidencias.dataset.reporteIncidencias = 'true';
   document.body.appendChild(scriptIncidencias);
 })();
+
+/* Campo Acciones tomadas dentro de Reporte de incidencias. */
+(() => {
+  if (document.querySelector('script[data-reporte-incidencias-acciones]')) return;
+
+  const scriptAcciones = document.createElement('script');
+  scriptAcciones.src = 'reporte-incidencias-acciones.js?v=1';
+  scriptAcciones.defer = true;
+  scriptAcciones.dataset.reporteIncidenciasAcciones = 'true';
+  document.body.appendChild(scriptAcciones);
+})();
