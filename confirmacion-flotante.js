@@ -199,3 +199,14 @@
   scriptAcciones.dataset.reporteIncidenciasAcciones = 'true';
   document.body.appendChild(scriptAcciones);
 })();
+
+/* Historial de incidencias. */
+(() => {
+  if (document.querySelector('script[data-historial-incidencias]')) return;
+
+  const scriptHistorialIncidencias = document.createElement('script');
+  scriptHistorialIncidencias.src = 'historial-incidencias.js?v=1';
+  scriptHistorialIncidencias.defer = true;
+  scriptHistorialIncidencias.dataset.historialIncidencias = 'true';
+  document.body.appendChild(scriptHistorialIncidencias);
+})();
