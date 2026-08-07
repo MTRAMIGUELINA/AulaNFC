@@ -74,9 +74,9 @@
         </button>
 
         <button class="dashboard__tarjeta dashboard__tarjeta--participacion" type="button" data-dashboard-detalle="participacion">
-          <span>🔵 Sin participación hoy</span>
+          <span>🔵 Participación pendiente hoy</span>
           <strong id="dashboardSinParticipacion">0</strong>
-          <small>Toca para ver la lista</small>
+          <small>Según los campos trabajados hoy</small>
         </button>
 
         <button class="dashboard__tarjeta dashboard__tarjeta--tareas" type="button" data-dashboard-detalle="tareas">
@@ -89,11 +89,11 @@
       <section id="detalleDashboard" class="dashboard__detalle oculto" aria-live="polite">
         <h3 id="tituloDetalleDashboard">Detalle</h3>
         <div id="listaDetalleDashboard" class="dashboard__lista">
-          <div class="dashboard__alumno">La lista se conectará con Apps Script en la siguiente fase.</div>
+          <div class="dashboard__alumno">Selecciona un indicador para ver el detalle.</div>
         </div>
       </section>
 
-      <p class="dashboard__aviso">Vista preparada. Los valores del día se conectarán con los registros reales en la siguiente fase.</p>
+      <p class="dashboard__aviso">Consultando los registros reales del día.</p>
     `;
 
     if (vistaEscaner) contenedor.insertBefore(vista, vistaEscaner);
@@ -147,13 +147,11 @@
     const titulos = {
       presentes: '🟢 Presentes hoy',
       faltantes: '🔴 Faltantes hoy',
-      participacion: '🔵 Alumnos sin participación hoy',
+      participacion: '🔵 Participación pendiente hoy',
       tareas: '🟡 Alumnos que no cumplieron con tareas'
     };
 
     document.getElementById('tituloDetalleDashboard').textContent = titulos[tipo] || 'Detalle';
-    document.getElementById('listaDetalleDashboard').innerHTML =
-      '<div class="dashboard__alumno">La lista se conectará con Apps Script en la siguiente fase.</div>';
     document.getElementById('detalleDashboard').classList.remove('oculto');
     document.getElementById('detalleDashboard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
