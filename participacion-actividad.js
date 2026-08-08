@@ -38,8 +38,6 @@
         parametros.actividad = String(
           document.getElementById('actividadParticipacion')?.value || ''
         ).trim();
-      } else {
-        parametros.actividad = '';
       }
 
       return parametros;
