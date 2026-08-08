@@ -24,5 +24,5 @@ cargarExtra('script[data-dashboard-conexion]','dashboard-conexion.js?v=1',{dashb
 cargarExtra('script[data-reporte-incidencias]','reporte-incidencias.js?v=1',{reporteIncidencias:'true'});
 cargarExtra('script[data-reporte-incidencias-acciones]','reporte-incidencias-acciones.js?v=1',{reporteIncidenciasAcciones:'true'});
 cargarExtra('script[data-historial-incidencias]','historial-incidencias.js?v=2',{historialIncidencias:'true'});
-cargarExtra('script[data-participacion-actividad]','participacion-actividad.js?v=1',{participacionActividad:'true'});
-cargarExtra('script[data-tareas-actividad]','tareas-actividad.js?v=1',{tareasActividad:'true'});
+cargarExtra('script[data-participacion-actividad]','participacion-actividad.js?v=2',{participacionActividad:'true'});
+cargarExtra('script[data-tareas-actividad]','tareas-actividad.js?v=2',{tareasActividad:'true'});
