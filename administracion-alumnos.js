@@ -24,7 +24,15 @@
   function crearVista(contenedor){
     const v=document.createElement('section');v.id='vistaAdministracionAlumnos';v.className='admin-alumnos oculto';v.innerHTML=`
       <header class="admin-alumnos__cabecera"><div><h2>👥 Administración de alumnos</h2><p>Altas, edición, UID NFC y estado del alumno.</p></div><button id="btnCerrarAdminAlumnos" class="admin-alumnos__cerrar" type="button">✕</button></header>
-      <div class="admin-alumnos__acciones-superiores"><input id="buscarAdminAlumno" type="search" placeholder="🔎 Buscar alumno..." autocomplete="off"><button id="btnNuevoAdminAlumno" class="admin-alumnos__nuevo" type="button">＋ Agregar alumno</button></div>
+      <div class="admin-alumnos__acciones-superiores">
+        <input id="buscarAdminAlumno" type="search" placeholder="🔎 Buscar alumno..." autocomplete="off">
+        <select id="filtroEstadoAdminAlumno" aria-label="Mostrar alumnos">
+          <option value="todos">Todos</option>
+          <option value="activos">Activos</option>
+          <option value="inactivos">Inactivos</option>
+        </select>
+        <button id="btnNuevoAdminAlumno" class="admin-alumnos__nuevo" type="button">＋ Agregar alumno</button>
+      </div>
       <p id="estadoAdminAlumnos" class="admin-alumnos__estado">Cargando alumnos...</p>
       <div id="listaAdminAlumnos" class="admin-alumnos__lista"></div>
       <section id="formAdminAlumno" class="admin-alumnos__formulario oculto">
@@ -40,7 +48,7 @@
           <label class="ancho-completo"><span>UID NFC</span><div class="admin-alumnos__uid"><input id="adminUid" type="text" autocomplete="off" placeholder="UID de la tarjeta"><button id="btnLeerUidAdmin" type="button">📡 Leer NFC</button></div></label>
           <label class="ancho-completo"><span>Foto / URL</span><input id="adminFoto" type="text" autocomplete="off" placeholder="Opcional"></label>
         </div>
-        <div class="admin-alumnos__botones"><button id="btnGuardarAdminAlumno" class="admin-alumnos__guardar" type="button">💾 Guardar alumno</button><button id="btnEstadoAdminAlumno" class="admin-alumnos__estado-btn oculto" type="button"></button><button id="btnCancelarAdminAlumno" class="admin-alumnos__cancelar" type="button">Cancelar</button></div>
+        <div class="admin-alumnos__botones"><button id="btnGuardarAdminAlumno" class="admin-alumnos__guardar" type="button">💾 Guardar alumno</button><button id="btnEstadoAdminAlumno" class="admin-alumnos__estado-btn oculto" type="button"></button><button id="btnEliminarAdminAlumno" class="admin-alumnos__eliminar oculto" type="button">🗑️ Eliminar definitivamente</button><button id="btnCancelarAdminAlumno" class="admin-alumnos__cancelar" type="button">Cancelar</button></div>
       </section>`;
     const escaner=document.getElementById('vistaEscaner');if(escaner)contenedor.insertBefore(v,escaner);else contenedor.appendChild(v);
   }
@@ -58,15 +66,22 @@
   }
 
   function renderLista(){
-    const term=normalizar(document.getElementById('buscarAdminAlumno')?.value||'');const lista=document.getElementById('listaAdminAlumnos');if(!lista)return;
-    const datos=alumnosAdmin.filter(a=>!term||normalizar(nombreCompleto(a)).includes(term));
+    const term=normalizar(document.getElementById('buscarAdminAlumno')?.value||'');
+    const filtro=document.getElementById('filtroEstadoAdminAlumno')?.value||'todos';
+    const lista=document.getElementById('listaAdminAlumnos');if(!lista)return;
+    const datos=alumnosAdmin.filter(a=>{
+      const coincideTexto=!term||normalizar(nombreCompleto(a)).includes(term);
+      const esActivo=a.activo!==false;
+      const coincideEstado=filtro==='todos'||(filtro==='activos'&&esActivo)||(filtro==='inactivos'&&!esActivo);
+      return coincideTexto&&coincideEstado;
+    });
     lista.innerHTML=datos.length?datos.map(a=>`<article class="admin-alumno-item"><div><strong>${esc(nombreCompleto(a))}</strong><small>ID ${esc(a.id)} · ${esc(a.grado||'')}° ${esc(a.grupo||'')} · UID ${esc(a.uid||'Sin UID')} · ${a.activo===false?'INACTIVO':'ACTIVO'}</small></div><button type="button" data-editar-admin="${esc(a.id)}">Editar</button></article>`).join(''):'<div class="admin-alumnos__vacio">No se encontraron alumnos.</div>';
     lista.querySelectorAll('[data-editar-admin]').forEach(b=>b.addEventListener('click',()=>editarAlumno(b.dataset.editarAdmin)));
   }
 
-  function limpiarFormulario(){alumnoSeleccionado=null;['adminIdAlumno','adminFechaNacimiento','adminNombre','adminApellidoPaterno','adminApellidoMaterno','adminGrado','adminGrupo','adminUid','adminFoto'].forEach(id=>{const x=document.getElementById(id);if(x)x.value='';});document.getElementById('tituloFormAdminAlumno').textContent='Nuevo alumno';document.getElementById('btnEstadoAdminAlumno').classList.add('oculto');}
+  function limpiarFormulario(){alumnoSeleccionado=null;['adminIdAlumno','adminFechaNacimiento','adminNombre','adminApellidoPaterno','adminApellidoMaterno','adminGrado','adminGrupo','adminUid','adminFoto'].forEach(id=>{const x=document.getElementById(id);if(x)x.value='';});document.getElementById('tituloFormAdminAlumno').textContent='Nuevo alumno';document.getElementById('btnEstadoAdminAlumno').classList.add('oculto');document.getElementById('btnEliminarAdminAlumno').classList.add('oculto');}
   function nuevoAlumno(){limpiarFormulario();document.getElementById('formAdminAlumno').classList.remove('oculto');document.getElementById('adminNombre')?.focus();}
-  function editarAlumno(id){const a=alumnosAdmin.find(x=>String(x.id)===String(id));if(!a)return;alumnoSeleccionado=a;document.getElementById('tituloFormAdminAlumno').textContent='Editar alumno';document.getElementById('adminIdAlumno').value=a.id||'';document.getElementById('adminFechaNacimiento').value=String(a.fechaNacimiento||'').slice(0,10);document.getElementById('adminNombre').value=a.nombre||'';document.getElementById('adminApellidoPaterno').value=a.apellidoPaterno||'';document.getElementById('adminApellidoMaterno').value=a.apellidoMaterno||'';document.getElementById('adminGrado').value=a.grado||'';document.getElementById('adminGrupo').value=a.grupo||'';document.getElementById('adminUid').value=a.uid||'';document.getElementById('adminFoto').value=a.foto||'';const b=document.getElementById('btnEstadoAdminAlumno');b.classList.remove('oculto');b.textContent=a.activo===false?'✅ Activar alumno':'⏸ Inactivar alumno';document.getElementById('formAdminAlumno').classList.remove('oculto');document.getElementById('formAdminAlumno').scrollIntoView({behavior:'smooth',block:'start'});}
+  function editarAlumno(id){const a=alumnosAdmin.find(x=>String(x.id)===String(id));if(!a)return;alumnoSeleccionado=a;document.getElementById('tituloFormAdminAlumno').textContent='Editar alumno';document.getElementById('adminIdAlumno').value=a.id||'';document.getElementById('adminFechaNacimiento').value=String(a.fechaNacimiento||'').slice(0,10);document.getElementById('adminNombre').value=a.nombre||'';document.getElementById('adminApellidoPaterno').value=a.apellidoPaterno||'';document.getElementById('adminApellidoMaterno').value=a.apellidoMaterno||'';document.getElementById('adminGrado').value=a.grado||'';document.getElementById('adminGrupo').value=a.grupo||'';document.getElementById('adminUid').value=a.uid||'';document.getElementById('adminFoto').value=a.foto||'';const b=document.getElementById('btnEstadoAdminAlumno');b.classList.remove('oculto');b.textContent=a.activo===false?'✅ Activar alumno':'⏸ Inactivar alumno';document.getElementById('btnEliminarAdminAlumno').classList.remove('oculto');document.getElementById('formAdminAlumno').classList.remove('oculto');document.getElementById('formAdminAlumno').scrollIntoView({behavior:'smooth',block:'start'});}
 
   function parametrosFormulario(){return {idAlumno:document.getElementById('adminIdAlumno').value.trim(),nombre:document.getElementById('adminNombre').value.trim(),apellidoPaterno:document.getElementById('adminApellidoPaterno').value.trim(),apellidoMaterno:document.getElementById('adminApellidoMaterno').value.trim(),fechaNacimiento:document.getElementById('adminFechaNacimiento').value,grado:document.getElementById('adminGrado').value.trim(),grupo:document.getElementById('adminGrupo').value.trim(),uid:document.getElementById('adminUid').value.trim(),foto:document.getElementById('adminFoto').value.trim()};}
 
@@ -74,16 +89,27 @@
 
   async function cambiarEstado(){if(!alumnoSeleccionado)return;const e=document.getElementById('estadoAdminAlumnos');const estado=alumnoSeleccionado.activo===false?'ACTIVO':'INACTIVO';e.textContent='⏳ Actualizando estado...';try{const r=await solicitarJSONP('cambiarestadoalumno',{idAlumno:alumnoSeleccionado.id,estado});if(!r||(r.ok===false||r.exito===false))throw new Error(r?.mensaje||'No fue posible cambiar el estado.');e.textContent=`✅ ${r.mensaje}`;document.getElementById('formAdminAlumno').classList.add('oculto');limpiarFormulario();await cargarAlumnos(true);}catch(err){e.textContent=`❌ ${err?.message||'No fue posible cambiar el estado.'}`;}}
 
+  async function eliminarAlumno(){
+    if(!alumnoSeleccionado)return;
+    const nombre=nombreCompleto(alumnoSeleccionado);
+    const confirmado=window.confirm(`¿Eliminar definitivamente a ${nombre}?\n\nEsta acción no se puede deshacer. Si el alumno tiene historial, AulaNFC bloqueará la eliminación y deberás dejarlo INACTIVO.`);
+    if(!confirmado)return;
+    const e=document.getElementById('estadoAdminAlumnos');const b=document.getElementById('btnEliminarAdminAlumno');b.disabled=true;e.textContent='⏳ Verificando si el alumno puede eliminarse...';
+    try{const r=await solicitarJSONP('eliminaralumno',{idAlumno:alumnoSeleccionado.id});if(!r||(r.ok===false||r.exito===false))throw new Error(r?.mensaje||'No fue posible eliminar el alumno.');e.textContent=`✅ ${r.mensaje||'Alumno eliminado definitivamente.'}`;document.getElementById('formAdminAlumno').classList.add('oculto');limpiarFormulario();await cargarAlumnos(true);}catch(err){e.textContent=`❌ ${err?.message||'No fue posible eliminar el alumno.'}`;}finally{b.disabled=false;}
+  }
+
   async function leerNFC(){const e=document.getElementById('estadoAdminAlumnos');if(leyendoNFC)return;if(!('NDEFReader'in window)){e.textContent='❌ Este dispositivo/navegador no admite Web NFC.';return;}leyendoNFC=true;e.textContent='📡 Acerca la tarjeta NFC del alumno...';try{const controller=new AbortController();const reader=new NDEFReader();await reader.scan({signal:controller.signal});reader.onreading=(event)=>{const uid=String(event.serialNumber||'').trim();document.getElementById('adminUid').value=uid;e.textContent=uid?`✅ UID leído: ${uid}`:'❌ No se pudo leer el UID.';controller.abort();leyendoNFC=false;};reader.onreadingerror=()=>{e.textContent='❌ No se pudo leer la tarjeta NFC.';controller.abort();leyendoNFC=false;};}catch(err){e.textContent=`❌ ${err?.message||'No fue posible activar el lector NFC.'}`;leyendoNFC=false;}}
 
   function conectarEventos(){
     document.getElementById('menuAdministracionAlumnos').addEventListener('click',()=>{marcarActivo();cerrarMenu();mostrarVista();});
     document.getElementById('btnCerrarAdminAlumnos').addEventListener('click',()=>{ocultarVista();document.getElementById('vistaEscaner')?.classList.remove('oculto');const inicio=document.getElementById('menuInicio');document.getElementById('menuLateral')?.querySelectorAll('.menu-lateral__opcion').forEach(b=>b.classList.toggle('activa',b===inicio));});
     document.getElementById('buscarAdminAlumno').addEventListener('input',renderLista);
+    document.getElementById('filtroEstadoAdminAlumno').addEventListener('change',renderLista);
     document.getElementById('btnNuevoAdminAlumno').addEventListener('click',nuevoAlumno);
     document.getElementById('btnCancelarAdminAlumno').addEventListener('click',()=>{document.getElementById('formAdminAlumno').classList.add('oculto');limpiarFormulario();});
     document.getElementById('btnGuardarAdminAlumno').addEventListener('click',guardar);
     document.getElementById('btnEstadoAdminAlumno').addEventListener('click',cambiarEstado);
+    document.getElementById('btnEliminarAdminAlumno').addEventListener('click',eliminarAlumno);
     document.getElementById('btnLeerUidAdmin').addEventListener('click',leerNFC);
     ['menuInicio','menuHistorial','menuResumenEstadistico','menuResultadosExamen'].forEach(id=>document.getElementById(id)?.addEventListener('click',ocultarVista));
   }
