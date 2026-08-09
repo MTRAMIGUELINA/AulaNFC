@@ -7,6 +7,7 @@
   const esc=(v)=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
   const nombreCompleto=(a)=>String(a?.nombreCompleto||[a?.nombre,a?.apellidoPaterno,a?.apellidoMaterno].filter(Boolean).join(' ')).replace(/\s+/g,' ').trim();
   const normalizar=(v)=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  const estadoAlumno=(a)=>String(a?.estado||(a?.activo===false?'INACTIVO':'ACTIVO')).trim().toUpperCase();
 
   function esperarBase(){
     const menu=document.getElementById('menuLateral');
@@ -30,6 +31,7 @@
           <option value="todos">Todos</option>
           <option value="activos">Activos</option>
           <option value="inactivos">Inactivos</option>
+          <option value="baja">Baja definitiva</option>
         </select>
         <button id="btnNuevoAdminAlumno" class="admin-alumnos__nuevo" type="button">＋ Agregar alumno</button>
       </div>
@@ -48,7 +50,13 @@
           <label class="ancho-completo"><span>UID NFC</span><div class="admin-alumnos__uid"><input id="adminUid" type="text" autocomplete="off" placeholder="UID de la tarjeta"><button id="btnLeerUidAdmin" type="button">📡 Leer NFC</button></div></label>
           <label class="ancho-completo"><span>Foto / URL</span><input id="adminFoto" type="text" autocomplete="off" placeholder="Opcional"></label>
         </div>
-        <div class="admin-alumnos__botones"><button id="btnGuardarAdminAlumno" class="admin-alumnos__guardar" type="button">💾 Guardar alumno</button><button id="btnEstadoAdminAlumno" class="admin-alumnos__estado-btn oculto" type="button"></button><button id="btnEliminarAdminAlumno" class="admin-alumnos__eliminar oculto" type="button">🗑️ Eliminar definitivamente</button><button id="btnCancelarAdminAlumno" class="admin-alumnos__cancelar" type="button">Cancelar</button></div>
+        <div class="admin-alumnos__botones">
+          <button id="btnGuardarAdminAlumno" class="admin-alumnos__guardar" type="button">💾 Guardar alumno</button>
+          <button id="btnEstadoAdminAlumno" class="admin-alumnos__estado-btn oculto" type="button"></button>
+          <button id="btnBajaDefinitivaAdminAlumno" class="admin-alumnos__estado-btn oculto" type="button">🚫 Dar de baja definitivamente</button>
+          <button id="btnEliminarAdminAlumno" class="admin-alumnos__eliminar oculto" type="button">🗑️ Eliminar definitivamente</button>
+          <button id="btnCancelarAdminAlumno" class="admin-alumnos__cancelar" type="button">Cancelar</button>
+        </div>
       </section>`;
     const escaner=document.getElementById('vistaEscaner');if(escaner)contenedor.insertBefore(v,escaner);else contenedor.appendChild(v);
   }
@@ -71,28 +79,65 @@
     const lista=document.getElementById('listaAdminAlumnos');if(!lista)return;
     const datos=alumnosAdmin.filter(a=>{
       const coincideTexto=!term||normalizar(nombreCompleto(a)).includes(term);
-      const esActivo=a.activo!==false;
-      const coincideEstado=filtro==='todos'||(filtro==='activos'&&esActivo)||(filtro==='inactivos'&&!esActivo);
+      const estado=estadoAlumno(a);
+      const coincideEstado=filtro==='todos'||(filtro==='activos'&&estado==='ACTIVO')||(filtro==='inactivos'&&estado==='INACTIVO')||(filtro==='baja'&&estado==='BAJA DEFINITIVA');
       return coincideTexto&&coincideEstado;
     });
-    lista.innerHTML=datos.length?datos.map(a=>`<article class="admin-alumno-item"><div><strong>${esc(nombreCompleto(a))}</strong><small>ID ${esc(a.id)} · ${esc(a.grado||'')}° ${esc(a.grupo||'')} · UID ${esc(a.uid||'Sin UID')} · ${a.activo===false?'INACTIVO':'ACTIVO'}</small></div><button type="button" data-editar-admin="${esc(a.id)}">Editar</button></article>`).join(''):'<div class="admin-alumnos__vacio">No se encontraron alumnos.</div>';
+    lista.innerHTML=datos.length?datos.map(a=>{const estado=estadoAlumno(a);return `<article class="admin-alumno-item"><div><strong>${esc(nombreCompleto(a))}</strong><small>ID ${esc(a.id)} · ${esc(a.grado||'')}° ${esc(a.grupo||'')} · UID ${esc(a.uid||'Sin UID')} · ${esc(estado)}</small></div><button type="button" data-editar-admin="${esc(a.id)}">Editar</button></article>`;}).join(''):'<div class="admin-alumnos__vacio">No se encontraron alumnos.</div>';
     lista.querySelectorAll('[data-editar-admin]').forEach(b=>b.addEventListener('click',()=>editarAlumno(b.dataset.editarAdmin)));
   }
 
-  function limpiarFormulario(){alumnoSeleccionado=null;['adminIdAlumno','adminFechaNacimiento','adminNombre','adminApellidoPaterno','adminApellidoMaterno','adminGrado','adminGrupo','adminUid','adminFoto'].forEach(id=>{const x=document.getElementById(id);if(x)x.value='';});document.getElementById('tituloFormAdminAlumno').textContent='Nuevo alumno';document.getElementById('btnEstadoAdminAlumno').classList.add('oculto');document.getElementById('btnEliminarAdminAlumno').classList.add('oculto');}
+  function limpiarFormulario(){alumnoSeleccionado=null;['adminIdAlumno','adminFechaNacimiento','adminNombre','adminApellidoPaterno','adminApellidoMaterno','adminGrado','adminGrupo','adminUid','adminFoto'].forEach(id=>{const x=document.getElementById(id);if(x)x.value='';});document.getElementById('tituloFormAdminAlumno').textContent='Nuevo alumno';document.getElementById('btnEstadoAdminAlumno').classList.add('oculto');document.getElementById('btnBajaDefinitivaAdminAlumno').classList.add('oculto');document.getElementById('btnEliminarAdminAlumno').classList.add('oculto');}
   function nuevoAlumno(){limpiarFormulario();document.getElementById('formAdminAlumno').classList.remove('oculto');document.getElementById('adminNombre')?.focus();}
-  function editarAlumno(id){const a=alumnosAdmin.find(x=>String(x.id)===String(id));if(!a)return;alumnoSeleccionado=a;document.getElementById('tituloFormAdminAlumno').textContent='Editar alumno';document.getElementById('adminIdAlumno').value=a.id||'';document.getElementById('adminFechaNacimiento').value=String(a.fechaNacimiento||'').slice(0,10);document.getElementById('adminNombre').value=a.nombre||'';document.getElementById('adminApellidoPaterno').value=a.apellidoPaterno||'';document.getElementById('adminApellidoMaterno').value=a.apellidoMaterno||'';document.getElementById('adminGrado').value=a.grado||'';document.getElementById('adminGrupo').value=a.grupo||'';document.getElementById('adminUid').value=a.uid||'';document.getElementById('adminFoto').value=a.foto||'';const b=document.getElementById('btnEstadoAdminAlumno');b.classList.remove('oculto');b.textContent=a.activo===false?'✅ Activar alumno':'⏸ Inactivar alumno';document.getElementById('btnEliminarAdminAlumno').classList.remove('oculto');document.getElementById('formAdminAlumno').classList.remove('oculto');document.getElementById('formAdminAlumno').scrollIntoView({behavior:'smooth',block:'start'});}
+  function editarAlumno(id){
+    const a=alumnosAdmin.find(x=>String(x.id)===String(id));if(!a)return;alumnoSeleccionado=a;
+    document.getElementById('tituloFormAdminAlumno').textContent='Editar alumno';
+    document.getElementById('adminIdAlumno').value=a.id||'';
+    document.getElementById('adminFechaNacimiento').value=String(a.fechaNacimiento||'').slice(0,10);
+    document.getElementById('adminNombre').value=a.nombre||'';
+    document.getElementById('adminApellidoPaterno').value=a.apellidoPaterno||'';
+    document.getElementById('adminApellidoMaterno').value=a.apellidoMaterno||'';
+    document.getElementById('adminGrado').value=a.grado||'';
+    document.getElementById('adminGrupo').value=a.grupo||'';
+    document.getElementById('adminUid').value=a.uid||'';
+    document.getElementById('adminFoto').value=a.foto||'';
+    const estado=estadoAlumno(a);
+    const bEstado=document.getElementById('btnEstadoAdminAlumno');
+    const bBaja=document.getElementById('btnBajaDefinitivaAdminAlumno');
+    bEstado.classList.add('oculto');bBaja.classList.add('oculto');
+    if(estado==='ACTIVO'){bEstado.classList.remove('oculto');bEstado.textContent='⏸ Inactivar alumno';bBaja.classList.remove('oculto');}
+    else if(estado==='INACTIVO'){bEstado.classList.remove('oculto');bEstado.textContent='✅ Reactivar alumno';bBaja.classList.remove('oculto');}
+    document.getElementById('btnEliminarAdminAlumno').classList.remove('oculto');
+    document.getElementById('formAdminAlumno').classList.remove('oculto');
+    document.getElementById('formAdminAlumno').scrollIntoView({behavior:'smooth',block:'start'});
+  }
 
   function parametrosFormulario(){return {idAlumno:document.getElementById('adminIdAlumno').value.trim(),nombre:document.getElementById('adminNombre').value.trim(),apellidoPaterno:document.getElementById('adminApellidoPaterno').value.trim(),apellidoMaterno:document.getElementById('adminApellidoMaterno').value.trim(),fechaNacimiento:document.getElementById('adminFechaNacimiento').value,grado:document.getElementById('adminGrado').value.trim(),grupo:document.getElementById('adminGrupo').value.trim(),uid:document.getElementById('adminUid').value.trim(),foto:document.getElementById('adminFoto').value.trim()};}
 
   async function guardar(){const p=parametrosFormulario(),e=document.getElementById('estadoAdminAlumnos'),b=document.getElementById('btnGuardarAdminAlumno');if(!p.nombre||!p.apellidoPaterno||!p.grado||!p.grupo){e.textContent='❌ Completa nombre, apellido paterno, grado y grupo.';return;}b.disabled=true;e.textContent='⏳ Guardando alumno...';try{const accion=alumnoSeleccionado?'actualizaralumno':'crearalumno';const r=await solicitarJSONP(accion,p);if(!r||(r.ok===false||r.exito===false))throw new Error(r?.mensaje||'No fue posible guardar el alumno.');e.textContent=`✅ ${r.mensaje||'Alumno guardado.'}`;document.getElementById('formAdminAlumno').classList.add('oculto');limpiarFormulario();await cargarAlumnos(true);}catch(err){e.textContent=`❌ ${err?.message||'No fue posible guardar el alumno.'}`;}finally{b.disabled=false;}}
 
-  async function cambiarEstado(){if(!alumnoSeleccionado)return;const e=document.getElementById('estadoAdminAlumnos');const estado=alumnoSeleccionado.activo===false?'ACTIVO':'INACTIVO';e.textContent='⏳ Actualizando estado...';try{const r=await solicitarJSONP('cambiarestadoalumno',{idAlumno:alumnoSeleccionado.id,estado});if(!r||(r.ok===false||r.exito===false))throw new Error(r?.mensaje||'No fue posible cambiar el estado.');e.textContent=`✅ ${r.mensaje}`;document.getElementById('formAdminAlumno').classList.add('oculto');limpiarFormulario();await cargarAlumnos(true);}catch(err){e.textContent=`❌ ${err?.message||'No fue posible cambiar el estado.'}`;}}
+  async function cambiarEstado(){
+    if(!alumnoSeleccionado)return;
+    const actual=estadoAlumno(alumnoSeleccionado);
+    if(actual==='BAJA DEFINITIVA')return;
+    const nuevo=actual==='ACTIVO'?'INACTIVO':'ACTIVO';
+    const e=document.getElementById('estadoAdminAlumnos');e.textContent='⏳ Actualizando estado...';
+    try{const r=await solicitarJSONP('cambiarestadoalumno',{idAlumno:alumnoSeleccionado.id,estado:nuevo});if(!r||(r.ok===false||r.exito===false))throw new Error(r?.mensaje||'No fue posible cambiar el estado.');e.textContent=`✅ ${r.mensaje}`;document.getElementById('formAdminAlumno').classList.add('oculto');limpiarFormulario();await cargarAlumnos(true);}catch(err){e.textContent=`❌ ${err?.message||'No fue posible cambiar el estado.'}`;}
+  }
+
+  async function darBajaDefinitiva(){
+    if(!alumnoSeleccionado)return;
+    const nombre=nombreCompleto(alumnoSeleccionado);
+    const confirmado=window.confirm(`¿Dar de baja definitivamente a ${nombre}?\n\nEl alumno dejará de estar disponible para nuevos registros, pero su historial se conservará.`);
+    if(!confirmado)return;
+    const e=document.getElementById('estadoAdminAlumnos');e.textContent='⏳ Registrando baja definitiva...';
+    try{const r=await solicitarJSONP('cambiarestadoalumno',{idAlumno:alumnoSeleccionado.id,estado:'BAJA DEFINITIVA'});if(!r||(r.ok===false||r.exito===false))throw new Error(r?.mensaje||'No fue posible dar de baja al alumno.');e.textContent=`✅ ${r.mensaje}`;document.getElementById('formAdminAlumno').classList.add('oculto');limpiarFormulario();await cargarAlumnos(true);}catch(err){e.textContent=`❌ ${err?.message||'No fue posible dar de baja al alumno.'}`;}
+  }
 
   async function eliminarAlumno(){
     if(!alumnoSeleccionado)return;
     const nombre=nombreCompleto(alumnoSeleccionado);
-    const confirmado=window.confirm(`¿Eliminar definitivamente a ${nombre}?\n\nEsta acción no se puede deshacer. Si el alumno tiene historial, AulaNFC bloqueará la eliminación y deberás dejarlo INACTIVO.`);
+    const confirmado=window.confirm(`¿Eliminar definitivamente a ${nombre}?\n\nEsta opción es solo para alumnos creados por error y sin historial. Si tiene registros, AulaNFC bloqueará la eliminación.`);
     if(!confirmado)return;
     const e=document.getElementById('estadoAdminAlumnos');const b=document.getElementById('btnEliminarAdminAlumno');b.disabled=true;e.textContent='⏳ Verificando si el alumno puede eliminarse...';
     try{const r=await solicitarJSONP('eliminaralumno',{idAlumno:alumnoSeleccionado.id});if(!r||(r.ok===false||r.exito===false))throw new Error(r?.mensaje||'No fue posible eliminar el alumno.');e.textContent=`✅ ${r.mensaje||'Alumno eliminado definitivamente.'}`;document.getElementById('formAdminAlumno').classList.add('oculto');limpiarFormulario();await cargarAlumnos(true);}catch(err){e.textContent=`❌ ${err?.message||'No fue posible eliminar el alumno.'}`;}finally{b.disabled=false;}
@@ -109,6 +154,7 @@
     document.getElementById('btnCancelarAdminAlumno').addEventListener('click',()=>{document.getElementById('formAdminAlumno').classList.add('oculto');limpiarFormulario();});
     document.getElementById('btnGuardarAdminAlumno').addEventListener('click',guardar);
     document.getElementById('btnEstadoAdminAlumno').addEventListener('click',cambiarEstado);
+    document.getElementById('btnBajaDefinitivaAdminAlumno').addEventListener('click',darBajaDefinitiva);
     document.getElementById('btnEliminarAdminAlumno').addEventListener('click',eliminarAlumno);
     document.getElementById('btnLeerUidAdmin').addEventListener('click',leerNFC);
     ['menuInicio','menuHistorial','menuResumenEstadistico','menuResultadosExamen'].forEach(id=>document.getElementById(id)?.addEventListener('click',ocultarVista));
