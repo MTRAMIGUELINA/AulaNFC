@@ -1,7 +1,15 @@
-/* AulaNFC v3 - Resultados de examen por periodo y campo formativo. */
+/* AulaNFC v3 - Resultados de examen por alumno y trimestre. */
 (() => {
   let alumnosExamen = [];
-  let cargando = false;
+  let alumnoSeleccionado = null;
+  let cargandoAlumnos = false;
+
+  const CAMPOS = [
+    'Lenguajes',
+    'Saberes y Pensamiento Científico',
+    'Ética, Naturaleza y Sociedad',
+    'De lo Humano a lo Comunitario'
+  ];
 
   const esc = (v) => String(v ?? '')
     .replace(/&/g, '&amp;')
@@ -10,10 +18,16 @@
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 
+  const normalizar = (v) => String(v || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+
   function nombreAlumno(a) {
     return String(
-      a.nombreCompleto ||
-      [a.nombre, a.apellidoPaterno, a.apellidoMaterno].filter(Boolean).join(' ')
+      a?.nombreCompleto ||
+      [a?.nombre, a?.apellidoPaterno, a?.apellidoMaterno].filter(Boolean).join(' ')
     ).replace(/\s+/g, ' ').trim();
   }
 
@@ -48,50 +62,43 @@
       <header class="resultados-examen__cabecera">
         <div>
           <h2>📝 Resultados de examen</h2>
-          <p>Captura las calificaciones del grupo por periodo y campo formativo.</p>
+          <p>Selecciona un trimestre y un alumno para capturar sus cuatro campos formativos.</p>
         </div>
         <button id="btnCerrarResultadosExamen" class="resultados-examen__cerrar" type="button" aria-label="Cerrar">✕</button>
       </header>
 
       <section class="resultados-examen__filtros">
         <label>
-          <span>Periodo de evaluación</span>
+          <span>Trimestre</span>
           <select id="periodoResultadosExamen">
-            <option value="">Selecciona un periodo</option>
+            <option value="">Selecciona un trimestre</option>
             <option value="Primer trimestre">Primer trimestre</option>
             <option value="Segundo trimestre">Segundo trimestre</option>
             <option value="Tercer trimestre">Tercer trimestre</option>
           </select>
         </label>
+      </section>
 
-        <label>
-          <span>Campo formativo</span>
-          <select id="campoResultadosExamen">
-            <option value="">Selecciona un campo</option>
-            <option value="Lenguajes">Lenguajes</option>
-            <option value="Saberes y Pensamiento Científico">Saberes y Pensamiento Científico</option>
-            <option value="Ética, Naturaleza y Sociedad">Ética, Naturaleza y Sociedad</option>
-            <option value="De lo Humano a lo Comunitario">De lo Humano a lo Comunitario</option>
-          </select>
+      <section class="resultados-examen__filtros">
+        <label style="grid-column:1/-1">
+          <span>Buscar alumno</span>
+          <input id="busquedaAlumnoResultadosExamen" type="search" placeholder="Escribe al menos dos letras..." autocomplete="off">
         </label>
       </section>
 
-      <p id="estadoResultadosExamen" class="resultados-examen__estado">Selecciona el periodo y el campo formativo.</p>
+      <p id="estadoResultadosExamen" class="resultados-examen__estado">Selecciona un trimestre y busca un alumno.</p>
+      <div id="listaBusquedaResultadosExamen" class="resultados-examen__lista oculto"></div>
 
       <section id="panelCalificacionesExamen" class="resultados-examen__panel oculto">
         <div class="resultados-examen__encabezado-lista">
           <div>
-            <h3 id="tituloListaResultadosExamen">Lista de alumnos</h3>
-            <p id="subtituloListaResultadosExamen"></p>
+            <h3 id="nombreAlumnoResultadosExamen">Alumno</h3>
+            <p id="datosAlumnoResultadosExamen"></p>
           </div>
-          <span id="contadorResultadosExamen">0 alumnos</span>
+          <span id="trimestreAlumnoResultadosExamen"></span>
         </div>
 
-        <div class="resultados-examen__tabla-cabecera">
-          <span>Alumno</span>
-          <span>Calificación</span>
-        </div>
-        <div id="listaResultadosExamen" class="resultados-examen__lista"></div>
+        <div id="camposResultadosExamen" class="resultados-examen__lista"></div>
 
         <div class="resultados-examen__acciones">
           <button id="btnGuardarResultadosExamen" type="button">💾 Guardar calificaciones</button>
@@ -138,8 +145,8 @@
   }
 
   async function cargarAlumnos() {
-    if (alumnosExamen.length || cargando) return;
-    cargando = true;
+    if (alumnosExamen.length || cargandoAlumnos) return;
+    cargandoAlumnos = true;
     const estado = document.getElementById('estadoResultadosExamen');
     estado.textContent = '⏳ Cargando alumnos...';
     try {
@@ -148,83 +155,116 @@
       alumnosExamen = (Array.isArray(r.alumnos) ? r.alumnos : [])
         .filter((a) => a.activo !== false)
         .sort((a, b) => nombreAlumno(a).localeCompare(nombreAlumno(b), 'es', { sensitivity: 'base' }));
-      estado.textContent = 'Selecciona el periodo y el campo formativo.';
-      intentarCargarResultados();
+      estado.textContent = 'Selecciona un trimestre y busca un alumno.';
     } catch (e) {
       estado.textContent = `❌ ${e?.message || 'No se pudieron cargar los alumnos.'}`;
     } finally {
-      cargando = false;
+      cargandoAlumnos = false;
     }
   }
 
-  async function intentarCargarResultados() {
-    const periodo = document.getElementById('periodoResultadosExamen')?.value || '';
-    const campo = document.getElementById('campoResultadosExamen')?.value || '';
-    const panel = document.getElementById('panelCalificacionesExamen');
+  function buscarAlumnos() {
+    const termino = normalizar(document.getElementById('busquedaAlumnoResultadosExamen')?.value || '');
+    const lista = document.getElementById('listaBusquedaResultadosExamen');
     const estado = document.getElementById('estadoResultadosExamen');
+    document.getElementById('panelCalificacionesExamen')?.classList.add('oculto');
+    alumnoSeleccionado = null;
 
-    if (!periodo || !campo) {
-      panel?.classList.add('oculto');
-      estado.textContent = 'Selecciona el periodo y el campo formativo.';
+    if (termino.length < 2) {
+      lista.classList.add('oculto');
+      lista.innerHTML = '';
+      estado.textContent = 'Escribe al menos dos letras para buscar.';
       return;
     }
 
-    if (!alumnosExamen.length) {
-      await cargarAlumnos();
-      if (!alumnosExamen.length) return;
+    const coincidencias = alumnosExamen.filter((a) => normalizar(nombreAlumno(a)).includes(termino));
+    lista.classList.remove('oculto');
+    lista.innerHTML = coincidencias.length
+      ? coincidencias.map((a) => `<button type="button" class="resultado-examen-alumno" data-id-alumno-examen="${esc(a.id)}"><span class="resultado-examen-alumno__datos"><strong>${esc(nombreAlumno(a))}</strong><small>${esc(String(a.grado || ''))}° · Grupo ${esc(String(a.grupo || ''))} · ID ${esc(String(a.id || ''))}</small></span></button>`).join('')
+      : '<div class="mensaje-lista">No se encontraron alumnos.</div>';
+    estado.textContent = `${coincidencias.length} coincidencia(s).`;
+
+    lista.querySelectorAll('[data-id-alumno-examen]').forEach((b) => {
+      b.addEventListener('click', () => seleccionarAlumno(b.dataset.idAlumnoExamen));
+    });
+  }
+
+  async function seleccionarAlumno(id) {
+    const periodo = document.getElementById('periodoResultadosExamen')?.value || '';
+    const estado = document.getElementById('estadoResultadosExamen');
+    if (!periodo) {
+      estado.textContent = '❌ Primero selecciona el trimestre.';
+      document.getElementById('periodoResultadosExamen')?.focus();
+      return;
     }
 
-    estado.textContent = '⏳ Cargando calificaciones...';
+    alumnoSeleccionado = alumnosExamen.find((a) => String(a.id) === String(id)) || null;
+    if (!alumnoSeleccionado) return;
+
+    document.getElementById('listaBusquedaResultadosExamen')?.classList.add('oculto');
+    document.getElementById('busquedaAlumnoResultadosExamen').value = '';
+    document.getElementById('nombreAlumnoResultadosExamen').textContent = nombreAlumno(alumnoSeleccionado);
+    document.getElementById('datosAlumnoResultadosExamen').textContent = `${alumnoSeleccionado.grado || ''}° · Grupo ${alumnoSeleccionado.grupo || ''} · ID ${alumnoSeleccionado.id || ''}`;
+    document.getElementById('trimestreAlumnoResultadosExamen').textContent = periodo;
+    document.getElementById('panelCalificacionesExamen').classList.remove('oculto');
+
+    renderizarCampos([]);
+    estado.textContent = '⏳ Cargando calificaciones del alumno...';
+
     try {
       const r = await solicitarJSONP('obtenerresultadosexamen', {
         periodo,
-        campoFormativo: campo
+        idAlumno: String(alumnoSeleccionado.id || '').trim()
       });
       if (!r || r.ok === false || r.exito === false) throw new Error(r?.mensaje || 'No fue posible consultar las calificaciones.');
       const existentes = Array.isArray(r.resultados) ? r.resultados : [];
-      renderizarLista(existentes, periodo, campo);
-      panel.classList.remove('oculto');
+      renderizarCampos(existentes);
       estado.textContent = existentes.length
-        ? `✅ Se recuperaron ${existentes.length} calificaciones guardadas.`
-        : 'Captura las calificaciones y presiona Guardar.';
+        ? '✅ Se recuperaron las calificaciones guardadas de este alumno.'
+        : 'Captura las calificaciones de los cuatro campos formativos.';
     } catch (e) {
-      panel?.classList.add('oculto');
       estado.textContent = `❌ ${e?.message || 'No fue posible consultar las calificaciones.'}`;
     }
   }
 
-  function renderizarLista(existentes, periodo, campo) {
+  function renderizarCampos(existentes) {
     const mapa = {};
-    existentes.forEach((r) => { mapa[String(r.idAlumno || '').trim()] = String(r.calificacion || '').trim(); });
+    existentes.forEach((r) => {
+      mapa[String(r.campoFormativo || '').trim()] = String(r.calificacion || '').trim();
+    });
 
-    document.getElementById('tituloListaResultadosExamen').textContent = campo;
-    document.getElementById('subtituloListaResultadosExamen').textContent = periodo;
-    document.getElementById('contadorResultadosExamen').textContent = `${alumnosExamen.length} alumnos`;
-
-    document.getElementById('listaResultadosExamen').innerHTML = alumnosExamen.map((a, i) => {
-      const id = String(a.id || '').trim();
-      const valor = mapa[id] ?? '';
-      const nombre = nombreAlumno(a);
-      return `<label class="resultado-examen-alumno">
+    document.getElementById('camposResultadosExamen').innerHTML = CAMPOS.map((campo, i) => `
+      <label class="resultado-examen-alumno">
         <span class="resultado-examen-alumno__numero">${i + 1}</span>
-        <span class="resultado-examen-alumno__datos">
-          <strong>${esc(nombre)}</strong>
-          <small>${esc(String(a.grado || ''))}° · Grupo ${esc(String(a.grupo || ''))} · ID ${esc(id)}</small>
-        </span>
-        <input class="resultado-examen-alumno__calificacion" type="number" inputmode="decimal" min="0" max="10" step="0.1" placeholder="—" value="${esc(valor)}" data-id="${esc(id)}" aria-label="Calificación de ${esc(nombre)}">
-      </label>`;
-    }).join('');
+        <span class="resultado-examen-alumno__datos"><strong>${esc(campo)}</strong></span>
+        <input class="resultado-examen-alumno__calificacion" type="number" inputmode="decimal" min="0" max="10" step="0.1" placeholder="—" value="${esc(mapa[campo] ?? '')}" data-campo="${esc(campo)}" aria-label="Calificación de ${esc(campo)}">
+      </label>`).join('');
+  }
+
+  function cambiarTrimestre() {
+    document.getElementById('panelCalificacionesExamen')?.classList.add('oculto');
+    document.getElementById('listaBusquedaResultadosExamen')?.classList.add('oculto');
+    document.getElementById('busquedaAlumnoResultadosExamen').value = '';
+    alumnoSeleccionado = null;
+    const periodo = document.getElementById('periodoResultadosExamen')?.value || '';
+    document.getElementById('estadoResultadosExamen').textContent = periodo
+      ? 'Busca y selecciona un alumno.'
+      : 'Selecciona un trimestre y busca un alumno.';
   }
 
   async function guardar() {
     const periodo = document.getElementById('periodoResultadosExamen')?.value || '';
-    const campo = document.getElementById('campoResultadosExamen')?.value || '';
     const estado = document.getElementById('estadoResultadosExamen');
     const boton = document.getElementById('btnGuardarResultadosExamen');
-    const inputs = [...document.querySelectorAll('.resultado-examen-alumno__calificacion')];
 
+    if (!periodo || !alumnoSeleccionado) {
+      estado.textContent = '❌ Selecciona el trimestre y un alumno.';
+      return;
+    }
+
+    const inputs = [...document.querySelectorAll('#camposResultadosExamen .resultado-examen-alumno__calificacion')];
     const invalidos = inputs.filter((input) => {
-      if (input.value === '') return false;
+      if (String(input.value).trim() === '') return false;
       const n = Number(input.value);
       return !Number.isFinite(n) || n < 0 || n > 10;
     });
@@ -234,20 +274,14 @@
       return;
     }
 
-    const resultados = inputs
+    const calificaciones = inputs
       .filter((input) => String(input.value).trim() !== '')
-      .map((input) => {
-        const alumno = alumnosExamen.find((a) => String(a.id) === String(input.dataset.id));
-        return {
-          idAlumno: String(alumno?.id || '').trim(),
-          nombre: nombreAlumno(alumno || {}),
-          grado: String(alumno?.grado || '').trim(),
-          grupo: String(alumno?.grupo || '').trim(),
-          calificacion: String(input.value).trim()
-        };
-      });
+      .map((input) => ({
+        campoFormativo: String(input.dataset.campo || '').trim(),
+        calificacion: String(input.value).trim()
+      }));
 
-    if (!resultados.length) {
+    if (!calificaciones.length) {
       estado.textContent = '❌ Captura al menos una calificación.';
       return;
     }
@@ -257,8 +291,11 @@
     try {
       const r = await solicitarJSONP('guardarresultadosexamen', {
         periodo,
-        campoFormativo: campo,
-        resultados: JSON.stringify(resultados)
+        idAlumno: String(alumnoSeleccionado.id || '').trim(),
+        nombre: nombreAlumno(alumnoSeleccionado),
+        grado: String(alumnoSeleccionado.grado || '').trim(),
+        grupo: String(alumnoSeleccionado.grupo || '').trim(),
+        calificaciones: JSON.stringify(calificaciones)
       });
       if (!r || r.ok === false || r.exito === false) throw new Error(r?.mensaje || 'No fue posible guardar las calificaciones.');
       estado.textContent = `✅ ${r.mensaje || 'Calificaciones guardadas correctamente.'}`;
@@ -284,8 +321,8 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    document.getElementById('periodoResultadosExamen').addEventListener('change', intentarCargarResultados);
-    document.getElementById('campoResultadosExamen').addEventListener('change', intentarCargarResultados);
+    document.getElementById('periodoResultadosExamen').addEventListener('change', cambiarTrimestre);
+    document.getElementById('busquedaAlumnoResultadosExamen').addEventListener('input', buscarAlumnos);
     document.getElementById('btnGuardarResultadosExamen').addEventListener('click', guardar);
 
     ['menuInicio', 'menuHistorial', 'menuResumenEstadistico'].forEach((id) => {
