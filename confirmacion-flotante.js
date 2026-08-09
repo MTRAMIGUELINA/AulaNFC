@@ -26,3 +26,4 @@ cargarExtra('script[data-reporte-incidencias-acciones]','reporte-incidencias-acc
 cargarExtra('script[data-historial-incidencias]','historial-incidencias.js?v=2',{historialIncidencias:'true'});
 cargarExtra('script[data-participacion-actividad]','participacion-actividad.js?v=2',{participacionActividad:'true'});
 cargarExtra('script[data-tareas-actividad]','tareas-actividad.js?v=2',{tareasActividad:'true'});
+cargarExtra('script[data-resultados-examen-loader]','resultados-examen-loader.js?v=1',{resultadosExamenLoader:'true'});
