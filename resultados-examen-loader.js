@@ -8,7 +8,7 @@
   }
   if (!document.querySelector('script[data-resultados-examen-modulo]')) {
     const script = document.createElement('script');
-    script.src = 'resultados-examen.js?v=1';
+    script.src = 'resultados-examen.js?v=2';
     script.defer = true;
     script.dataset.resultadosExamenModulo = 'true';
     document.body.appendChild(script);
