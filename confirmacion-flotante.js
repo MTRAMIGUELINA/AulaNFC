@@ -31,3 +31,4 @@ cargarExtra('script[data-tareas-actividad]','tareas-actividad.js?v=2',{tareasAct
 cargarExtra('script[data-resultados-examen-loader]','resultados-examen-loader.js?v=1',{resultadosExamenLoader:'true'});
 cargarExtra('script[data-administracion-alumnos-loader]','administracion-alumnos-loader.js?v=1',{administracionAlumnosLoader:'true'});
 cargarExtra('script[data-configuracion-loader]','configuracion-loader.js?v=1',{configuracionLoader:'true'});
+cargarExtra('script[data-registro-manual-grupo-activo]','registro-manual-grupo-activo.js?v=1',{registroManualGrupoActivo:'true'});
