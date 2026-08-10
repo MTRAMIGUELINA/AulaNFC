@@ -13,4 +13,11 @@
     script.dataset.configuracionAulanfc='true';
     document.body.appendChild(script);
   }
+  if (!document.querySelector('script[data-firma-ficha-ajuste]')) {
+    const script=document.createElement('script');
+    script.src='ficha-pdf-firma-ajuste.js?v=1';
+    script.defer=true;
+    script.dataset.firmaFichaAjuste='true';
+    document.body.appendChild(script);
+  }
 })();
