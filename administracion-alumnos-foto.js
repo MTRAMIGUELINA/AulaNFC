@@ -22,8 +22,6 @@
     const etiquetaOriginal = campoUrl.closest('label');
     if (!etiquetaOriginal) return;
 
-    // Conservamos el campo URL para compatibilidad con alumnos existentes,
-    // pero deja de ser el control principal de la interfaz.
     etiquetaOriginal.style.display = 'none';
 
     const contenedor = document.createElement('div');
@@ -46,7 +44,6 @@
             id="adminFotoArchivo"
             type="file"
             accept="image/*"
-            capture="environment"
             hidden
           >
 
@@ -55,7 +52,7 @@
           </button>
 
           <small id="adminFotoAyuda">
-            En celular puedes tomar una foto con la cámara o elegir una imagen existente.
+            En celular puedes tomar una foto nueva o elegir una imagen existente desde la galería/archivos.
           </small>
         </div>
       </div>
@@ -69,7 +66,6 @@
     inputArchivo.addEventListener('change', manejarArchivoFoto);
     botonQuitar.addEventListener('click', quitarFotoSeleccionada);
 
-    // Si se abre un alumno que ya tiene URL, la mostramos.
     actualizarPreviewDesdeUrl(campoUrl.value);
   }
 
@@ -216,8 +212,6 @@
         return;
       }
 
-      // Esperamos un instante porque editarAlumno() rellena adminFoto
-      // justo antes de mostrar el formulario.
       setTimeout(() => {
         if (!fotoArchivoSeleccionado) {
           actualizarPreviewDesdeUrl(campoUrl.value);
