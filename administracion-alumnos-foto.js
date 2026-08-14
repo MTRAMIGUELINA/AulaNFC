@@ -1,4 +1,4 @@
-/* AulaNFC v3.1 - Captura/selección y vista previa de foto en Administración de alumnos. */
+/* AulaNFC v3.1 - Selección y vista previa de foto en Administración de alumnos. */
 (() => {
   let fotoArchivoSeleccionado = null;
   let fotoObjectUrl = '';
@@ -37,7 +37,7 @@
 
         <div class="admin-alumnos__foto-acciones">
           <label class="admin-alumnos__foto-seleccionar" for="adminFotoArchivo">
-            📷 Tomar o elegir foto
+            🖼️ Seleccionar foto
           </label>
 
           <input
@@ -52,7 +52,7 @@
           </button>
 
           <small id="adminFotoAyuda">
-            En celular puedes tomar una foto nueva o elegir una imagen existente desde la galería/archivos.
+            Selecciona una fotografía existente desde la galería o archivos del dispositivo.
           </small>
         </div>
       </div>
