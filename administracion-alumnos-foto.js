@@ -43,7 +43,7 @@
           <input
             id="adminFotoArchivo"
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             hidden
           >
 
@@ -52,7 +52,7 @@
           </button>
 
           <small id="adminFotoAyuda">
-            Selecciona una fotografía existente desde la galería o archivos del dispositivo.
+            Usa una imagen JPG, JPEG, PNG o WebP desde la galería o archivos del dispositivo.
           </small>
         </div>
       </div>
@@ -69,20 +69,39 @@
     actualizarPreviewDesdeUrl(campoUrl.value);
   }
 
+  function esFormatoCompatible(archivo) {
+    const tipo = String(archivo?.type || '').toLowerCase();
+    const nombre = String(archivo?.name || '').toLowerCase();
+
+    const tiposPermitidos = [
+      'image/jpeg',
+      'image/png',
+      'image/webp'
+    ];
+
+    if (tiposPermitidos.includes(tipo)) return true;
+
+    return /\.(jpe?g|png|webp)$/.test(nombre);
+  }
+
   function manejarArchivoFoto(evento) {
     const archivo = evento.target.files && evento.target.files[0];
     if (!archivo) return;
 
-    if (!archivo.type || !archivo.type.startsWith('image/')) {
-      mostrarEstadoFoto('❌ Selecciona un archivo de imagen válido.');
+    if (!esFormatoCompatible(archivo)) {
+      mostrarPreview('');
+      mostrarEstadoFoto('❌ Esa foto usa un formato no compatible. Selecciona una imagen JPG, JPEG, PNG o WebP.');
       evento.target.value = '';
+      fotoArchivoSeleccionado = null;
       return;
     }
 
     const maxBytes = 8 * 1024 * 1024;
     if (archivo.size > maxBytes) {
+      mostrarPreview('');
       mostrarEstadoFoto('❌ La fotografía es demasiado grande. Usa una imagen menor de 8 MB.');
       evento.target.value = '';
+      fotoArchivoSeleccionado = null;
       return;
     }
 
@@ -90,13 +109,31 @@
 
     if (fotoObjectUrl) {
       URL.revokeObjectURL(fotoObjectUrl);
+      fotoObjectUrl = '';
     }
 
-    fotoObjectUrl = URL.createObjectURL(archivo);
-    mostrarPreview(fotoObjectUrl);
-    mostrarEstadoFoto('✅ Fotografía seleccionada. Se guardará cuando conectemos la subida a Drive.');
+    const lector = new FileReader();
 
-    document.getElementById('btnQuitarFotoAdmin')?.removeAttribute('hidden');
+    lector.onload = function() {
+      const resultado = String(lector.result || '');
+
+      if (!resultado) {
+        mostrarPreview('');
+        mostrarEstadoFoto('❌ No fue posible generar la vista previa de esta fotografía.');
+        return;
+      }
+
+      mostrarPreview(resultado);
+      mostrarEstadoFoto('✅ Fotografía seleccionada correctamente.');
+      document.getElementById('btnQuitarFotoAdmin')?.removeAttribute('hidden');
+    };
+
+    lector.onerror = function() {
+      mostrarPreview('');
+      mostrarEstadoFoto('❌ No fue posible leer esta fotografía. Prueba con otra imagen JPG, PNG o WebP.');
+    };
+
+    lector.readAsDataURL(archivo);
 
     window.AulaNFCFotoAlumno = {
       archivo: fotoArchivoSeleccionado,
@@ -144,6 +181,7 @@
     imagen.onerror = () => {
       imagen.hidden = true;
       inicial.hidden = false;
+      mostrarEstadoFoto('❌ El navegador no pudo mostrar esta imagen. Prueba con otra foto JPG, PNG o WebP.');
     };
 
     imagen.src = src;
