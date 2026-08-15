@@ -16,7 +16,6 @@ function cargarExtra(selector,src,dataset){if(document.querySelector(selector))r
 cargarExtra('script[data-menu-aulanfc]','menu-lateral.js?v=2',{menuAulanfc:'true'});
 cargarExtra('script[data-resumen-estadistico-conexion]','resumen-estadistico-conexion.js?v=1',{resumenEstadisticoConexion:'true'});
 cargarExtra('script[data-ficha-alumno-menu]','ficha-alumno-menu.js?v=2',{fichaAlumnoMenu:'true'});
-cargarExtra('script[data-ficha-alumno-foto-drive]','ficha-alumno-foto-drive.js?v=1',{fichaAlumnoFotoDrive:'true'});
 cargarExtra('script[data-ficha-historial-conexion]','ficha-historial-conexion.js?v=1',{fichaHistorialConexion:'true'});
 cargarExtra('script[data-ficha-pdf]','ficha-pdf.js?v=4',{fichaPdf:'true'});
 cargarExtra('script[data-ficha-pdf-resultados-examen]','ficha-pdf-resultados-examen.js?v=1',{fichaPdfResultadosExamen:'true'});
