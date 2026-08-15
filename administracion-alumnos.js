@@ -87,10 +87,14 @@
     lista.querySelectorAll('[data-editar-admin]').forEach(b=>b.addEventListener('click',()=>editarAlumno(b.dataset.editarAdmin)));
   }
 
+  function limpiarRecuperacionFotografica(){window.AulaNFCAdministracionAlumnos?.limpiarRecuperacionFotografica?.();}
+  function prepararFotografiaAlumno(idAlumno){window.AulaNFCAdministracionAlumnos?.prepararFotografiaAlumno?.(idAlumno);}
+  function sincronizarFormularioFotografia(){window.AulaNFCAdministracionAlumnos?.sincronizarFormularioFotografia?.();}
   function limpiarFormulario(){alumnoSeleccionado=null;['adminIdAlumno','adminFechaNacimiento','adminNombre','adminApellidoPaterno','adminApellidoMaterno','adminGrado','adminGrupo','adminUid','adminFoto'].forEach(id=>{const x=document.getElementById(id);if(x)x.value='';});document.getElementById('tituloFormAdminAlumno').textContent='Nuevo alumno';document.getElementById('btnEstadoAdminAlumno').classList.add('oculto');document.getElementById('btnBajaDefinitivaAdminAlumno').classList.add('oculto');document.getElementById('btnEliminarAdminAlumno').classList.add('oculto');}
-  function nuevoAlumno(){limpiarFormulario();document.getElementById('formAdminAlumno').classList.remove('oculto');document.getElementById('adminNombre')?.focus();}
+  function nuevoAlumno(){limpiarRecuperacionFotografica();limpiarFormulario();sincronizarFormularioFotografia();document.getElementById('formAdminAlumno').classList.remove('oculto');document.getElementById('adminNombre')?.focus();}
   function editarAlumno(id){
     const a=alumnosAdmin.find(x=>String(x.id)===String(id));if(!a)return;alumnoSeleccionado=a;
+    prepararFotografiaAlumno(a.id);
     document.getElementById('tituloFormAdminAlumno').textContent='Editar alumno';
     document.getElementById('adminIdAlumno').value=a.id||'';
     document.getElementById('adminFechaNacimiento').value=String(a.fechaNacimiento||'').slice(0,10);
@@ -101,6 +105,7 @@
     document.getElementById('adminGrupo').value=a.grupo||'';
     document.getElementById('adminUid').value=a.uid||'';
     document.getElementById('adminFoto').value=a.foto||'';
+    sincronizarFormularioFotografia();
     const estado=estadoAlumno(a);
     const bEstado=document.getElementById('btnEstadoAdminAlumno');
     const bBaja=document.getElementById('btnBajaDefinitivaAdminAlumno');
@@ -113,6 +118,19 @@
   }
 
   function parametrosFormulario(){return {idAlumno:document.getElementById('adminIdAlumno').value.trim(),nombre:document.getElementById('adminNombre').value.trim(),apellidoPaterno:document.getElementById('adminApellidoPaterno').value.trim(),apellidoMaterno:document.getElementById('adminApellidoMaterno').value.trim(),fechaNacimiento:document.getElementById('adminFechaNacimiento').value,grado:document.getElementById('adminGrado').value.trim(),grupo:document.getElementById('adminGrupo').value.trim(),uid:document.getElementById('adminUid').value.trim(),foto:document.getElementById('adminFoto').value.trim()};}
+
+  function conservarAlumnoCreado(idAlumno,datos={}){
+    const id=String(idAlumno||'').trim();if(!id)return false;
+    alumnoSeleccionado={...datos,id,idAlumno:id};
+    document.getElementById('adminIdAlumno').value=id;
+    document.getElementById('tituloFormAdminAlumno').textContent='Editar alumno';
+    return true;
+  }
+
+  window.AulaNFCAdministracionAlumnos={
+    ...(window.AulaNFCAdministracionAlumnos||{}),
+    conservarAlumnoCreado
+  };
 
   async function guardar(){const p=parametrosFormulario(),e=document.getElementById('estadoAdminAlumnos'),b=document.getElementById('btnGuardarAdminAlumno');if(!p.nombre||!p.apellidoPaterno||!p.grado||!p.grupo){e.textContent='❌ Completa nombre, apellido paterno, grado y grupo.';return;}b.disabled=true;e.textContent='⏳ Guardando alumno...';try{const accion=alumnoSeleccionado?'actualizaralumno':'crearalumno';const r=await solicitarJSONP(accion,p);if(!r||(r.ok===false||r.exito===false))throw new Error(r?.mensaje||'No fue posible guardar el alumno.');e.textContent=`✅ ${r.mensaje||'Alumno guardado.'}`;document.getElementById('formAdminAlumno').classList.add('oculto');limpiarFormulario();await cargarAlumnos(true);}catch(err){e.textContent=`❌ ${err?.message||'No fue posible guardar el alumno.'}`;}finally{b.disabled=false;}}
 
@@ -147,11 +165,11 @@
 
   function conectarEventos(){
     document.getElementById('menuAdministracionAlumnos').addEventListener('click',()=>{marcarActivo();cerrarMenu();mostrarVista();});
-    document.getElementById('btnCerrarAdminAlumnos').addEventListener('click',()=>{ocultarVista();document.getElementById('vistaEscaner')?.classList.remove('oculto');const inicio=document.getElementById('menuInicio');document.getElementById('menuLateral')?.querySelectorAll('.menu-lateral__opcion').forEach(b=>b.classList.toggle('activa',b===inicio));});
+    document.getElementById('btnCerrarAdminAlumnos').addEventListener('click',()=>{limpiarRecuperacionFotografica();document.getElementById('formAdminAlumno').classList.add('oculto');limpiarFormulario();sincronizarFormularioFotografia();ocultarVista();document.getElementById('vistaEscaner')?.classList.remove('oculto');const inicio=document.getElementById('menuInicio');document.getElementById('menuLateral')?.querySelectorAll('.menu-lateral__opcion').forEach(b=>b.classList.toggle('activa',b===inicio));});
     document.getElementById('buscarAdminAlumno').addEventListener('input',renderLista);
     document.getElementById('filtroEstadoAdminAlumno').addEventListener('change',renderLista);
     document.getElementById('btnNuevoAdminAlumno').addEventListener('click',nuevoAlumno);
-    document.getElementById('btnCancelarAdminAlumno').addEventListener('click',()=>{document.getElementById('formAdminAlumno').classList.add('oculto');limpiarFormulario();});
+    document.getElementById('btnCancelarAdminAlumno').addEventListener('click',()=>{limpiarRecuperacionFotografica();document.getElementById('formAdminAlumno').classList.add('oculto');limpiarFormulario();sincronizarFormularioFotografia();});
     document.getElementById('btnGuardarAdminAlumno').addEventListener('click',guardar);
     document.getElementById('btnEstadoAdminAlumno').addEventListener('click',cambiarEstado);
     document.getElementById('btnBajaDefinitivaAdminAlumno').addEventListener('click',darBajaDefinitiva);

@@ -4,6 +4,29 @@
   let fotoOriginal = '';
   let quitarFotoSolicitada = false;
   let parcheInstalado = false;
+  let recuperacionFotografica = null;
+
+  function limpiarRecuperacionFotografica() {
+    recuperacionFotografica = null;
+    fotoArchivoSeleccionado = null;
+    quitarFotoSolicitada = false;
+    const input = document.getElementById('adminFotoArchivo');
+    if (input) input.value = '';
+  }
+
+  function prepararFotografiaAlumno(idAlumno) {
+    const id = String(idAlumno || '').trim();
+    if (recuperacionFotografica && recuperacionFotografica.idAlumno !== id) {
+      limpiarRecuperacionFotografica();
+    }
+  }
+
+  window.AulaNFCAdministracionAlumnos = {
+    ...(window.AulaNFCAdministracionAlumnos || {}),
+    limpiarRecuperacionFotografica,
+    prepararFotografiaAlumno,
+    sincronizarFormularioFotografia: prepararFotoFormulario
+  };
 
   function esperarFormulario() {
     const campoUrl = document.getElementById('adminFoto');
@@ -210,8 +233,7 @@
   function observarFormulario(formulario) {
     const observador = new MutationObserver(() => {
       if (formulario.classList.contains('oculto')) {
-        fotoArchivoSeleccionado = null;
-        quitarFotoSolicitada = false;
+        limpiarRecuperacionFotografica();
         return;
       }
       setTimeout(prepararFotoFormulario, 30);
@@ -341,17 +363,29 @@
       if (clave === 'actualizaralumno' && fotoArchivoSeleccionado) {
         const id = String(p.idAlumno || '').trim();
         if (!id) throw new Error('No se encontró el ID del alumno para guardar su fotografía.');
-        const idFoto = await subirFotoDrive(id,nombre);
-        p.foto = idFoto;
-        document.getElementById('adminFoto').value = idFoto;
-        const r = await original(accion,p);
-        if (r && r.ok !== false && r.exito !== false) {
-          fotoOriginal = idFoto;
-          fotoArchivoSeleccionado = null;
-          quitarFotoSolicitada = false;
-          mostrarEstadoFoto('✅ Alumno y nueva fotografía guardados correctamente.');
+        const esRecuperacion = recuperacionFotografica?.idAlumno === id;
+        try {
+          const idFoto = esRecuperacion && recuperacionFotografica.idFoto
+            ? recuperacionFotografica.idFoto
+            : await subirFotoDrive(id,nombre);
+          if (esRecuperacion) recuperacionFotografica.idFoto = idFoto;
+          p.foto = idFoto;
+          document.getElementById('adminFoto').value = idFoto;
+          const r = await original(accion,p);
+          if (r && r.ok !== false && r.exito !== false) {
+            fotoOriginal = idFoto;
+            limpiarRecuperacionFotografica();
+            mostrarEstadoFoto('✅ Alumno y nueva fotografía guardados correctamente.');
+          } else if (esRecuperacion) {
+            throw new Error(r?.mensaje || 'No fue posible asociar la fotografía al alumno.');
+          }
+          return r;
+        } catch (error) {
+          if (esRecuperacion) {
+            throw new Error(`El alumno sí fue creado con ID ${id}, pero la fotografía no pudo completarse. ${error?.message || 'Intenta guardar nuevamente para reanudar la fotografía.'}`);
+          }
+          throw error;
         }
-        return r;
       }
 
       // ALUMNO NUEVO SIN FOTO.
@@ -367,16 +401,29 @@
       const id = String(creado.idAlumno || creado.id || '').trim();
       if (!id) throw new Error('El alumno fue creado, pero no se recibió su ID para guardar la fotografía.');
 
-      const idFoto = await subirFotoDrive(id,nombre);
-      document.getElementById('adminIdAlumno').value = id;
-      document.getElementById('adminFoto').value = idFoto;
+      const administracion = window.AulaNFCAdministracionAlumnos;
+      if (!administracion?.conservarAlumnoCreado?.(id,p)) {
+        throw new Error(`El alumno sí fue creado con ID ${id}, pero no fue posible conservarlo en modo edición para completar su fotografía.`);
+      }
+      recuperacionFotografica = { idAlumno:id, idFoto:'' };
 
-      const actualizado = await original('actualizaralumno',{...p,idAlumno:id,foto:idFoto});
-      if (!actualizado || actualizado.ok === false || actualizado.exito === false) return actualizado;
+      let idFoto;
+      let actualizado;
+      try {
+        idFoto = await subirFotoDrive(id,nombre);
+        recuperacionFotografica.idFoto = idFoto;
+        document.getElementById('adminFoto').value = idFoto;
+
+        actualizado = await original('actualizaralumno',{...p,idAlumno:id,foto:idFoto});
+        if (!actualizado || actualizado.ok === false || actualizado.exito === false) {
+          throw new Error(actualizado?.mensaje || 'No fue posible asociar la fotografía al alumno.');
+        }
+      } catch (error) {
+        throw new Error(`El alumno sí fue creado con ID ${id}, pero la fotografía no pudo completarse. ${error?.message || 'Intenta guardar nuevamente para reanudar la fotografía.'}`);
+      }
 
       fotoOriginal = idFoto;
-      fotoArchivoSeleccionado = null;
-      quitarFotoSolicitada = false;
+      limpiarRecuperacionFotografica();
 
       return {
         ...actualizado,
