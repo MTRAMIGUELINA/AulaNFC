@@ -10,7 +10,7 @@
   function cargarExtensionFoto() {
     if (document.querySelector('script[data-administracion-alumnos-foto]')) return;
     const foto=document.createElement('script');
-    foto.src='administracion-alumnos-foto.js?v=1';
+    foto.src='administracion-alumnos-foto.js?v=2';
     foto.defer=true;
     foto.dataset.administracionAlumnosFoto='true';
     document.body.appendChild(foto);
