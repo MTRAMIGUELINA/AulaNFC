@@ -1,6 +1,8 @@
-/* AulaNFC v3.1 - Selección, vista previa y subida de foto a Google Drive. */
+/* AulaNFC v3.3 - Selección, edición y subida privada de fotos de alumnos. */
 (() => {
   let fotoArchivoSeleccionado = null;
+  let fotoOriginal = '';
+  let quitarFotoSolicitada = false;
   let parcheInstalado = false;
 
   function esperarFormulario() {
@@ -39,7 +41,7 @@
           <label class="admin-alumnos__foto-seleccionar" for="adminFotoArchivo">🖼️ Seleccionar foto</label>
           <input id="adminFotoArchivo" type="file" accept="image/jpeg,image/png,image/webp" hidden>
           <button id="btnQuitarFotoAdmin" type="button" class="admin-alumnos__foto-quitar" hidden>✕ Quitar foto</button>
-          <small id="adminFotoAyuda">Selecciona una fotografía JPG, JPEG, PNG o WebP. AulaNFC la optimizará antes de guardarla.</small>
+          <small id="adminFotoAyuda">Si no seleccionas otra foto, se conservará la actual. Puedes reemplazarla o quitarla.</small>
         </div>
       </div>`;
 
@@ -47,7 +49,7 @@
 
     document.getElementById('adminFotoArchivo')?.addEventListener('change', manejarArchivoFoto);
     document.getElementById('btnQuitarFotoAdmin')?.addEventListener('click', quitarFotoSeleccionada);
-    actualizarPreviewDesdeUrl(campoUrl.value);
+    prepararFotoFormulario();
   }
 
   function esFormatoCompatible(archivo) {
@@ -63,45 +65,51 @@
     if (!esFormatoCompatible(archivo)) {
       evento.target.value = '';
       fotoArchivoSeleccionado = null;
-      mostrarPreview('');
       mostrarEstadoFoto('❌ Selecciona una imagen JPG, JPEG, PNG o WebP.');
+      restaurarFotoActual();
       return;
     }
 
     if (archivo.size > 8 * 1024 * 1024) {
       evento.target.value = '';
       fotoArchivoSeleccionado = null;
-      mostrarPreview('');
       mostrarEstadoFoto('❌ La fotografía supera 8 MB. Selecciona una imagen más pequeña.');
+      restaurarFotoActual();
       return;
     }
 
     fotoArchivoSeleccionado = archivo;
-    const lector = new FileReader();
+    quitarFotoSolicitada = false;
 
+    const lector = new FileReader();
     lector.onload = () => {
       mostrarPreview(String(lector.result || ''));
-      mostrarEstadoFoto('✅ Fotografía seleccionada. Se guardará junto con el alumno.');
+      mostrarEstadoFoto(fotoOriginal
+        ? '✅ Nueva fotografía seleccionada. Reemplazará la foto actual al guardar.'
+        : '✅ Fotografía seleccionada. Se guardará junto con el alumno.');
       document.getElementById('btnQuitarFotoAdmin')?.removeAttribute('hidden');
     };
-
     lector.onerror = () => {
       fotoArchivoSeleccionado = null;
-      mostrarPreview('');
       mostrarEstadoFoto('❌ No fue posible leer esta fotografía.');
+      restaurarFotoActual();
     };
-
     lector.readAsDataURL(archivo);
   }
 
   function quitarFotoSeleccionada() {
     fotoArchivoSeleccionado = null;
+    quitarFotoSolicitada = true;
+
     const input = document.getElementById('adminFotoArchivo');
     const campo = document.getElementById('adminFoto');
     if (input) input.value = '';
     if (campo) campo.value = '';
+
     mostrarPreview('');
-    mostrarEstadoFoto('Fotografía eliminada del formulario.');
+    mostrarEstadoFoto(fotoOriginal
+      ? '🗑️ La fotografía actual se quitará cuando guardes los cambios.'
+      : 'Fotografía eliminada del formulario.');
     document.getElementById('btnQuitarFotoAdmin')?.setAttribute('hidden','');
   }
 
@@ -117,9 +125,43 @@
       return;
     }
 
-    imagen.onload = () => { imagen.hidden = false; inicial.hidden = true; };
-    imagen.onerror = () => { imagen.hidden = true; inicial.hidden = false; };
+    imagen.onload = () => {
+      imagen.hidden = false;
+      inicial.hidden = true;
+    };
+    imagen.onerror = () => {
+      imagen.hidden = true;
+      inicial.hidden = false;
+    };
     imagen.src = src;
+  }
+
+  async function cargarFotoActualPrivada() {
+    const idAlumno = String(document.getElementById('adminIdAlumno')?.value || '').trim();
+    if (!idAlumno || !fotoOriginal || typeof window.solicitarJSONP !== 'function') {
+      actualizarPreviewDesdeUrl(fotoOriginal);
+      return;
+    }
+
+    try {
+      const respuesta = await window.solicitarJSONP('obtenerfotoalumno', { idAlumno });
+      if (
+        respuesta &&
+        respuesta.ok !== false &&
+        respuesta.exito !== false &&
+        respuesta.tieneFoto === true &&
+        respuesta.base64
+      ) {
+        const tipoMime = String(respuesta.tipoMime || 'image/jpeg').trim();
+        mostrarPreview(`data:${tipoMime};base64,${String(respuesta.base64).trim()}`);
+        document.getElementById('btnQuitarFotoAdmin')?.removeAttribute('hidden');
+        return;
+      }
+    } catch (error) {
+      console.warn('No fue posible cargar la vista previa privada de la foto:', error);
+    }
+
+    actualizarPreviewDesdeUrl(fotoOriginal);
   }
 
   function obtenerIdDrive(valor) {
@@ -145,24 +187,35 @@
     document.getElementById('btnQuitarFotoAdmin')?.removeAttribute('hidden');
   }
 
-  function limpiarEstadoFoto() {
+  function prepararFotoFormulario() {
     fotoArchivoSeleccionado = null;
+    quitarFotoSolicitada = false;
+
     const input = document.getElementById('adminFotoArchivo');
     if (input) input.value = '';
-    actualizarPreviewDesdeUrl(document.getElementById('adminFoto')?.value || '');
+
+    fotoOriginal = String(document.getElementById('adminFoto')?.value || '').trim();
+    if (fotoOriginal) cargarFotoActualPrivada();
+    else actualizarPreviewDesdeUrl('');
   }
 
-  function observarFormulario(formulario, campoUrl) {
+  function restaurarFotoActual() {
+    quitarFotoSolicitada = false;
+    const campo = document.getElementById('adminFoto');
+    if (campo) campo.value = fotoOriginal;
+    if (fotoOriginal) cargarFotoActualPrivada();
+    else actualizarPreviewDesdeUrl('');
+  }
+
+  function observarFormulario(formulario) {
     const observador = new MutationObserver(() => {
       if (formulario.classList.contains('oculto')) {
-        limpiarEstadoFoto();
+        fotoArchivoSeleccionado = null;
+        quitarFotoSolicitada = false;
         return;
       }
-      setTimeout(() => {
-        if (!fotoArchivoSeleccionado) actualizarPreviewDesdeUrl(campoUrl.value);
-      }, 0);
+      setTimeout(prepararFotoFormulario, 30);
     });
-
     observador.observe(formulario,{attributes:true,attributeFilter:['class']});
   }
 
@@ -173,7 +226,6 @@
     const max = 900;
     let ancho = imagen.naturalWidth || imagen.width;
     let alto = imagen.naturalHeight || imagen.height;
-
     if (!ancho || !alto) throw new Error('No se pudieron obtener las dimensiones de la fotografía.');
 
     const escala = Math.min(1, max / Math.max(ancho, alto));
@@ -185,7 +237,6 @@
     canvas.height = alto;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(imagen,0,0,ancho,alto);
-
     return canvas.toDataURL('image/jpeg',0.82);
   }
 
@@ -261,25 +312,55 @@
     window.solicitarJSONP = async function(accion,parametros={}) {
       const clave = String(accion || '').trim().toLowerCase();
 
-      if (!fotoArchivoSeleccionado || (clave !== 'crearalumno' && clave !== 'actualizaralumno')) {
+      if (clave !== 'crearalumno' && clave !== 'actualizaralumno') {
         return original(accion,parametros);
       }
 
       const p = {...parametros};
       const nombre = nombreFormulario(p);
 
-      if (clave === 'actualizaralumno') {
+      // EDITAR SIN TOCAR FOTO: conservar exactamente la referencia existente.
+      if (clave === 'actualizaralumno' && !fotoArchivoSeleccionado && !quitarFotoSolicitada) {
+        p.foto = fotoOriginal || String(p.foto || '').trim();
+        return original(accion,p);
+      }
+
+      // EDITAR Y QUITAR FOTO: limpiar la columna FOTO.
+      if (clave === 'actualizaralumno' && quitarFotoSolicitada && !fotoArchivoSeleccionado) {
+        p.foto = '';
+        const r = await original(accion,p);
+        if (r && r.ok !== false && r.exito !== false) {
+          fotoOriginal = '';
+          quitarFotoSolicitada = false;
+          mostrarEstadoFoto('✅ Fotografía retirada del alumno correctamente.');
+        }
+        return r;
+      }
+
+      // EDITAR Y REEMPLAZAR FOTO: subir nueva y guardar su ID.
+      if (clave === 'actualizaralumno' && fotoArchivoSeleccionado) {
         const id = String(p.idAlumno || '').trim();
         if (!id) throw new Error('No se encontró el ID del alumno para guardar su fotografía.');
         const idFoto = await subirFotoDrive(id,nombre);
         p.foto = idFoto;
         document.getElementById('adminFoto').value = idFoto;
         const r = await original(accion,p);
-        if (r && r.ok !== false && r.exito !== false) mostrarEstadoFoto('✅ Alumno y fotografía guardados correctamente.');
+        if (r && r.ok !== false && r.exito !== false) {
+          fotoOriginal = idFoto;
+          fotoArchivoSeleccionado = null;
+          quitarFotoSolicitada = false;
+          mostrarEstadoFoto('✅ Alumno y nueva fotografía guardados correctamente.');
+        }
         return r;
       }
 
-      // Alumno nuevo: primero obtenemos su ID, luego guardamos la foto y finalmente actualizamos la columna FOTO.
+      // ALUMNO NUEVO SIN FOTO.
+      if (clave === 'crearalumno' && !fotoArchivoSeleccionado) {
+        p.foto = '';
+        return original(accion,p);
+      }
+
+      // ALUMNO NUEVO CON FOTO: crear, obtener ID, subir foto y actualizar.
       const creado = await original('crearalumno',{...p,foto:''});
       if (!creado || creado.ok === false || creado.exito === false) return creado;
 
@@ -292,6 +373,10 @@
 
       const actualizado = await original('actualizaralumno',{...p,idAlumno:id,foto:idFoto});
       if (!actualizado || actualizado.ok === false || actualizado.exito === false) return actualizado;
+
+      fotoOriginal = idFoto;
+      fotoArchivoSeleccionado = null;
+      quitarFotoSolicitada = false;
 
       return {
         ...actualizado,
