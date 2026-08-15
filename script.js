@@ -317,14 +317,65 @@ function seleccionarAlumnoManual(id) {
 
 async function guardarRegistroManual() {
   if (!alumnoManualId || !validarModulo() || envioEnProceso) return;
-  const alumno = alumnos.find((a) => String(a.id) === alumnoManualId);
+  const moduloActual = moduloSeleccionado;
+  const alumno = alumnos.find((a) => String(a.id) === String(alumnoManualId));
+  if (!alumno) {
+    $('estado').textContent = '❌ No se encontró el alumno seleccionado.';
+    return;
+  }
+
   envioEnProceso = true;
   $('btnGuardarManual').disabled = true;
   $('estado').textContent = '⏳ Guardando registro manual...';
+  $('resultado').textContent = '';
+
   try {
-    const respuesta = await solicitarJSONP('registrarManual', construirParametrosRegistro({ id: alumnoManualId }));
+    const parametros = construirParametrosRegistro({
+      id: alumnoManualId,
+      alumnoId: alumnoManualId,
+      idAlumno: alumnoManualId,
+      uid: alumno.uid || ''
+    });
+
+    if (moduloActual === 'conducta') {
+      const tipoRegistro = String($('tipoConducta').value || '').trim();
+      Object.assign(parametros, {
+        modulo: 'conducta',
+        tipoConducta: tipoRegistro,
+        conducta: tipoRegistro,
+        resultadoConducta: tipoRegistro,
+        tipoRegistro,
+        resultadoRegistro: tipoRegistro,
+        tipoResultado: tipoRegistro,
+        resultado: tipoRegistro,
+        detalle: tipoRegistro,
+        valor: tipoRegistro,
+        registro: tipoRegistro,
+        tipo: tipoRegistro
+      });
+    }
+
+    if (moduloActual === 'lectura') {
+      const tipoRegistro = String($('tipoLectura').value || '').trim();
+      Object.assign(parametros, {
+        modulo: 'lectura',
+        tipoLectura: tipoRegistro,
+        lectura: tipoRegistro,
+        resultadoLectura: tipoRegistro,
+        tipoRegistro,
+        resultadoRegistro: tipoRegistro,
+        tipoResultado: tipoRegistro,
+        resultado: tipoRegistro,
+        detalle: tipoRegistro,
+        valor: tipoRegistro,
+        registro: tipoRegistro,
+        tipo: tipoRegistro
+      });
+    }
+
+    const respuesta = await solicitarJSONP('registrarManual', parametros);
     validarRespuesta(respuesta);
-    confirmarRegistro(respuesta.nombre || respuesta.nombreCompleto || nombreCompleto(alumno || {}), moduloSeleccionado, 'Manual');
+    confirmarRegistro(respuesta.nombre || respuesta.nombreCompleto || nombreCompleto(alumno), moduloActual, 'Manual');
     cerrarRegistroManual();
   } catch (error) {
     $('estado').textContent = '❌ No se pudo guardar el registro manual.';
