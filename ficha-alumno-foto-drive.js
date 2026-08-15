@@ -1,4 +1,4 @@
-/* AulaNFC v3.1 - Fotos privadas de alumnos servidas por Apps Script. */
+/* AulaNFC v3.2 - Fotos privadas de alumnos en Ficha del alumno. */
 (() => {
   let ultimoAlumnoCargado = '';
   let cargaEnCurso = false;
@@ -11,38 +11,43 @@
       : partes[0].slice(0, 2).toUpperCase();
   }
 
-  function mostrarIniciales() {
-    const imagen = document.getElementById('fotoFichaAlumno');
-    const span = document.getElementById('inicialesFichaAlumno');
-    const nombre = document.getElementById('nombreFichaAlumno')?.textContent || 'Alumno';
-
-    if (imagen) {
-      imagen.removeAttribute('src');
-      imagen.classList.add('oculto');
-    }
-
-    if (span) {
-      span.textContent = iniciales(nombre);
-      span.classList.remove('oculto');
-    }
+  function obtenerContenedor() {
+    return document.getElementById('fotoFichaAlumno');
   }
 
-  function mostrarFoto(dataUrl) {
-    const imagen = document.getElementById('fotoFichaAlumno');
-    const span = document.getElementById('inicialesFichaAlumno');
+  function mostrarIniciales() {
+    const contenedor = obtenerContenedor();
+    if (!contenedor) return;
 
-    if (!imagen) return;
+    const nombre = document.getElementById('nombreFichaAlumno')?.textContent || 'Alumno';
+    contenedor.innerHTML = '';
+    contenedor.textContent = iniciales(nombre);
+    contenedor.dataset.fotoPrivada = '';
+  }
+
+  function mostrarFoto(dataUrl, idAlumno) {
+    const contenedor = obtenerContenedor();
+    if (!contenedor) return;
+
+    const nombre = document.getElementById('nombreFichaAlumno')?.textContent || 'Alumno';
+    const imagen = document.createElement('img');
+
+    imagen.alt = `Foto de ${nombre}`;
+    imagen.src = dataUrl;
+    imagen.style.width = '100%';
+    imagen.style.height = '100%';
+    imagen.style.objectFit = 'cover';
+    imagen.style.display = 'block';
 
     imagen.onload = () => {
-      imagen.classList.remove('oculto');
-      span?.classList.add('oculto');
+      contenedor.innerHTML = '';
+      contenedor.appendChild(imagen);
+      contenedor.dataset.fotoPrivada = idAlumno || '';
     };
 
     imagen.onerror = () => {
       mostrarIniciales();
     };
-
-    imagen.src = dataUrl;
   }
 
   async function cargarFotoPrivada() {
@@ -57,7 +62,14 @@
     ).trim();
 
     if (!idAlumno || idAlumno === '—') return;
-    if (idAlumno === ultimoAlumnoCargado) return;
+
+    const contenedor = obtenerContenedor();
+    if (
+      idAlumno === ultimoAlumnoCargado &&
+      contenedor?.dataset.fotoPrivada === idAlumno
+    ) {
+      return;
+    }
 
     ultimoAlumnoCargado = idAlumno;
     cargaEnCurso = true;
@@ -93,7 +105,8 @@
       }
 
       mostrarFoto(
-        `data:${tipoMime};base64,${base64}`
+        `data:${tipoMime};base64,${base64}`,
+        idAlumno
       );
 
     } catch (error) {
@@ -107,23 +120,23 @@
     }
   }
 
-  function reiniciarSiCambiaAlumno() {
+  function detectarCambioAlumno() {
     const idAlumno = String(
       document.getElementById('idFichaAlumno')?.textContent || ''
     ).trim();
 
+    if (!idAlumno || idAlumno === '—') return;
+
+    const contenedor = obtenerContenedor();
     if (
-      idAlumno &&
-      idAlumno !== '—' &&
-      idAlumno !== ultimoAlumnoCargado
+      idAlumno !== ultimoAlumnoCargado ||
+      contenedor?.dataset.fotoPrivada !== idAlumno
     ) {
-      setTimeout(cargarFotoPrivada, 0);
+      setTimeout(cargarFotoPrivada, 20);
     }
   }
 
-  const observador = new MutationObserver(() => {
-    reiniciarSiCambiaAlumno();
-  });
+  const observador = new MutationObserver(detectarCambioAlumno);
 
   observador.observe(document.documentElement, {
     childList: true,
@@ -133,5 +146,9 @@
     attributeFilter: ['class']
   });
 
-  setTimeout(cargarFotoPrivada, 300);
+  window.addEventListener('load', () => {
+    setTimeout(cargarFotoPrivada, 400);
+  });
+
+  setTimeout(cargarFotoPrivada, 600);
 })();
