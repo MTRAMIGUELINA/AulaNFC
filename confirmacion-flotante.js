@@ -11,24 +11,3 @@
   function mostrarConfirmacionFlotante(nombre,modulo){const ventana=obtenerVentana(),mensaje=mensajesPorModulo[modulo]||'Registro guardado';document.getElementById('confirmacionFlotanteMensaje').textContent=mensaje;document.getElementById('confirmacionFlotanteAlumno').textContent=nombre||'Alumno';clearTimeout(temporizadorOcultar);clearTimeout(temporizadorRetirar);ventana.classList.remove('saliendo','visible');requestAnimationFrame(()=>requestAnimationFrame(()=>ventana.classList.add('visible')));temporizadorOcultar=setTimeout(()=>{ventana.classList.add('saliendo');ventana.classList.remove('visible');temporizadorRetirar=setTimeout(()=>ventana.classList.remove('saliendo'),180)},1000)}
   window.confirmarRegistro=function(nombre,modulo,metodo){$('estado').textContent=lectorActivo?'📡 Registro confirmado. Acerca otra tarjeta.':'✅ Registro confirmado.';$('resultado').innerHTML='';mostrarConfirmacionFlotante(nombre,modulo);historialSesion.unshift({nombre,modulo,metodo,hora:new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})});$('totalSesion').textContent=historialSesion.length;$('historialSesion').innerHTML=historialSesion.map(r=>`<article class="historial-item"><div class="historial-icono">${moduloPresentacion(r.modulo)}</div><div><strong>${escaparHTML(r.nombre)}</strong><p>${escaparHTML(formatearModulo(r.modulo))} · ${r.metodo}</p></div><time>${r.hora}</time></article>`).join('');if('vibrate'in navigator)navigator.vibrate(180)};
 })();
-
-function cargarExtra(selector,src,dataset){if(document.querySelector(selector))return;const s=document.createElement('script');s.src=src;s.defer=true;Object.assign(s.dataset,dataset);document.body.appendChild(s)}
-cargarExtra('script[data-menu-aulanfc]','menu-lateral.js?v=2',{menuAulanfc:'true'});
-cargarExtra('script[data-resumen-estadistico-conexion]','resumen-estadistico-conexion.js?v=1',{resumenEstadisticoConexion:'true'});
-cargarExtra('script[data-ficha-alumno-menu]','ficha-alumno-menu.js?v=2',{fichaAlumnoMenu:'true'});
-cargarExtra('script[data-ficha-historial-conexion]','ficha-historial-conexion.js?v=1',{fichaHistorialConexion:'true'});
-cargarExtra('script[data-ficha-pdf]','ficha-pdf.js?v=4',{fichaPdf:'true'});
-cargarExtra('script[data-ficha-pdf-resultados-examen]','ficha-pdf-resultados-examen.js?v=1',{fichaPdfResultadosExamen:'true'});
-cargarExtra('script[data-dashboard-aulanfc]','dashboard.js?v=1',{dashboardAulanfc:'true'});
-cargarExtra('script[data-dashboard-conexion]','dashboard-conexion.js?v=1',{dashboardConexion:'true'});
-cargarExtra('script[data-reporte-incidencias]','reporte-incidencias.js?v=1',{reporteIncidencias:'true'});
-cargarExtra('script[data-reporte-incidencias-acciones]','reporte-incidencias-acciones.js?v=1',{reporteIncidenciasAcciones:'true'});
-cargarExtra('script[data-reporte-incidencias-config]','reporte-incidencias-config.js?v=1',{reporteIncidenciasConfig:'true'});
-cargarExtra('script[data-reporte-incidencias-grupo-activo]','reporte-incidencias-grupo-activo.js?v=1',{reporteIncidenciasGrupoActivo:'true'});
-cargarExtra('script[data-historial-incidencias]','historial-incidencias.js?v=2',{historialIncidencias:'true'});
-cargarExtra('script[data-participacion-actividad]','participacion-actividad.js?v=2',{participacionActividad:'true'});
-cargarExtra('script[data-tareas-actividad]','tareas-actividad.js?v=2',{tareasActividad:'true'});
-cargarExtra('script[data-resultados-examen-loader]','resultados-examen-loader.js?v=1',{resultadosExamenLoader:'true'});
-cargarExtra('script[data-administracion-alumnos-loader]','administracion-alumnos-loader.js?v=1',{administracionAlumnosLoader:'true'});
-cargarExtra('script[data-configuracion-loader]','configuracion-loader.js?v=1',{configuracionLoader:'true'});
-cargarExtra('script[data-registro-manual-grupo-activo]','registro-manual-grupo-activo.js?v=1',{registroManualGrupoActivo:'true'});
