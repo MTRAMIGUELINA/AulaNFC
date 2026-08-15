@@ -1,23 +1,7 @@
-/* AulaNFC v2.1 - Compatibilidad de fotos de alumnos con enlaces de Google Drive. */
+/* AulaNFC v3.1 - Fotos privadas de alumnos servidas por Apps Script. */
 (() => {
-  function obtenerIdDrive(valor) {
-    const texto = String(valor || '').trim();
-    if (!texto) return '';
-
-    const patrones = [
-      /\/file\/d\/([a-zA-Z0-9_-]+)/,
-      /[?&]id=([a-zA-Z0-9_-]+)/,
-      /\/d\/([a-zA-Z0-9_-]+)/,
-      /^([a-zA-Z0-9_-]{20,})$/
-    ];
-
-    for (const patron of patrones) {
-      const coincidencia = texto.match(patron);
-      if (coincidencia && coincidencia[1]) return coincidencia[1];
-    }
-
-    return '';
-  }
+  let ultimoAlumnoCargado = '';
+  let cargaEnCurso = false;
 
   function iniciales(nombre) {
     const partes = String(nombre || '').trim().split(/\s+/).filter(Boolean);
@@ -27,41 +11,127 @@
       : partes[0].slice(0, 2).toUpperCase();
   }
 
-  function mostrarIniciales(contenedor) {
+  function mostrarIniciales() {
+    const imagen = document.getElementById('fotoFichaAlumno');
+    const span = document.getElementById('inicialesFichaAlumno');
     const nombre = document.getElementById('nombreFichaAlumno')?.textContent || 'Alumno';
-    contenedor.textContent = iniciales(nombre);
-  }
 
-  function corregirFoto() {
-    const contenedor = document.getElementById('fotoFichaAlumno');
-    if (!contenedor) return;
-
-    const imagen = contenedor.querySelector('img');
-    if (!imagen || imagen.dataset.driveProcesada === 'true') return;
-
-    const original = imagen.getAttribute('src') || '';
-    const idDrive = obtenerIdDrive(original);
-
-    imagen.dataset.driveProcesada = 'true';
-
-    if (!idDrive) {
-      imagen.addEventListener('error', () => mostrarIniciales(contenedor), { once: true });
-      return;
+    if (imagen) {
+      imagen.removeAttribute('src');
+      imagen.classList.add('oculto');
     }
 
-    imagen.src = `https://drive.google.com/thumbnail?id=${encodeURIComponent(idDrive)}&sz=w500`;
-    imagen.referrerPolicy = 'no-referrer';
-
-    imagen.addEventListener('error', () => {
-      mostrarIniciales(contenedor);
-    }, { once: true });
+    if (span) {
+      span.textContent = iniciales(nombre);
+      span.classList.remove('oculto');
+    }
   }
 
-  const observador = new MutationObserver(() => corregirFoto());
-  observador.observe(document.documentElement, {
-    childList: true,
-    subtree: true
+  function mostrarFoto(dataUrl) {
+    const imagen = document.getElementById('fotoFichaAlumno');
+    const span = document.getElementById('inicialesFichaAlumno');
+
+    if (!imagen) return;
+
+    imagen.onload = () => {
+      imagen.classList.remove('oculto');
+      span?.classList.add('oculto');
+    };
+
+    imagen.onerror = () => {
+      mostrarIniciales();
+    };
+
+    imagen.src = dataUrl;
+  }
+
+  async function cargarFotoPrivada() {
+    if (cargaEnCurso) return;
+    if (typeof solicitarJSONP !== 'function') return;
+
+    const contenido = document.getElementById('contenidoFichaAlumno');
+    if (!contenido || contenido.classList.contains('oculto')) return;
+
+    const idAlumno = String(
+      document.getElementById('idFichaAlumno')?.textContent || ''
+    ).trim();
+
+    if (!idAlumno || idAlumno === '—') return;
+    if (idAlumno === ultimoAlumnoCargado) return;
+
+    ultimoAlumnoCargado = idAlumno;
+    cargaEnCurso = true;
+    mostrarIniciales();
+
+    try {
+      const respuesta = await solicitarJSONP('obtenerfotoalumno', {
+        idAlumno
+      });
+
+      if (
+        !respuesta ||
+        respuesta.ok === false ||
+        respuesta.exito === false ||
+        respuesta.tieneFoto !== true ||
+        !respuesta.base64
+      ) {
+        mostrarIniciales();
+        return;
+      }
+
+      const tipoMime = String(
+        respuesta.tipoMime || 'image/jpeg'
+      ).trim();
+
+      const base64 = String(
+        respuesta.base64 || ''
+      ).trim();
+
+      if (!base64) {
+        mostrarIniciales();
+        return;
+      }
+
+      mostrarFoto(
+        `data:${tipoMime};base64,${base64}`
+      );
+
+    } catch (error) {
+      console.error(
+        'No fue posible cargar la foto privada del alumno:',
+        error
+      );
+      mostrarIniciales();
+    } finally {
+      cargaEnCurso = false;
+    }
+  }
+
+  function reiniciarSiCambiaAlumno() {
+    const idAlumno = String(
+      document.getElementById('idFichaAlumno')?.textContent || ''
+    ).trim();
+
+    if (
+      idAlumno &&
+      idAlumno !== '—' &&
+      idAlumno !== ultimoAlumnoCargado
+    ) {
+      setTimeout(cargarFotoPrivada, 0);
+    }
+  }
+
+  const observador = new MutationObserver(() => {
+    reiniciarSiCambiaAlumno();
   });
 
-  corregirFoto();
+  observador.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter: ['class']
+  });
+
+  setTimeout(cargarFotoPrivada, 300);
 })();
