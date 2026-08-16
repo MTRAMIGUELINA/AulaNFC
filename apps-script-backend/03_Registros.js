@@ -595,6 +595,94 @@ function registrarManualWeb_(parametros) {
     }
 
     // --------------------------------------
+    // VALIDAR GRADO Y GRUPO CONFIGURADOS
+    // --------------------------------------
+    const respuestaConfiguracion =
+      obtenerConfiguracion_();
+
+    if (
+      !respuestaConfiguracion ||
+      respuestaConfiguracion.ok !== true
+    ) {
+      return responderJSONP_(
+        parametros.callback,
+        {
+          exito: false,
+          ok: false,
+          mensaje:
+            "No fue posible verificar la configuración del grupo."
+        }
+      );
+    }
+
+    const configuracion =
+      respuestaConfiguracion
+        .configuracion || {};
+
+    const gradoConfigurado =
+      String(
+        configuracion.GRADO || ""
+      )
+        .trim()
+        .replace(/[°º]/g, "")
+        .replace(/\s+/g, "")
+        .toUpperCase();
+
+    const grupoConfigurado =
+      limpiarGrupo_(
+        configuracion.GRUPO || ""
+      );
+
+    if (
+      !gradoConfigurado ||
+      !grupoConfigurado
+    ) {
+      return responderJSONP_(
+        parametros.callback,
+        {
+          exito: false,
+          ok: false,
+          mensaje:
+            "Debes configurar GRADO y GRUPO antes de registrar manualmente."
+        }
+      );
+    }
+
+    const gradoAlumno =
+      String(
+        alumno.grado || ""
+      )
+        .trim()
+        .replace(/[°º]/g, "")
+        .replace(/\s+/g, "")
+        .toUpperCase();
+
+    const grupoAlumno =
+      limpiarGrupo_(
+        alumno.grupo || ""
+      );
+
+    if (
+      gradoAlumno !== gradoConfigurado ||
+      grupoAlumno !== grupoConfigurado
+    ) {
+      return responderJSONP_(
+        parametros.callback,
+        {
+          exito: false,
+          ok: false,
+          mensaje:
+            alumno.nombreCompleto +
+            " no pertenece al grupo activo " +
+            gradoConfigurado +
+            "° " +
+            grupoConfigurado +
+            "."
+        }
+      );
+    }
+
+    // --------------------------------------
     // REGISTRAR SEGÚN EL MÓDULO
     // --------------------------------------
     const resultadoRegistro =
