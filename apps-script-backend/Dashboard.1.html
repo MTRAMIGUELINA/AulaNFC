@@ -1,0 +1,190 @@
+<div class="encabezado-pagina">
+
+  <h2>Panel principal</h2>
+
+  <p>
+    Selecciona un módulo para comenzar a registrar información
+    mediante las tarjetas NFC.
+  </p>
+
+</div>
+
+<section class="tarjeta-bienvenida">
+
+  <h2>Bienvenida a AulaNFC</h2>
+
+  <p>
+    Controla la asistencia, las tareas, la participación,
+    la conducta y la lectura de tus alumnos desde una sola
+    aplicación.
+  </p>
+
+</section>
+
+<section class="rejilla-resumen">
+
+  <article class="tarjeta-resumen">
+
+    <div class="tarjeta-resumen-superior">
+
+      <span class="tarjeta-resumen-etiqueta">
+        Asistencias de hoy
+      </span>
+
+      <div class="tarjeta-resumen-icono fondo-verde">
+        ✅
+      </div>
+
+    </div>
+
+    <p class="tarjeta-resumen-numero">0</p>
+
+    <p class="tarjeta-resumen-detalle">
+      Registros realizados
+    </p>
+
+  </article>
+
+  <article class="tarjeta-resumen">
+
+    <div class="tarjeta-resumen-superior">
+
+      <span class="tarjeta-resumen-etiqueta">
+        Tareas
+      </span>
+
+      <div class="tarjeta-resumen-icono fondo-amarillo">
+        📚
+      </div>
+
+    </div>
+
+    <p class="tarjeta-resumen-numero">0</p>
+
+    <p class="tarjeta-resumen-detalle">
+      Entregas registradas
+    </p>
+
+  </article>
+
+  <article class="tarjeta-resumen">
+
+    <div class="tarjeta-resumen-superior">
+
+      <span class="tarjeta-resumen-etiqueta">
+        Participaciones
+      </span>
+
+      <div class="tarjeta-resumen-icono fondo-azul">
+        🙋
+      </div>
+
+    </div>
+
+    <p class="tarjeta-resumen-numero">0</p>
+
+    <p class="tarjeta-resumen-detalle">
+      Participaciones del día
+    </p>
+
+  </article>
+
+  <article class="tarjeta-resumen">
+
+    <div class="tarjeta-resumen-superior">
+
+      <span class="tarjeta-resumen-etiqueta">
+        Conducta
+      </span>
+
+      <div class="tarjeta-resumen-icono fondo-morado">
+        ⭐
+      </div>
+
+    </div>
+
+    <p class="tarjeta-resumen-numero">0</p>
+
+    <p class="tarjeta-resumen-detalle">
+      Registros realizados
+    </p>
+
+  </article>
+
+</section>
+
+<section class="rejilla-inferior">
+
+  <article class="tarjeta">
+
+    <h3>Accesos rápidos</h3>
+
+    <div class="modos-rapidos">
+
+      <button
+        class="boton-rapido"
+        onclick="abrirDesdeAcceso('asistencia')"
+      >
+        <strong>🟢 Asistencia</strong>
+        <span>Registrar entrada por NFC</span>
+      </button>
+
+      <button
+        class="boton-rapido"
+        onclick="abrirDesdeAcceso('tareas')"
+      >
+        <strong>🟡 Tareas</strong>
+        <span>Registrar entregas</span>
+      </button>
+
+      <button
+        class="boton-rapido"
+        onclick="abrirDesdeAcceso('participacion')"
+      >
+        <strong>🔵 Participación</strong>
+        <span>Elegir campo formativo</span>
+      </button>
+
+      <button
+        class="boton-rapido"
+        onclick="abrirDesdeAcceso('reportes')"
+      >
+        <strong>📊 Reportes</strong>
+        <span>Consultar resultados</span>
+      </button>
+
+    </div>
+
+  </article>
+
+  <article class="tarjeta">
+
+    <h3>Estado del sistema</h3>
+
+    <div class="estado-sistema">
+
+      <div class="fila-estado">
+        <span>Aplicación</span>
+        <span class="etiqueta-estado">Activa</span>
+      </div>
+
+      <div class="fila-estado">
+        <span>Conexión con Google Sheets</span>
+        <span class="etiqueta-estado">Preparada</span>
+      </div>
+
+      <div class="fila-estado">
+        <span>Modo de registro</span>
+        <strong>Sin seleccionar</strong>
+      </div>
+
+      <div class="fila-estado">
+        <span>Lector NFC</span>
+        <strong>Pendiente de configurar</strong>
+      </div>
+
+    </div>
+
+  </article>
+
+</section>

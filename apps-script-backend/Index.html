@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <base target="_top">
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>AulaNFC</title>
+
+  <?!= include("CSS"); ?>
+  <?!= include("BuscarAlumnoCSS"); ?>
+</head>
+
+<body>
+
+  <div class="aplicacion">
+
+    <?!= include("menu"); ?>
+
+    <main class="contenido-principal">
+
+      <header class="barra-superior">
+
+        <button
+          class="boton-menu-movil"
+          type="button"
+          onclick="alternarMenu()"
+          aria-label="Abrir o cerrar menú"
+        >
+          ☰
+        </button>
+
+        <div>
+          <h1 class="titulo-superior">
+            AulaNFC
+          </h1>
+
+          <p class="subtitulo-superior">
+            Sistema de gestión del aula
+          </p>
+        </div>
+
+        <div class="estado-conexion">
+          <span class="punto-conexion"></span>
+          Sistema activo
+        </div>
+
+      </header>
+
+      <section
+        id="contenido"
+        class="contenido-vista"
+      >
+        <?!= include("Dashboard"); ?>
+      </section>
+
+    </main>
+
+  </div>
+
+  <div
+    id="capaMenu"
+    class="capa-menu"
+    onclick="cerrarMenu()"
+  ></div>
+
+  <div
+    id="notificacion"
+    class="notificacion"
+  ></div>
+
+  <?!= include("JS"); ?>
+  <?!= include("BuscarAlumnoJS"); ?>
+
+</body>
+
+</html>

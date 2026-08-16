@@ -1,0 +1,492 @@
+<style>
+  .buscar-alumno {
+    --ba-azul: #1976d2;
+    --ba-azul-oscuro: #125ba1;
+    --ba-fondo: #f4f7fb;
+    --ba-texto: #1f2937;
+    --ba-texto-suave: #64748b;
+    --ba-borde: #dfe6ef;
+    --ba-blanco: #ffffff;
+
+    color: var(--ba-texto);
+    font-family:
+      Arial,
+      Helvetica,
+      sans-serif;
+  }
+
+  .buscar-alumno *,
+  .buscar-alumno *::before,
+  .buscar-alumno *::after {
+    box-sizing: border-box;
+  }
+
+  .buscar-alumno__encabezado {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+
+  .buscar-alumno__etiqueta,
+  .ficha-alumno__etiqueta,
+  .historial-alumno__etiqueta {
+    margin: 0 0 5px;
+    color: var(--ba-azul);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .buscar-alumno__titulo {
+    margin: 0;
+    font-size: 28px;
+    line-height: 1.2;
+  }
+
+  .buscar-alumno__descripcion {
+    max-width: 650px;
+    margin: 8px 0 0;
+    color: var(--ba-texto-suave);
+    line-height: 1.5;
+  }
+
+  .buscar-alumno__recargar {
+    min-height: 42px;
+    padding: 0 18px;
+    border: 1px solid var(--ba-borde);
+    border-radius: 10px;
+    background: var(--ba-blanco);
+    color: var(--ba-azul);
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  .buscar-alumno__recargar:hover {
+    border-color: var(--ba-azul);
+    background: #eef6ff;
+  }
+
+  .buscar-alumno__contenido {
+    display: grid;
+    grid-template-columns:
+      minmax(250px, 340px)
+      minmax(0, 1fr);
+    gap: 22px;
+    align-items: start;
+  }
+
+  .buscar-alumno__panel-lista,
+  .buscar-alumno__panel-ficha {
+    border: 1px solid var(--ba-borde);
+    border-radius: 16px;
+    background: var(--ba-blanco);
+    box-shadow:
+      0 8px 24px rgba(15, 23, 42, 0.06);
+  }
+
+  .buscar-alumno__panel-lista {
+    overflow: hidden;
+  }
+
+  .buscar-alumno__campo {
+    padding: 20px 20px 14px;
+  }
+
+  .buscar-alumno__label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .buscar-alumno__input-contenedor {
+    position: relative;
+  }
+
+  .buscar-alumno__icono-busqueda {
+    position: absolute;
+    top: 50%;
+    left: 13px;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  .buscar-alumno__input {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 14px 10px 42px;
+    border: 1px solid var(--ba-borde);
+    border-radius: 11px;
+    outline: none;
+    font-size: 15px;
+  }
+
+  .buscar-alumno__input:focus {
+    border-color: var(--ba-azul);
+    box-shadow:
+      0 0 0 3px rgba(25, 118, 210, 0.12);
+  }
+
+  .buscar-alumno__contador {
+    padding: 0 20px 12px;
+    color: var(--ba-texto-suave);
+    font-size: 12px;
+  }
+
+  .buscar-alumno__lista {
+    max-height: 590px;
+    overflow-y: auto;
+    border-top: 1px solid var(--ba-borde);
+  }
+
+  .buscar-alumno__item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border: 0;
+    border-bottom: 1px solid #edf1f6;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .buscar-alumno__item:hover {
+    background: #f5f9ff;
+  }
+
+  .buscar-alumno__item.activo {
+    background: #eaf4ff;
+    box-shadow:
+      inset 4px 0 0 var(--ba-azul);
+  }
+
+  .buscar-alumno__avatar-lista {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #e7f2ff;
+    color: var(--ba-azul);
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .buscar-alumno__item-datos {
+    min-width: 0;
+  }
+
+  .buscar-alumno__item-nombre {
+    display: block;
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .buscar-alumno__item-grupo {
+    display: block;
+    margin-top: 3px;
+    color: var(--ba-texto-suave);
+    font-size: 12px;
+  }
+
+  .buscar-alumno__panel-ficha {
+    min-height: 530px;
+    padding: 25px;
+  }
+
+  .buscar-alumno__estado-inicial {
+    min-height: 475px;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    padding: 30px;
+    color: var(--ba-texto-suave);
+    text-align: center;
+  }
+
+  .buscar-alumno__estado-inicial h3 {
+    margin: 14px 0 5px;
+    color: var(--ba-texto);
+  }
+
+  .buscar-alumno__estado-inicial p {
+    max-width: 350px;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .buscar-alumno__estado-icono {
+    width: 76px;
+    height: 76px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #eef6ff;
+    font-size: 34px;
+  }
+
+  .ficha-alumno__encabezado {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--ba-borde);
+  }
+
+  .ficha-alumno__avatar {
+    width: 72px;
+    height: 72px;
+    flex: 0 0 72px;
+    position: relative;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 50%;
+    background:
+      linear-gradient(
+        135deg,
+        #ddebff,
+        #eef7ff
+      );
+    color: var(--ba-azul);
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  .ficha-alumno__foto {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .ficha-alumno__identidad h3 {
+    margin: 0;
+    font-size: 24px;
+  }
+
+  .ficha-alumno__identidad > p:last-child {
+    margin: 6px 0 0;
+    color: var(--ba-texto-suave);
+  }
+
+  .ficha-alumno__datos {
+    display: grid;
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    padding: 20px 0;
+  }
+
+  .ficha-alumno__dato {
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid var(--ba-borde);
+    border-radius: 12px;
+    background: var(--ba-fondo);
+  }
+
+  .ficha-alumno__dato-label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--ba-texto-suave);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .ficha-alumno__dato strong {
+    display: block;
+    overflow-wrap: anywhere;
+    font-size: 13px;
+  }
+
+  .historial-alumno {
+    margin-top: 4px;
+  }
+
+  .historial-alumno__encabezado {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 16px;
+  }
+
+  .historial-alumno__encabezado h3 {
+    margin: 0;
+    font-size: 20px;
+  }
+
+  .historial-alumno__total {
+    padding: 7px 11px;
+    border-radius: 999px;
+    background: #edf5ff;
+    color: var(--ba-azul);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .historial-alumno__lista {
+    display: grid;
+    gap: 12px;
+  }
+
+  .historial-alumno__item {
+    display: grid;
+    grid-template-columns: 46px 1fr auto;
+    gap: 13px;
+    align-items: center;
+    padding: 14px;
+    border: 1px solid var(--ba-borde);
+    border-radius: 13px;
+    background: var(--ba-blanco);
+  }
+
+  .historial-alumno__icono {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    font-size: 20px;
+  }
+
+  .historial-alumno__icono--asistencia {
+    background: #e8f7ee;
+  }
+
+  .historial-alumno__icono--tareas {
+    background: #fff7d9;
+  }
+
+  .historial-alumno__icono--participacion {
+    background: #e8f2ff;
+  }
+
+  .historial-alumno__icono--conducta {
+    background: #f3eaff;
+  }
+
+  .historial-alumno__icono--lectura {
+    background: #fff0e4;
+  }
+
+  .historial-alumno__modulo {
+    margin: 0 0 3px;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .historial-alumno__registro {
+    margin: 0;
+    color: var(--ba-texto-suave);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .historial-alumno__fecha {
+    color: var(--ba-texto-suave);
+    font-size: 12px;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .historial-alumno__vacio,
+  .buscar-alumno__sin-resultados,
+  .buscar-alumno__error {
+    padding: 35px 20px;
+    color: var(--ba-texto-suave);
+    text-align: center;
+  }
+
+  .buscar-alumno__error {
+    color: #b42318;
+  }
+
+  .buscar-alumno__cargando,
+  .historial-alumno__cargando {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 30px;
+    color: var(--ba-texto-suave);
+  }
+
+  .buscar-alumno__spinner {
+    width: 19px;
+    height: 19px;
+    display: inline-block;
+    border: 3px solid #d8e4f1;
+    border-top-color: var(--ba-azul);
+    border-radius: 50%;
+    animation:
+      girarBuscadorAlumno 0.8s linear infinite;
+  }
+
+  .oculto {
+    display: none !important;
+  }
+
+  @keyframes girarBuscadorAlumno {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (max-width: 900px) {
+    .buscar-alumno__contenido {
+      grid-template-columns: 1fr;
+    }
+
+    .buscar-alumno__lista {
+      max-height: 340px;
+    }
+
+    .buscar-alumno__panel-ficha {
+      min-height: auto;
+    }
+
+    .buscar-alumno__estado-inicial {
+      min-height: 300px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .buscar-alumno__encabezado {
+      flex-direction: column;
+    }
+
+    .buscar-alumno__recargar {
+      width: 100%;
+    }
+
+    .buscar-alumno__panel-ficha {
+      padding: 18px;
+    }
+
+    .ficha-alumno__datos {
+      grid-template-columns: 1fr;
+    }
+
+    .historial-alumno__item {
+      grid-template-columns: 42px 1fr;
+    }
+
+    .historial-alumno__fecha {
+      grid-column: 2;
+      text-align: left;
+    }
+  }
+</style>

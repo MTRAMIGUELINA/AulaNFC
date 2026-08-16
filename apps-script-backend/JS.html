@@ -1,0 +1,147 @@
+<script>
+
+  const mapaArchivos = {
+    dashboard: "Dashboard",
+    asistencia: "Asistencia",
+    tareas: "Tareas",
+    participacion: "Participacion",
+    conducta: "Conducta",
+    lectura: "Lectura",
+    buscaralumno: "BuscarAlumno",
+    reportes: "Reportes"
+  };
+
+
+  function abrir(modulo, boton) {
+
+    const archivo = mapaArchivos[modulo];
+
+    if (!archivo) {
+      mostrarNotificacion("El módulo solicitado no existe.");
+      return;
+    }
+
+    mostrarCargando();
+
+    google.script.run
+  .withSuccessHandler(function(html) {
+
+    document
+      .getElementById("contenido")
+      .innerHTML = html;
+
+    if (
+      archivo === "BuscarAlumno"
+    ) {
+      iniciarModuloBuscarAlumno();
+    }
+
+    marcarBotonActivo(
+      modulo,
+      boton
+    );
+
+    cerrarMenu();
+  })
+  .withFailureHandler(function(error) {
+
+    document
+      .getElementById("contenido")
+      .innerHTML = `
+        <div class="tarjeta">
+          <h2>No fue posible cargar el módulo</h2>
+          <p>${error.message || error}</p>
+        </div>
+      `;
+  })
+  .cargarVista(archivo);
+
+
+  function abrirDesdeAcceso(modulo) {
+
+    const boton = document.querySelector(
+      `[data-modulo="${modulo}"]`
+    );
+
+    abrir(modulo, boton);
+  }
+
+
+  function marcarBotonActivo(modulo, botonSeleccionado) {
+
+    document
+      .querySelectorAll(".boton-navegacion")
+      .forEach(function(boton) {
+        boton.classList.remove("activo");
+      });
+
+    const boton = botonSeleccionado ||
+      document.querySelector(`[data-modulo="${modulo}"]`);
+
+    if (boton) {
+      boton.classList.add("activo");
+    }
+  }
+
+
+  function mostrarCargando() {
+
+    document.getElementById("contenido").innerHTML = `
+      <div class="estado-espera">
+        <div>
+          <div class="estado-espera-icono">⏳</div>
+          <h3>Cargando módulo...</h3>
+          <p>Espera un momento.</p>
+        </div>
+      </div>
+    `;
+  }
+
+
+  function alternarMenu() {
+
+    document
+      .getElementById("menuLateral")
+      .classList.toggle("abierto");
+
+    document
+      .getElementById("capaMenu")
+      .classList.toggle("visible");
+  }
+
+
+  function cerrarMenu() {
+
+    document
+      .getElementById("menuLateral")
+      .classList.remove("abierto");
+
+    document
+      .getElementById("capaMenu")
+      .classList.remove("visible");
+  }
+
+
+  function mostrarNotificacion(mensaje) {
+
+    const notificacion =
+      document.getElementById("notificacion");
+
+    notificacion.textContent = mensaje;
+    notificacion.classList.add("visible");
+
+    setTimeout(function() {
+      notificacion.classList.remove("visible");
+    }, 3000);
+  }
+
+
+  function escaparHtml(texto) {
+
+    const elemento = document.createElement("div");
+    elemento.textContent = texto || "Error desconocido";
+
+    return elemento.innerHTML;
+  }
+
+</script>

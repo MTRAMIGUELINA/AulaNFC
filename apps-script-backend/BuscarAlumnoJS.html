@@ -1,0 +1,801 @@
+<script>
+  let alumnosBuscador = [];
+  let alumnosFiltradosBuscador = [];
+  let idAlumnoSeleccionadoBuscador = "";
+
+  /**
+   * Inicia el módulo cuando BuscarAlumno.html
+   * aparece dentro del contenedor principal.
+   */
+  function iniciarModuloBuscarAlumno() {
+    const modulo =
+      document.getElementById(
+        "moduloBuscarAlumno"
+      );
+
+    if (!modulo) {
+      return;
+    }
+
+    cargarAlumnosBuscador();
+  }
+
+
+  /**
+   * Vuelve a cargar la lista.
+   */
+  function recargarModuloBuscarAlumno() {
+    alumnosBuscador = [];
+    alumnosFiltradosBuscador = [];
+    idAlumnoSeleccionadoBuscador = "";
+
+    const campo =
+      document.getElementById(
+        "campoBusquedaAlumno"
+      );
+
+    if (campo) {
+      campo.value = "";
+    }
+
+    mostrarEstadoInicialFichaAlumno();
+    cargarAlumnosBuscador();
+  }
+
+
+  /**
+   * Obtiene los alumnos desde Apps Script.
+   */
+  function cargarAlumnosBuscador() {
+    const lista =
+      document.getElementById(
+        "listaAlumnosBuscador"
+      );
+
+    if (!lista) {
+      return;
+    }
+
+    lista.innerHTML =
+      '<div class="buscar-alumno__cargando">' +
+        '<span class="buscar-alumno__spinner"></span>' +
+        "<p>Cargando alumnos...</p>" +
+      "</div>";
+
+    google.script.run
+      .withSuccessHandler(
+        function(respuesta) {
+          if (
+            !respuesta ||
+            respuesta.exito !== true
+          ) {
+            mostrarErrorListaAlumnos(
+              respuesta &&
+              respuesta.mensaje
+                ? respuesta.mensaje
+                : "No fue posible obtener los alumnos."
+            );
+
+            return;
+          }
+
+          alumnosBuscador =
+            Array.isArray(
+              respuesta.alumnos
+            )
+              ? respuesta.alumnos
+              : [];
+
+          alumnosFiltradosBuscador =
+            alumnosBuscador.slice();
+
+          renderizarListaAlumnos(
+            alumnosFiltradosBuscador
+          );
+        }
+      )
+      .withFailureHandler(
+        function(error) {
+          mostrarErrorListaAlumnos(
+            error && error.message
+              ? error.message
+              : "Ocurrió un error al cargar los alumnos."
+          );
+        }
+      )
+      .obtenerAlumnosCliente();
+  }
+
+
+  /**
+   * Filtra la lista conforme se escribe.
+   */
+  function filtrarAlumnosBuscador(
+    termino
+  ) {
+    const texto =
+      normalizarTextoBuscadorAlumno(
+        termino
+      );
+
+    alumnosFiltradosBuscador =
+      alumnosBuscador.filter(
+        function(alumno) {
+          const nombre =
+            normalizarTextoBuscadorAlumno(
+              alumno.nombreCompleto ||
+              [
+                alumno.nombre,
+                alumno.apellidoPaterno,
+                alumno.apellidoMaterno
+              ]
+                .filter(Boolean)
+                .join(" ")
+            );
+
+          return nombre.indexOf(texto) !== -1;
+        }
+      );
+
+    renderizarListaAlumnos(
+      alumnosFiltradosBuscador
+    );
+  }
+
+
+  /**
+   * Muestra los alumnos encontrados.
+   */
+  function renderizarListaAlumnos(
+    alumnos
+  ) {
+    const lista =
+      document.getElementById(
+        "listaAlumnosBuscador"
+      );
+
+    const contador =
+      document.getElementById(
+        "contadorAlumnos"
+      );
+
+    if (!lista || !contador) {
+      return;
+    }
+
+    contador.textContent =
+      alumnos.length === 1
+        ? "1 alumno"
+        : alumnos.length + " alumnos";
+
+    if (!alumnos.length) {
+      lista.innerHTML =
+        '<div class="buscar-alumno__sin-resultados">' +
+          "<strong>No se encontraron alumnos</strong>" +
+          "<p>Prueba escribiendo otro nombre.</p>" +
+        "</div>";
+
+      return;
+    }
+
+    lista.innerHTML =
+      alumnos.map(
+        function(alumno) {
+          const nombre =
+            obtenerNombreAlumnoBuscador(
+              alumno
+            );
+
+          const iniciales =
+            obtenerInicialesAlumno(
+              nombre
+            );
+
+          const gradoGrupo =
+            obtenerGradoGrupoAlumno(
+              alumno
+            );
+
+          const activo =
+            String(alumno.id) ===
+            String(
+              idAlumnoSeleccionadoBuscador
+            );
+
+          return (
+            '<button type="button" ' +
+              'class="buscar-alumno__item' +
+              (activo ? " activo" : "") +
+              '" onclick="seleccionarAlumnoBuscador(' +
+              JSON.stringify(
+                String(alumno.id)
+              )
+              .replace(/"/g, "&quot;") +
+              ')">' +
+
+              '<span class="buscar-alumno__avatar-lista">' +
+                escaparHTMLBuscador(
+                  iniciales
+                ) +
+              "</span>" +
+
+              '<span class="buscar-alumno__item-datos">' +
+                '<span class="buscar-alumno__item-nombre">' +
+                  escaparHTMLBuscador(
+                    nombre
+                  ) +
+                "</span>" +
+
+                '<span class="buscar-alumno__item-grupo">' +
+                  escaparHTMLBuscador(
+                    gradoGrupo
+                  ) +
+                "</span>" +
+              "</span>" +
+            "</button>"
+          );
+        }
+      ).join("");
+  }
+
+
+  /**
+   * Selecciona un alumno y solicita su reporte.
+   */
+  function seleccionarAlumnoBuscador(
+    idAlumno
+  ) {
+    idAlumnoSeleccionadoBuscador =
+      String(idAlumno || "");
+
+    renderizarListaAlumnos(
+      alumnosFiltradosBuscador
+    );
+
+    mostrarCargaHistorialAlumno();
+
+    google.script.run
+      .withSuccessHandler(
+        function(respuesta) {
+          if (
+            !respuesta ||
+            respuesta.exito !== true
+          ) {
+            mostrarErrorFichaAlumno(
+              respuesta &&
+              respuesta.mensaje
+                ? respuesta.mensaje
+                : "No fue posible obtener el reporte."
+            );
+
+            return;
+          }
+
+          mostrarFichaAlumno(
+            respuesta
+          );
+        }
+      )
+      .withFailureHandler(
+        function(error) {
+          mostrarErrorFichaAlumno(
+            error && error.message
+              ? error.message
+              : "Ocurrió un error al obtener el reporte."
+          );
+        }
+      )
+      .obtenerReporteAlumnoCliente(
+        idAlumnoSeleccionadoBuscador
+      );
+  }
+
+
+  /**
+   * Muestra la ficha y el historial.
+   */
+  function mostrarFichaAlumno(
+    respuesta
+  ) {
+    const alumno =
+      respuesta.alumno || {};
+
+    const historial =
+      Array.isArray(
+        respuesta.historial
+      )
+        ? respuesta.historial
+        : [];
+
+    ocultarElementoBuscador(
+      "estadoInicialAlumno"
+    );
+
+    mostrarElementoBuscador(
+      "contenidoFichaAlumno"
+    );
+
+    ocultarElementoBuscador(
+      "estadoCargaHistorial"
+    );
+
+    const nombre =
+      obtenerNombreAlumnoBuscador(
+        alumno
+      );
+
+    establecerTextoBuscador(
+      "nombreFichaAlumno",
+      nombre || "Alumno"
+    );
+
+    establecerTextoBuscador(
+      "gradoGrupoFichaAlumno",
+      obtenerGradoGrupoAlumno(
+        alumno
+      )
+    );
+
+    establecerTextoBuscador(
+      "idFichaAlumno",
+      alumno.id || "—"
+    );
+
+    establecerTextoBuscador(
+      "uidFichaAlumno",
+      alumno.uid || "Sin UID"
+    );
+
+    establecerTextoBuscador(
+      "estadoFichaAlumno",
+      alumno.activo === false ||
+      String(
+        alumno.estatus || ""
+      ).toUpperCase() === "INACTIVO"
+        ? "Inactivo"
+        : "Activo"
+    );
+
+    establecerTextoBuscador(
+      "inicialesFichaAlumno",
+      obtenerInicialesAlumno(
+        nombre
+      )
+    );
+
+    mostrarFotoAlumno(
+      alumno.foto || "",
+      nombre
+    );
+
+    const total =
+      Number(
+        respuesta.totalRegistros
+      ) || historial.length;
+
+    establecerTextoBuscador(
+      "totalHistorialAlumno",
+      total === 1
+        ? "1 registro"
+        : total + " registros"
+    );
+
+    renderizarHistorialAlumno(
+      historial
+    );
+  }
+
+
+  /**
+   * Dibuja los registros del historial.
+   */
+  function renderizarHistorialAlumno(
+    historial
+  ) {
+    const contenedor =
+      document.getElementById(
+        "listaHistorialAlumno"
+      );
+
+    if (!contenedor) {
+      return;
+    }
+
+    if (!historial.length) {
+      contenedor.innerHTML =
+        '<div class="historial-alumno__vacio">' +
+          "<strong>Sin registros</strong>" +
+          "<p>Este alumno todavía no tiene historial.</p>" +
+        "</div>";
+
+      return;
+    }
+
+    contenedor.innerHTML =
+      historial.map(
+        function(registro) {
+          const presentacion =
+            obtenerPresentacionModulo(
+              registro.modulo
+            );
+
+          const fechaHora =
+            [
+              registro.fecha,
+              registro.hora
+            ]
+              .filter(Boolean)
+              .join(" · ");
+
+          return (
+            '<article class="historial-alumno__item">' +
+
+              '<div class="historial-alumno__icono ' +
+                presentacion.clase +
+              '">' +
+                presentacion.icono +
+              "</div>" +
+
+              "<div>" +
+                '<h4 class="historial-alumno__modulo">' +
+                  escaparHTMLBuscador(
+                    registro.modulo ||
+                    "Registro"
+                  ) +
+                "</h4>" +
+
+                '<p class="historial-alumno__registro">' +
+                  escaparHTMLBuscador(
+                    registro.registro ||
+                    "Registro guardado"
+                  ) +
+                "</p>" +
+              "</div>" +
+
+              '<time class="historial-alumno__fecha">' +
+                escaparHTMLBuscador(
+                  fechaHora
+                ) +
+              "</time>" +
+
+            "</article>"
+          );
+        }
+      ).join("");
+  }
+
+
+  function mostrarCargaHistorialAlumno() {
+    ocultarElementoBuscador(
+      "estadoInicialAlumno"
+    );
+
+    mostrarElementoBuscador(
+      "contenidoFichaAlumno"
+    );
+
+    mostrarElementoBuscador(
+      "estadoCargaHistorial"
+    );
+
+    const lista =
+      document.getElementById(
+        "listaHistorialAlumno"
+      );
+
+    if (lista) {
+      lista.innerHTML = "";
+    }
+  }
+
+
+  function mostrarEstadoInicialFichaAlumno() {
+    mostrarElementoBuscador(
+      "estadoInicialAlumno"
+    );
+
+    ocultarElementoBuscador(
+      "contenidoFichaAlumno"
+    );
+  }
+
+
+  function mostrarErrorListaAlumnos(
+    mensaje
+  ) {
+    const lista =
+      document.getElementById(
+        "listaAlumnosBuscador"
+      );
+
+    const contador =
+      document.getElementById(
+        "contadorAlumnos"
+      );
+
+    if (contador) {
+      contador.textContent =
+        "No disponible";
+    }
+
+    if (lista) {
+      lista.innerHTML =
+        '<div class="buscar-alumno__error">' +
+          "<strong>Error al cargar</strong>" +
+          "<p>" +
+            escaparHTMLBuscador(
+              mensaje
+            ) +
+          "</p>" +
+        "</div>";
+    }
+  }
+
+
+  function mostrarErrorFichaAlumno(
+    mensaje
+  ) {
+    ocultarElementoBuscador(
+      "estadoCargaHistorial"
+    );
+
+    const lista =
+      document.getElementById(
+        "listaHistorialAlumno"
+      );
+
+    if (lista) {
+      lista.innerHTML =
+        '<div class="buscar-alumno__error">' +
+          "<strong>No se pudo cargar la ficha</strong>" +
+          "<p>" +
+            escaparHTMLBuscador(
+              mensaje
+            ) +
+          "</p>" +
+        "</div>";
+    }
+  }
+
+
+  function obtenerPresentacionModulo(
+    modulo
+  ) {
+    const nombre =
+      normalizarTextoBuscadorAlumno(
+        modulo
+      );
+
+    if (
+      nombre.indexOf("asistencia") !== -1
+    ) {
+      return {
+        icono: "🟢",
+        clase:
+          "historial-alumno__icono--asistencia"
+      };
+    }
+
+    if (
+      nombre.indexOf("tarea") !== -1
+    ) {
+      return {
+        icono: "🟡",
+        clase:
+          "historial-alumno__icono--tareas"
+      };
+    }
+
+    if (
+      nombre.indexOf("participacion") !== -1
+    ) {
+      return {
+        icono: "🔵",
+        clase:
+          "historial-alumno__icono--participacion"
+      };
+    }
+
+    if (
+      nombre.indexOf("conducta") !== -1
+    ) {
+      return {
+        icono: "🟣",
+        clase:
+          "historial-alumno__icono--conducta"
+      };
+    }
+
+    if (
+      nombre.indexOf("lectura") !== -1
+    ) {
+      return {
+        icono: "🟠",
+        clase:
+          "historial-alumno__icono--lectura"
+      };
+    }
+
+    return {
+      icono: "📌",
+      clase: ""
+    };
+  }
+
+
+  function obtenerNombreAlumnoBuscador(
+    alumno
+  ) {
+    return String(
+      alumno.nombreCompleto ||
+      [
+        alumno.nombre,
+        alumno.apellidoPaterno,
+        alumno.apellidoMaterno
+      ]
+        .filter(Boolean)
+        .join(" ") ||
+      "Alumno"
+    )
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+
+  function obtenerGradoGrupoAlumno(
+    alumno
+  ) {
+    const grado =
+      String(
+        alumno.grado || ""
+      ).trim();
+
+    const grupo =
+      String(
+        alumno.grupo || ""
+      ).trim();
+
+    if (grado && grupo) {
+      return grado + " · Grupo " + grupo;
+    }
+
+    return grado || grupo || "Sin grado y grupo";
+  }
+
+
+  function obtenerInicialesAlumno(
+    nombre
+  ) {
+    const palabras =
+      String(nombre || "")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+    if (!palabras.length) {
+      return "AL";
+    }
+
+    if (palabras.length === 1) {
+      return palabras[0]
+        .substring(0, 2)
+        .toUpperCase();
+    }
+
+    return (
+      palabras[0].charAt(0) +
+      palabras[1].charAt(0)
+    ).toUpperCase();
+  }
+
+
+  function mostrarFotoAlumno(
+    url,
+    nombre
+  ) {
+    const foto =
+      document.getElementById(
+        "fotoFichaAlumno"
+      );
+
+    const iniciales =
+      document.getElementById(
+        "inicialesFichaAlumno"
+      );
+
+    if (!foto || !iniciales) {
+      return;
+    }
+
+    foto.onload = function() {
+      foto.classList.remove("oculto");
+      iniciales.classList.add("oculto");
+    };
+
+    foto.onerror = function() {
+      foto.classList.add("oculto");
+      iniciales.classList.remove("oculto");
+      foto.removeAttribute("src");
+    };
+
+    if (String(url || "").trim()) {
+      foto.alt =
+        "Fotografía de " + nombre;
+
+      foto.src =
+        String(url).trim();
+    } else {
+      foto.classList.add("oculto");
+      iniciales.classList.remove("oculto");
+      foto.removeAttribute("src");
+    }
+  }
+
+
+  function establecerTextoBuscador(
+    id,
+    texto
+  ) {
+    const elemento =
+      document.getElementById(id);
+
+    if (elemento) {
+      elemento.textContent =
+        String(texto || "");
+    }
+  }
+
+
+  function mostrarElementoBuscador(
+    id
+  ) {
+    const elemento =
+      document.getElementById(id);
+
+    if (elemento) {
+      elemento.classList.remove(
+        "oculto"
+      );
+    }
+  }
+
+
+  function ocultarElementoBuscador(
+    id
+  ) {
+    const elemento =
+      document.getElementById(id);
+
+    if (elemento) {
+      elemento.classList.add(
+        "oculto"
+      );
+    }
+  }
+
+
+  function normalizarTextoBuscadorAlumno(
+    texto
+  ) {
+    return String(texto || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(
+        /[\u0300-\u036f]/g,
+        ""
+      );
+  }
+
+
+  function escaparHTMLBuscador(
+    texto
+  ) {
+    return String(texto || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+</script>

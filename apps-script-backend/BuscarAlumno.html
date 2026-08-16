@@ -1,0 +1,202 @@
+<section
+  id="moduloBuscarAlumno"
+  class="buscar-alumno"
+>
+  <header class="buscar-alumno__encabezado">
+    <div>
+      <p class="buscar-alumno__etiqueta">
+        Consulta individual
+      </p>
+
+      <h2 class="buscar-alumno__titulo">
+        Buscar alumno
+      </h2>
+
+      <p class="buscar-alumno__descripcion">
+        Selecciona un alumno para consultar su
+        información y su historial de registros.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="buscar-alumno__recargar"
+      onclick="recargarModuloBuscarAlumno()"
+      aria-label="Actualizar lista de alumnos"
+    >
+      ↻ Actualizar
+    </button>
+  </header>
+
+  <div class="buscar-alumno__contenido">
+
+    <!-- COLUMNA DE BÚSQUEDA -->
+    <aside class="buscar-alumno__panel-lista">
+      <div class="buscar-alumno__campo">
+        <label
+          for="campoBusquedaAlumno"
+          class="buscar-alumno__label"
+        >
+          Buscar por nombre
+        </label>
+
+        <div class="buscar-alumno__input-contenedor">
+          <span
+            class="buscar-alumno__icono-busqueda"
+            aria-hidden="true"
+          >
+            🔎
+          </span>
+
+          <input
+            type="search"
+            id="campoBusquedaAlumno"
+            class="buscar-alumno__input"
+            placeholder="Escribe el nombre..."
+            autocomplete="off"
+            oninput="filtrarAlumnosBuscador(this.value)"
+          >
+        </div>
+      </div>
+
+      <div class="buscar-alumno__contador">
+        <span id="contadorAlumnos">
+          Cargando alumnos...
+        </span>
+      </div>
+
+      <div
+        id="listaAlumnosBuscador"
+        class="buscar-alumno__lista"
+        aria-live="polite"
+      >
+        <div class="buscar-alumno__cargando">
+          <span class="buscar-alumno__spinner"></span>
+          <p>Cargando alumnos...</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- COLUMNA DE FICHA -->
+    <main
+      id="panelFichaAlumno"
+      class="buscar-alumno__panel-ficha"
+    >
+      <div
+        id="estadoInicialAlumno"
+        class="buscar-alumno__estado-inicial"
+      >
+        <div class="buscar-alumno__estado-icono">
+          👤
+        </div>
+
+        <h3>Selecciona un alumno</h3>
+
+        <p>
+          La información y el historial aparecerán
+          en este espacio.
+        </p>
+      </div>
+
+      <div
+        id="contenidoFichaAlumno"
+        class="buscar-alumno__ficha oculto"
+      >
+        <section class="ficha-alumno__encabezado">
+          <div class="ficha-alumno__avatar">
+            <img
+              id="fotoFichaAlumno"
+              alt="Fotografía del alumno"
+              class="ficha-alumno__foto oculto"
+            >
+
+            <span
+              id="inicialesFichaAlumno"
+              class="ficha-alumno__iniciales"
+            >
+              AL
+            </span>
+          </div>
+
+          <div class="ficha-alumno__identidad">
+            <p class="ficha-alumno__etiqueta">
+              Ficha del alumno
+            </p>
+
+            <h3 id="nombreFichaAlumno">
+              Nombre del alumno
+            </h3>
+
+            <p id="gradoGrupoFichaAlumno">
+              Grado y grupo
+            </p>
+          </div>
+        </section>
+
+        <section class="ficha-alumno__datos">
+          <div class="ficha-alumno__dato">
+            <span class="ficha-alumno__dato-label">
+              ID
+            </span>
+
+            <strong id="idFichaAlumno">
+              —
+            </strong>
+          </div>
+
+          <div class="ficha-alumno__dato">
+            <span class="ficha-alumno__dato-label">
+              UID NFC
+            </span>
+
+            <strong id="uidFichaAlumno">
+              —
+            </strong>
+          </div>
+
+          <div class="ficha-alumno__dato">
+            <span class="ficha-alumno__dato-label">
+              Estado
+            </span>
+
+            <strong id="estadoFichaAlumno">
+              —
+            </strong>
+          </div>
+        </section>
+
+        <section class="historial-alumno">
+          <div class="historial-alumno__encabezado">
+            <div>
+              <p class="historial-alumno__etiqueta">
+                Actividad registrada
+              </p>
+
+              <h3>Historial</h3>
+            </div>
+
+            <span
+              id="totalHistorialAlumno"
+              class="historial-alumno__total"
+            >
+              0 registros
+            </span>
+          </div>
+
+          <div
+            id="estadoCargaHistorial"
+            class="historial-alumno__cargando oculto"
+          >
+            <span class="buscar-alumno__spinner"></span>
+            <p>Cargando historial...</p>
+          </div>
+
+          <div
+            id="listaHistorialAlumno"
+            class="historial-alumno__lista"
+          ></div>
+        </section>
+      </div>
+    </main>
+  </div>
+</section>
