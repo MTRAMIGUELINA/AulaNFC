@@ -145,61 +145,86 @@ function crearAlumno_(parametros) {
       };
     }
 
-    // --------------------------------------
-    // VALIDAR UID DUPLICADO
-    // --------------------------------------
+    const lock =
+      LockService.getScriptLock();
 
-    if (uid) {
-      const ultimaFila =
-        hoja.getLastRow();
+    let lockAdquirido = false;
+    let idAlumno = "";
 
-      if (ultimaFila >= 2) {
-        const uids =
-          hoja
-            .getRange(
-              2,
-              8,
-              ultimaFila - 1,
-              1
-            )
-            .getDisplayValues()
-            .flat();
+    try {
+      lockAdquirido =
+        lock.tryLock(5000);
 
-        const uidDuplicado =
-          uids.some(function(valor) {
-            return (
-              formatearUID_(valor) === uid
-            );
-          });
+      if (!lockAdquirido) {
+        return {
+          ok: false,
+          exito: false,
+          mensaje:
+            "No fue posible procesar el alta en este momento. Intenta nuevamente."
+        };
+      }
 
-        if (uidDuplicado) {
-          return {
-            ok: false,
-            exito: false,
-            mensaje:
-              "Esta tarjeta NFC ya está asignada a otro alumno."
-          };
+      // --------------------------------------
+      // VALIDAR UID DUPLICADO BAJO LOCK
+      // --------------------------------------
+
+      if (uid) {
+        const ultimaFila =
+          hoja.getLastRow();
+
+        if (ultimaFila >= 2) {
+          const uids =
+            hoja
+              .getRange(
+                2,
+                8,
+                ultimaFila - 1,
+                1
+              )
+              .getDisplayValues()
+              .flat();
+
+          const uidDuplicado =
+            uids.some(function(valor) {
+              return (
+                formatearUID_(valor) === uid
+              );
+            });
+
+          if (uidDuplicado) {
+            return {
+              ok: false,
+              exito: false,
+              mensaje:
+                "Esta tarjeta NFC ya está asignada a otro alumno."
+            };
+          }
         }
       }
+
+      idAlumno =
+        generarSiguienteIdAlumno_();
+
+      hoja.appendRow([
+        idAlumno,
+        nombre,
+        apellidoPaterno,
+        apellidoMaterno,
+        fechaNacimiento,
+        grado,
+        grupo,
+        uid,
+        "ACTIVO",
+        foto
+      ]);
+
+      SpreadsheetApp.flush();
+
+    } finally {
+      if (lockAdquirido) {
+        lock.releaseLock();
+      }
     }
-
-    const idAlumno =
-      generarSiguienteIdAlumno_();
-
-    hoja.appendRow([
-      idAlumno,
-      nombre,
-      apellidoPaterno,
-      apellidoMaterno,
-      fechaNacimiento,
-      grado,
-      grupo,
-      uid,
-      "ACTIVO",
-      foto
-    ]);
-
-    SpreadsheetApp.flush();
 
     return {
       ok: true,
