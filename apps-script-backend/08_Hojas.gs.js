@@ -78,111 +78,136 @@ function registrarFilaModulo_(
   }
 
 
-  // --------------------------------------
-  // OBTENER O CREAR HOJA
-  // --------------------------------------
+  const lock =
+    LockService.getScriptLock();
 
-  const hoja =
-    obtenerOCrearHoja_(
-      libro,
-      nombreHoja,
-      encabezadosFinales
-    );
+  let lockAdquirido = false;
+  let hoja;
+
+  try {
+
+    lockAdquirido =
+      lock.tryLock(5000);
+
+    if (!lockAdquirido) {
+      throw new Error(
+        "No fue posible guardar el registro en este momento. Intenta nuevamente."
+      );
+    }
+
+    // --------------------------------------
+    // OBTENER O CREAR HOJA
+    // --------------------------------------
+
+    hoja =
+      obtenerOCrearHoja_(
+        libro,
+        nombreHoja,
+        encabezadosFinales
+      );
 
 
-  // --------------------------------------
-  // ASEGURAR COLUMNA CICLO ESCOLAR
-  // --------------------------------------
+    // --------------------------------------
+    // ASEGURAR COLUMNA CICLO ESCOLAR
+    // --------------------------------------
 
-  let ultimaColumna =
-    hoja.getLastColumn();
+    let ultimaColumna =
+      hoja.getLastColumn();
 
-  let encabezadosActuales = [];
+    let encabezadosActuales = [];
 
-  if (ultimaColumna > 0) {
+    if (ultimaColumna > 0) {
 
-    encabezadosActuales =
+      encabezadosActuales =
+        hoja
+          .getRange(
+            1,
+            1,
+            1,
+            ultimaColumna
+          )
+          .getDisplayValues()[0];
+    }
+
+    const indiceCiclo =
+      encabezadosActuales.findIndex(
+        function(encabezado) {
+
+          return (
+            String(
+              encabezado || ""
+            )
+              .trim()
+              .toUpperCase() ===
+            "CICLO ESCOLAR"
+          );
+        }
+      );
+
+
+    let columnaCiclo;
+
+    if (indiceCiclo === -1) {
+
+      columnaCiclo =
+        ultimaColumna + 1;
+
       hoja
         .getRange(
           1,
-          1,
-          1,
-          ultimaColumna
+          columnaCiclo
         )
-        .getDisplayValues()[0];
-  }
-
-  const indiceCiclo =
-    encabezadosActuales.findIndex(
-      function(encabezado) {
-
-        return (
-          String(
-            encabezado || ""
-          )
-            .trim()
-            .toUpperCase() ===
+        .setValue(
           "CICLO ESCOLAR"
+        )
+        .setFontWeight(
+          "bold"
         );
-      }
-    );
+
+    } else {
+
+      columnaCiclo =
+        indiceCiclo + 1;
+    }
 
 
-  let columnaCiclo;
+    // --------------------------------------
+    // GUARDAR REGISTRO
+    // --------------------------------------
 
-  if (indiceCiclo === -1) {
+    const nuevaFila =
+      hoja.getLastRow() + 1;
 
-    columnaCiclo =
-      ultimaColumna + 1;
+    if (valores.length > 0) {
 
-    hoja
-      .getRange(
-        1,
-        columnaCiclo
-      )
-      .setValue(
-        "CICLO ESCOLAR"
-      )
-      .setFontWeight(
-        "bold"
-      );
-
-  } else {
-
-    columnaCiclo =
-      indiceCiclo + 1;
-  }
-
-
-  // --------------------------------------
-  // GUARDAR REGISTRO
-  // --------------------------------------
-
-  const nuevaFila =
-    hoja.getLastRow() + 1;
-
-  if (valores.length > 0) {
+      hoja
+        .getRange(
+          nuevaFila,
+          1,
+          1,
+          valores.length
+        )
+        .setValues([
+          valores
+        ]);
+    }
 
     hoja
       .getRange(
         nuevaFila,
-        1,
-        1,
-        valores.length
+        columnaCiclo
       )
-      .setValues([
-        valores
-      ]);
-  }
+      .setValue(
+        cicloEscolar
+      );
 
-  hoja
-    .getRange(
-      nuevaFila,
-      columnaCiclo
-    )
-    .setValue(
-      cicloEscolar
-    );
+    SpreadsheetApp.flush();
+
+  } finally {
+    if (lockAdquirido) {
+      lock.releaseLock();
+    }
+  }
 
 
   // --------------------------------------
