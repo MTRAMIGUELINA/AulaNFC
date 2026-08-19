@@ -342,7 +342,7 @@ function obtenerHistorialIncidencias_(
           2,
           1,
           ultimaFila - 1,
-          10
+          11
         )
         .getDisplayValues();
 
@@ -398,6 +398,11 @@ function obtenerHistorialIncidencias_(
             acuerdos:
               String(
                 fila[9] || ""
+              ).trim(),
+
+            cicloEscolar:
+              String(
+                fila[10] || ""
               ).trim()
           };
         })
