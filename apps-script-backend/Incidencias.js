@@ -59,10 +59,10 @@ function guardarIncidencia_(parametros) {
         parametros.descripcion || ""
       ).trim();
 
-      const accionesTomadas =
-  String(
-    parametros.accionesTomadas || ""
-  ).trim();
+    const accionesTomadas =
+      String(
+        parametros.accionesTomadas || ""
+      ).trim();
 
     const acuerdos =
       String(
@@ -86,53 +86,74 @@ function guardarIncidencia_(parametros) {
       };
     }
 
-    const folio =
-      generarFolioIncidencia_(
-        hoja
-      );
-
     // --------------------------------------
-// OBTENER CICLO ESCOLAR
-// --------------------------------------
+    // OBTENER CICLO ESCOLAR
+    // --------------------------------------
 
-let cicloEscolar = "";
+    let cicloEscolar = "";
 
-try {
-  const respuestaConfiguracion =
-    obtenerConfiguracion_();
+    try {
+      const respuestaConfiguracion =
+        obtenerConfiguracion_();
 
-  if (
-    respuestaConfiguracion &&
-    respuestaConfiguracion.ok === true
-  ) {
-    cicloEscolar =
-      String(
-        respuestaConfiguracion
-          .configuracion
-          ?.CICLO_ESCOLAR || ""
-      ).trim();
-  }
+      if (
+        respuestaConfiguracion &&
+        respuestaConfiguracion.ok === true
+      ) {
+        cicloEscolar =
+          String(
+            respuestaConfiguracion
+              .configuracion
+              ?.CICLO_ESCOLAR || ""
+          ).trim();
+      }
 
-} catch (error) {
-  console.error(
-    "No fue posible obtener el ciclo escolar:",
-    error
-  );
-}
+    } catch (error) {
+      console.error(
+        "No fue posible obtener el ciclo escolar:",
+        error
+      );
+    }
 
-    hoja.appendRow([
-  folio,
-  fecha,
-  idAlumno,
-  nombre,
-  grado,
-  grupo,
-  incidencia,
-  descripcion,
-  accionesTomadas,
-  acuerdos,
-  cicloEscolar
-]);
+    const lock =
+      LockService.getScriptLock();
+
+    const lockObtenido =
+      lock.tryLock(5000);
+
+    if (!lockObtenido) {
+      throw new Error(
+        "No fue posible adquirir el bloqueo para guardar la incidencia."
+      );
+    }
+
+    let folio;
+
+    try {
+      folio =
+        generarFolioIncidencia_(
+          hoja
+        );
+
+      hoja.appendRow([
+        folio,
+        fecha,
+        idAlumno,
+        nombre,
+        grado,
+        grupo,
+        incidencia,
+        descripcion,
+        accionesTomadas,
+        acuerdos,
+        cicloEscolar
+      ]);
+
+      SpreadsheetApp.flush();
+
+    } finally {
+      lock.releaseLock();
+    }
 
     return {
       ok: true,
