@@ -59,10 +59,10 @@ function guardarIncidencia_(parametros) {
         parametros.descripcion || ""
       ).trim();
 
-    const accionesTomadas =
-      String(
-        parametros.accionesTomadas || ""
-      ).trim();
+      const accionesTomadas =
+  String(
+    parametros.accionesTomadas || ""
+  ).trim();
 
     const acuerdos =
       String(
@@ -87,33 +87,33 @@ function guardarIncidencia_(parametros) {
     }
 
     // --------------------------------------
-    // OBTENER CICLO ESCOLAR
-    // --------------------------------------
+// OBTENER CICLO ESCOLAR
+// --------------------------------------
 
-    let cicloEscolar = "";
+let cicloEscolar = "";
 
-    try {
-      const respuestaConfiguracion =
-        obtenerConfiguracion_();
+try {
+  const respuestaConfiguracion =
+    obtenerConfiguracion_();
 
-      if (
-        respuestaConfiguracion &&
-        respuestaConfiguracion.ok === true
-      ) {
-        cicloEscolar =
-          String(
-            respuestaConfiguracion
-              .configuracion
-              ?.CICLO_ESCOLAR || ""
-          ).trim();
-      }
+  if (
+    respuestaConfiguracion &&
+    respuestaConfiguracion.ok === true
+  ) {
+    cicloEscolar =
+      String(
+        respuestaConfiguracion
+          .configuracion
+          ?.CICLO_ESCOLAR || ""
+      ).trim();
+  }
 
-    } catch (error) {
-      console.error(
-        "No fue posible obtener el ciclo escolar:",
-        error
-      );
-    }
+} catch (error) {
+  console.error(
+    "No fue posible obtener el ciclo escolar:",
+    error
+  );
+}
 
     const lock =
       LockService.getScriptLock();
@@ -136,18 +136,18 @@ function guardarIncidencia_(parametros) {
         );
 
       hoja.appendRow([
-        folio,
-        fecha,
-        idAlumno,
-        nombre,
-        grado,
-        grupo,
-        incidencia,
-        descripcion,
-        accionesTomadas,
-        acuerdos,
-        cicloEscolar
-      ]);
+  folio,
+  fecha,
+  idAlumno,
+  nombre,
+  grado,
+  grupo,
+  incidencia,
+  descripcion,
+  accionesTomadas,
+  acuerdos,
+  cicloEscolar
+]);
 
       SpreadsheetApp.flush();
 
