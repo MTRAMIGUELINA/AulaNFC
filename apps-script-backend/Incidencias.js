@@ -86,11 +86,6 @@ function guardarIncidencia_(parametros) {
       };
     }
 
-    const folio =
-      generarFolioIncidencia_(
-        hoja
-      );
-
     // --------------------------------------
 // OBTENER CICLO ESCOLAR
 // --------------------------------------
@@ -120,7 +115,27 @@ try {
   );
 }
 
-    hoja.appendRow([
+    const lock =
+      LockService.getScriptLock();
+
+    const lockObtenido =
+      lock.tryLock(5000);
+
+    if (!lockObtenido) {
+      throw new Error(
+        "No fue posible adquirir el bloqueo para guardar la incidencia."
+      );
+    }
+
+    let folio;
+
+    try {
+      folio =
+        generarFolioIncidencia_(
+          hoja
+        );
+
+      hoja.appendRow([
   folio,
   fecha,
   idAlumno,
@@ -133,6 +148,12 @@ try {
   acuerdos,
   cicloEscolar
 ]);
+
+      SpreadsheetApp.flush();
+
+    } finally {
+      lock.releaseLock();
+    }
 
     return {
       ok: true,
