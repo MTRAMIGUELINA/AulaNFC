@@ -1,4 +1,64 @@
-function cargarExtra(selector,src,dataset){if(document.querySelector(selector))return;const s=document.createElement('script');s.src=src;s.defer=true;Object.assign(s.dataset,dataset);document.body.appendChild(s)}
+const cargasExtra=new Map();
+const atributoEstadoCarga='data-aulanfc-load-state';
+
+function registrarCarga(selector,script){
+  const cargaExistente=cargasExtra.get(selector);
+  if(cargaExistente?.script===script)return cargaExistente.promise;
+
+  let resolver,rechazar;
+  const promise=new Promise((resolve,reject)=>{resolver=resolve;rechazar=reject});
+  const carga={script,estado:'loading',promise};
+  cargasExtra.set(selector,carga);
+  script.setAttribute(atributoEstadoCarga,'loading');
+
+  script.addEventListener('load',()=>{
+    carga.estado='loaded';
+    script.setAttribute(atributoEstadoCarga,'loaded');
+    resolver(script);
+  },{once:true});
+
+  script.addEventListener('error',()=>{
+    carga.estado='failed';
+    script.setAttribute(atributoEstadoCarga,'failed');
+    rechazar(new Error(`No se pudo cargar ${script.src}`));
+  },{once:true});
+
+  promise.catch(()=>{});
+  return promise;
+}
+
+function cargarExtra(selector,src,dataset){
+  const cargaExistente=cargasExtra.get(selector);
+  if(cargaExistente?.estado==='loading'||cargaExistente?.estado==='loaded')return cargaExistente.promise;
+  if(cargaExistente?.estado==='failed'){
+    cargaExistente.script.remove();
+    cargasExtra.delete(selector);
+  }
+
+  let script=document.querySelector(selector);
+  const estado=script?.getAttribute(atributoEstadoCarga);
+
+  if(script&&estado==='failed'){
+    script.remove();
+    script=null;
+  }
+  if(script&&estado==='loading')return registrarCarga(selector,script);
+  if(script){
+    script.setAttribute(atributoEstadoCarga,'loaded');
+    const promise=Promise.resolve(script);
+    cargasExtra.set(selector,{script,estado:'loaded',promise});
+    return promise;
+  }
+
+  script=document.createElement('script');
+  script.src=src;
+  script.defer=true;
+  Object.assign(script.dataset,dataset);
+  const promise=registrarCarga(selector,script);
+  document.body.appendChild(script);
+  return promise;
+}
+
 cargarExtra('script[data-menu-aulanfc]','menu-lateral.js?v=2',{menuAulanfc:'true'});
 cargarExtra('script[data-resumen-estadistico-conexion]','resumen-estadistico-conexion.js?v=1',{resumenEstadisticoConexion:'true'});
 cargarExtra('script[data-ficha-alumno-menu]','ficha-alumno-menu.js?v=2',{fichaAlumnoMenu:'true'});
