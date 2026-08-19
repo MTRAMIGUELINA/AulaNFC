@@ -98,12 +98,6 @@ function registrarAsistencia_(
     "CICLO ESCOLAR"
   ];
 
-  const hoja = obtenerOCrearHoja_(
-    libro,
-    NOMBRE_HOJA_ASISTENCIAS,
-    encabezados
-  );
-
   const zonaHoraria =
     Session.getScriptTimeZone();
 
@@ -114,64 +108,6 @@ function registrarAsistencia_(
       "yyyy-MM-dd"
     );
 
-  const ultimaFila =
-    hoja.getLastRow();
-
-  if (ultimaFila >= 2) {
-    const registros =
-      hoja
-        .getRange(
-          2,
-          1,
-          ultimaFila - 1,
-          6
-        )
-        .getValues();
-
-    const yaRegistrado =
-      registros.some(
-        function(fila) {
-          let fechaRegistro = "";
-
-          if (fila[0] instanceof Date) {
-            fechaRegistro =
-              Utilities.formatDate(
-                fila[0],
-                zonaHoraria,
-                "yyyy-MM-dd"
-              );
-          } else {
-            fechaRegistro =
-              String(
-                fila[0] || ""
-              ).trim();
-          }
-
-          const idRegistro =
-            String(
-              fila[2] || ""
-            ).trim();
-
-          return (
-            fechaRegistro === fechaHoy &&
-            idRegistro ===
-              String(
-                alumno.id
-              ).trim()
-          );
-        }
-      );
-
-    if (yaRegistrado) {
-      return {
-        exito: false,
-        mensaje:
-          alumno.nombreCompleto +
-          " ya tiene asistencia registrada hoy."
-      };
-    }
-  }
-
   const observacion =
     String(origenRegistro || "nfc")
       .toLowerCase() === "manual"
@@ -180,38 +116,126 @@ function registrarAsistencia_(
   
   let cicloEscolar = "";
 
-try {
-  const respuestaConfiguracion =
-    obtenerConfiguracion_();
+  try {
+    const respuestaConfiguracion =
+      obtenerConfiguracion_();
 
-  if (
-    respuestaConfiguracion &&
-    respuestaConfiguracion.ok === true
-  ) {
-    cicloEscolar =
-      String(
-        respuestaConfiguracion
-          .configuracion
-          ?.CICLO_ESCOLAR || ""
-      ).trim();
+    if (
+      respuestaConfiguracion &&
+      respuestaConfiguracion.ok === true
+    ) {
+      cicloEscolar =
+        String(
+          respuestaConfiguracion
+            .configuracion
+            ?.CICLO_ESCOLAR || ""
+        ).trim();
+    }
+
+  } catch (error) {
+    console.error(
+      "No fue posible obtener el ciclo escolar:",
+      error
+    );
   }
 
-} catch (error) {
-  console.error(
-    "No fue posible obtener el ciclo escolar:",
-    error
-  );
-}
+  const lock =
+    LockService.getScriptLock();
 
-  hoja.appendRow([
-  ahora,
-  ahora,
-  alumno.id,
-  alumno.nombreCompleto,
-  "Presente",
-  observacion,
-  cicloEscolar
-]);
+  let lockAdquirido = false;
+  let hoja;
+
+  try {
+    lockAdquirido =
+      lock.tryLock(5000);
+
+    if (!lockAdquirido) {
+      throw new Error(
+        "No fue posible guardar la asistencia en este momento. Intenta nuevamente."
+      );
+    }
+
+    hoja = obtenerOCrearHoja_(
+      libro,
+      NOMBRE_HOJA_ASISTENCIAS,
+      encabezados
+    );
+
+    const ultimaFila =
+      hoja.getLastRow();
+
+    if (ultimaFila >= 2) {
+      const registros =
+        hoja
+          .getRange(
+            2,
+            1,
+            ultimaFila - 1,
+            6
+          )
+          .getValues();
+
+      const yaRegistrado =
+        registros.some(
+          function(fila) {
+            let fechaRegistro = "";
+
+            if (fila[0] instanceof Date) {
+              fechaRegistro =
+                Utilities.formatDate(
+                  fila[0],
+                  zonaHoraria,
+                  "yyyy-MM-dd"
+                );
+            } else {
+              fechaRegistro =
+                String(
+                  fila[0] || ""
+                ).trim();
+            }
+
+            const idRegistro =
+              String(
+                fila[2] || ""
+              ).trim();
+
+            return (
+              fechaRegistro === fechaHoy &&
+              idRegistro ===
+                String(
+                  alumno.id
+                ).trim()
+            );
+          }
+        );
+
+      if (yaRegistrado) {
+        return {
+          exito: false,
+          mensaje:
+            alumno.nombreCompleto +
+            " ya tiene asistencia registrada hoy."
+        };
+      }
+    }
+
+    hoja.appendRow([
+      ahora,
+      ahora,
+      alumno.id,
+      alumno.nombreCompleto,
+      "Presente",
+      observacion,
+      cicloEscolar
+    ]);
+
+    SpreadsheetApp.flush();
+
+  } finally {
+    if (lockAdquirido) {
+      lock.releaseLock();
+    }
+  }
 
   formatearColumnasFechaHora_(
     hoja
