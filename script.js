@@ -18,6 +18,7 @@ let ultimoUID = '';
 let momentoUltimoEscaneo = 0;
 let alumnos = [];
 let alumnosCargados = false;
+let ultimaSolicitudAlumnos = 0;
 let registrosConsultaActual = [];
 let consultaGeneralActiva = false;
 let historialSesion = [];
@@ -208,14 +209,19 @@ async function alternarBuscarAlumno() {
     cerrarBuscarAlumno();
     return;
   }
+  if (!$('panelRegistroManual').classList.contains('oculto')) {
+    cerrarRegistroManual();
+  }
   $('vistaBuscar').classList.remove('oculto');
   $('fichaAlumno').classList.add('oculto');
   $('campoBusquedaAlumno').value = '';
   $('listaAlumnos').classList.add('oculto');
   $('contadorAlumnos').textContent = 'Escribe un nombre para buscar.';
   try {
-    await cargarAlumnos();
-    $('campoBusquedaAlumno').focus();
+    const cargaAplicada = await cargarAlumnos(true);
+    if (cargaAplicada && !$('vistaBuscar').classList.contains('oculto')) {
+      $('campoBusquedaAlumno').focus();
+    }
   } catch (error) {
     $('contadorAlumnos').textContent = error.message;
   }
@@ -225,12 +231,20 @@ function cerrarBuscarAlumno() {
   $('vistaBuscar').classList.add('oculto');
 }
 
-async function cargarAlumnos() {
-  if (alumnosCargados) return;
-  const respuesta = await solicitarJSONP('obtenerAlumnos');
-  validarRespuesta(respuesta);
-  alumnos = Array.isArray(respuesta.alumnos) ? respuesta.alumnos : [];
-  alumnosCargados = true;
+async function cargarAlumnos(forzar = false) {
+  if (alumnosCargados && !forzar) return true;
+  const numeroSolicitud = ++ultimaSolicitudAlumnos;
+  try {
+    const respuesta = await solicitarJSONP('obtenerAlumnos');
+    validarRespuesta(respuesta);
+    if (numeroSolicitud !== ultimaSolicitudAlumnos) return false;
+    alumnos = Array.isArray(respuesta.alumnos) ? respuesta.alumnos : [];
+    alumnosCargados = true;
+    return true;
+  } catch (error) {
+    if (numeroSolicitud !== ultimaSolicitudAlumnos) return false;
+    throw error;
+  }
 }
 
 function renderizarBusquedaConsulta(termino) {
