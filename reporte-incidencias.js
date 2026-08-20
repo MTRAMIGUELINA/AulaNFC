@@ -2,6 +2,7 @@
 (() => {
   let alumnosIncidencias = [];
   let alumnosCargados = false;
+  let ultimaSolicitudAlumnosIncidencias = 0;
   let folioIncidenciaActual = '';
   let guardandoIncidencia = false;
 
@@ -27,9 +28,29 @@
 <div class="incidencias__acciones"><button id="btnGuardarIncidencia" class="incidencias__boton incidencias__boton--guardar" type="button" disabled>💾 Guardar reporte</button><button id="btnPDFIncidencia" class="incidencias__boton incidencias__boton--pdf" type="button" disabled>📄 Generar PDF</button><button id="btnLimpiarIncidencia" class="incidencias__boton incidencias__boton--limpiar" type="reset">Limpiar</button></div>
 <p id="estadoReporteIncidencias" class="incidencias__aviso">Selecciona un alumno para comenzar.</p></form>`;if(vE)c.insertBefore(v,vE);else c.appendChild(v);return true}
 
-  async function cargarAlumnos(){const s=document.getElementById('incidenciaAlumno'),estado=document.getElementById('estadoReporteIncidencias');if(alumnosCargados||typeof solicitarJSONP!=='function')return;estado.textContent='⏳ Cargando alumnos...';try{const r=await solicitarJSONP('obtenerAlumnos');if(!r||(r.ok===false||r.exito===false))throw new Error(r?.mensaje||'No se pudieron cargar los alumnos.');alumnosIncidencias=(Array.isArray(r.alumnos)?r.alumnos:[]).filter(a=>a.activo!==false).sort((a,b)=>nombreAlumno(a).localeCompare(nombreAlumno(b),'es',{sensitivity:'base'}));s.innerHTML='<option value="">Selecciona un alumno</option>'+alumnosIncidencias.map(a=>`<option value="${esc(a.id)}">${esc(nombreAlumno(a))}</option>`).join('');alumnosCargados=true;estado.textContent=`✅ ${alumnosIncidencias.length} alumnos disponibles.`}catch(e){estado.textContent=`❌ ${e?.message||'No se pudieron cargar los alumnos.'}`}}
+  async function cargarAlumnos(forzar=false){
+    const s=document.getElementById('incidenciaAlumno'),estado=document.getElementById('estadoReporteIncidencias');
+    if((alumnosCargados&&!forzar)||typeof solicitarJSONP!=='function')return;
+    const numeroSolicitud=++ultimaSolicitudAlumnosIncidencias,idSeleccionado=s?.value||'',mostrarEstado=!folioIncidenciaActual;
+    if(mostrarEstado)estado.textContent='⏳ Cargando alumnos...';
+    try{
+      const r=await solicitarJSONP('obtenerAlumnos');
+      if(!r||(r.ok===false||r.exito===false))throw new Error(r?.mensaje||'No se pudieron cargar los alumnos.');
+      if(numeroSolicitud!==ultimaSolicitudAlumnosIncidencias)return;
+      alumnosIncidencias=(Array.isArray(r.alumnos)?r.alumnos:[]).filter(a=>a.activo!==false).sort((a,b)=>nombreAlumno(a).localeCompare(nombreAlumno(b),'es',{sensitivity:'base'}));
+      s.innerHTML='<option value="">Selecciona un alumno</option>'+alumnosIncidencias.map(a=>`<option value="${esc(a.id)}">${esc(nombreAlumno(a))}</option>`).join('');
+      const alumnoActual=alumnosIncidencias.find(a=>String(a.id)===String(idSeleccionado));
+      s.value=alumnoActual?String(alumnoActual.id):'';
+      if(alumnoActual)pintarAlumnoSeleccionado(alumnoActual);else document.getElementById('incidenciaAlumnoSeleccionado')?.classList.add('oculto');
+      alumnosCargados=true;
+      validarFormulario();
+      if(mostrarEstado)estado.textContent=`✅ ${alumnosIncidencias.length} alumnos disponibles.`;
+    }catch(e){if(numeroSolicitud===ultimaSolicitudAlumnosIncidencias&&mostrarEstado)estado.textContent=`❌ ${e?.message||'No se pudieron cargar los alumnos.'}`;}
+  }
 
   function obtenerAlumnoSeleccionado(){const id=document.getElementById('incidenciaAlumno')?.value||'';return alumnosIncidencias.find(x=>String(x.id)===String(id))||null}
+
+  function pintarAlumnoSeleccionado(a){const caja=document.getElementById('incidenciaAlumnoSeleccionado');document.getElementById('incidenciaNombreAlumno').textContent=nombreAlumno(a);document.getElementById('incidenciaDatosAlumno').textContent=`Grado: ${a.grado||'—'}° · Grupo: ${a.grupo||'—'} · ID: ${a.id||'—'}`;caja.classList.remove('oculto')}
 
   function seleccionarAlumno(){invalidarFolio();const a=obtenerAlumnoSeleccionado(),caja=document.getElementById('incidenciaAlumnoSeleccionado');if(!a){caja.classList.add('oculto');validarFormulario();return}document.getElementById('incidenciaNombreAlumno').textContent=nombreAlumno(a);document.getElementById('incidenciaDatosAlumno').textContent=`Grado: ${a.grado||'—'}° · Grupo: ${a.grupo||'—'} · ID: ${a.id||'—'}`;caja.classList.remove('oculto');validarFormulario()}
 

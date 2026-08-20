@@ -205,6 +205,7 @@
 
   let alumnosEstadisticas = [];
   let alumnosEstadisticasCargados = false;
+  let ultimaSolicitudAlumnosEstadisticas = 0;
 
   if (disparadorHistorial) disparadorHistorial.classList.add('menu-disparador-oculto');
 
@@ -260,22 +261,29 @@
     if (vistaEscaner) vistaEscaner.classList.add('oculto');
     vistaResumen.classList.remove('oculto');
     vistaResumen.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    cargarAlumnosEstadisticas();
+    document.getElementById('alumnoEstadisticasSeleccionado')?.classList.add('oculto');
+    buscadorEstadisticas.value = '';
+    listaEstadisticas.classList.add('oculto');
+    cargarAlumnosEstadisticas(true);
   }
 
-  async function cargarAlumnosEstadisticas() {
-    if (alumnosEstadisticasCargados || typeof solicitarJSONP !== 'function') return;
+  async function cargarAlumnosEstadisticas(forzar = false) {
+    if ((alumnosEstadisticasCargados && !forzar) || typeof solicitarJSONP !== 'function') return;
+    const numeroSolicitud = ++ultimaSolicitudAlumnosEstadisticas;
     contadorEstadisticas.textContent = 'Cargando alumnos...';
     try {
       const respuesta = await solicitarJSONP('obtenerAlumnos');
       if (respuesta && (respuesta.exito === false || respuesta.ok === false)) {
         throw new Error(respuesta.mensaje || 'No se pudieron cargar los alumnos.');
       }
+      if (numeroSolicitud !== ultimaSolicitudAlumnosEstadisticas) return;
       alumnosEstadisticas = Array.isArray(respuesta.alumnos) ? respuesta.alumnos : [];
       alumnosEstadisticasCargados = true;
       contadorEstadisticas.textContent = 'Escribe un nombre para buscar.';
     } catch (error) {
-      contadorEstadisticas.textContent = error.message || 'No se pudieron cargar los alumnos.';
+      if (numeroSolicitud === ultimaSolicitudAlumnosEstadisticas) {
+        contadorEstadisticas.textContent = error.message || 'No se pudieron cargar los alumnos.';
+      }
     }
   }
 

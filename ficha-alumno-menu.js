@@ -3,6 +3,7 @@
   let alumnosFicha = [];
   let alumnosFichaCargados = false;
   let alumnoFichaSeleccionado = null;
+  let ultimaSolicitudAlumnosFicha = 0;
   let consultaFichaEnProceso = false;
 
   function cargarEstiloFicha() {
@@ -22,6 +23,8 @@
   function normalizar(texto) { return String(texto||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(); }
   function escapar(texto) { return String(texto??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#039;'); }
   function numero(valor) { const n=Number(valor); return Number.isFinite(n)?n:0; }
+  function actualizarAlumnoFichaVisible(alumno) { const nombre=nombreAlumno(alumno),foto=alumno.foto||alumno.fotoUrl||alumno.fotografia||alumno.imagen||'';document.getElementById('nombreFichaAlumno').textContent=nombre;document.getElementById('gradoFichaAlumno').textContent=alumno.grado||'—';document.getElementById('grupoFichaAlumno').textContent=alumno.grupo||'—';document.getElementById('idFichaAlumno').textContent=alumno.id||'—';const contenedorFoto=document.getElementById('fotoFichaAlumno');contenedorFoto.innerHTML=foto?`<img src="${escapar(foto)}" alt="Foto de ${escapar(nombre)}">`:escapar(iniciales(nombre)); }
+  function limpiarAlumnoFichaVisible() { alumnoFichaSeleccionado=null;document.getElementById('contenidoFichaAlumno').classList.add('oculto');document.getElementById('nombreFichaAlumno').textContent='Alumno';document.getElementById('gradoFichaAlumno').textContent='—';document.getElementById('grupoFichaAlumno').textContent='—';document.getElementById('idFichaAlumno').textContent='—';document.getElementById('fotoFichaAlumno').textContent='AL';limpiarResumenFicha(); }
 
   function agregarBotonFichaAlumno() {
     if (document.getElementById('menuFichaAlumno')) return true;
@@ -40,15 +43,19 @@
     if(vistaEscaner)contenedor.insertBefore(vista,vistaEscaner);else contenedor.appendChild(vista); return true;
   }
 
-  async function cargarAlumnosFicha() {
-    const contador=document.getElementById('contadorFichaAlumno'); if(alumnosFichaCargados||typeof solicitarJSONP!=='function')return;
+  async function cargarAlumnosFicha(forzar=false) {
+    const contador=document.getElementById('contadorFichaAlumno'); if((alumnosFichaCargados&&!forzar)||typeof solicitarJSONP!=='function')return;
+    const numeroSolicitud=++ultimaSolicitudAlumnosFicha;
     contador.textContent='Cargando alumnos del grupo activo...';
     try {
       const respuesta=await solicitarJSONP('obtenerAlumnosGrupoActivo');
       if(!respuesta||(respuesta.ok===false||respuesta.exito===false))throw new Error(respuesta?.mensaje||'No se pudieron cargar los alumnos del grupo activo.');
+      if(numeroSolicitud!==ultimaSolicitudAlumnosFicha)return;
       alumnosFicha=Array.isArray(respuesta.alumnos)?respuesta.alumnos:[]; alumnosFichaCargados=true;
+      if(alumnoFichaSeleccionado){const actualizado=alumnosFicha.find(item=>String(item.id)===String(alumnoFichaSeleccionado.id));if(actualizado){alumnoFichaSeleccionado=actualizado;actualizarAlumnoFichaVisible(actualizado);}else{limpiarAlumnoFichaVisible();}}
       contador.textContent=alumnosFicha.length?`Grupo activo: ${respuesta.grado||''}° ${respuesta.grupo||''} · ${alumnosFicha.length} alumnos`:'No hay alumnos activos en el grupo configurado.';
-    } catch(error){contador.textContent=error.message||'No se pudieron cargar los alumnos.';}
+      const buscador=document.getElementById('busquedaFichaAlumno');if(normalizar(buscador.value).length>=2)buscarAlumnoFicha();else document.getElementById('listaFichaAlumno').classList.add('oculto');
+    } catch(error){if(numeroSolicitud===ultimaSolicitudAlumnosFicha)contador.textContent=error.message||'No se pudieron cargar los alumnos.';}
   }
 
   function buscarAlumnoFicha(){const buscador=document.getElementById('busquedaFichaAlumno'),lista=document.getElementById('listaFichaAlumno'),contador=document.getElementById('contadorFichaAlumno'),termino=normalizar(buscador.value);if(termino.length<2){lista.classList.add('oculto');contador.textContent='Escribe al menos dos letras.';return;}const coincidencias=alumnosFicha.filter(a=>normalizar(nombreAlumno(a)).includes(termino));contador.textContent=`${coincidencias.length} coincidencias`;lista.classList.remove('oculto');lista.innerHTML=coincidencias.length?coincidencias.map(a=>`<button class="ficha-alumno__opcion" type="button" data-ficha-id="${escapar(a.id)}"><strong>${escapar(nombreAlumno(a))}</strong><small>${escapar(gradoGrupoAlumno(a))}</small></button>`).join(''):'<div class="mensaje-lista">No se encontraron alumnos.</div>';}
@@ -58,7 +65,7 @@
   async function cargarResumenFicha(alumno){if(!alumno||!alumno.id||consultaFichaEnProceso||typeof solicitarJSONP!=='function')return;consultaFichaEnProceso=true;limpiarResumenFicha();const estado=document.getElementById('estadoFichaAlumno');if(estado)estado.textContent='⏳ Consultando resumen del alumno...';try{const respuesta=await solicitarJSONP('obtenerResumenEstadistico',{idAlumno:String(alumno.id),periodo:'ciclo'});if(!respuesta||(respuesta.ok!==true&&respuesta.exito!==true))throw new Error(respuesta?.mensaje||'No fue posible obtener el resumen del alumno.');pintarResumenFicha(respuesta);if(estado)estado.textContent='✅ Resumen actualizado.';}catch(error){if(estado)estado.textContent=`❌ ${error?.message||'No fue posible obtener el resumen del alumno.'}`;}finally{consultaFichaEnProceso=false;}}
   function pintarResumenFicha(respuesta){const asistencia=respuesta.asistencia||{},tareas=respuesta.tareas||{},participaciones=respuesta.participaciones||{},conducta=respuesta.conducta||{},lectura=respuesta.lectura||{};const presentes=numero(asistencia.presentes),faltas=numero(asistencia.faltas),diasEscolares=numero(asistencia.diasEscolares),porcentajeAsistencia=diasEscolares>0?Math.round((presentes/diasEscolares)*100):numero(asistencia.porcentajeAsistencia);document.getElementById('fichaAsistencia').textContent=diasEscolares>0?`${porcentajeAsistencia}% · ${presentes} presentes / ${faltas} faltas`:`${presentes} presentes`;document.getElementById('fichaTareas').textContent=`${numero(tareas.porcentajeCumplimiento)}%`;document.getElementById('fichaParticipaciones').textContent=String(numero(participaciones.total));document.getElementById('fichaConducta').textContent=String(conducta.resumen||'').trim()||'Sin resumen';document.getElementById('fichaLectura').textContent=String(lectura.nivelPredominante||'').trim()||'Sin registros';}
   function ocultarFicha(){const vista=document.getElementById('vistaFichaAlumno');if(vista)vista.classList.add('oculto');}
-  function mostrarFicha(){const vistaFicha=document.getElementById('vistaFichaAlumno'),vistaResumen=document.getElementById('vistaResumenEstadistico'),vistaEscaner=document.getElementById('vistaEscaner'),pantallaHistorial=document.getElementById('pantallaHistorial'),disparadorHistorial=document.getElementById('btnAbrirHistorial');if(vistaResumen)vistaResumen.classList.add('oculto');if(pantallaHistorial&&!pantallaHistorial.classList.contains('oculto')&&disparadorHistorial)disparadorHistorial.click();if(vistaEscaner)vistaEscaner.classList.add('oculto');vistaFicha.classList.remove('oculto');vistaFicha.scrollIntoView({behavior:'smooth',block:'start'});cargarAlumnosFicha();}
+  function mostrarFicha(){const vistaFicha=document.getElementById('vistaFichaAlumno'),vistaResumen=document.getElementById('vistaResumenEstadistico'),vistaEscaner=document.getElementById('vistaEscaner'),pantallaHistorial=document.getElementById('pantallaHistorial'),disparadorHistorial=document.getElementById('btnAbrirHistorial');if(vistaResumen)vistaResumen.classList.add('oculto');if(pantallaHistorial&&!pantallaHistorial.classList.contains('oculto')&&disparadorHistorial)disparadorHistorial.click();if(vistaEscaner)vistaEscaner.classList.add('oculto');vistaFicha.classList.remove('oculto');vistaFicha.scrollIntoView({behavior:'smooth',block:'start'});cargarAlumnosFicha(true);}
   function cerrarMenuVisualmente(){const menu=document.getElementById('menuLateral'),fondo=document.getElementById('fondoMenuLateral'),boton=document.getElementById('btnMenuLateral');if(menu){menu.classList.remove('abierto');menu.setAttribute('aria-hidden','true');}if(fondo)fondo.classList.remove('visible');if(boton)boton.setAttribute('aria-expanded','false');document.body.classList.remove('menu-abierto');}
   function inicializarFicha(){cargarEstiloFicha();if(!agregarBotonFichaAlumno()||!crearVistaFicha())return false;const botonFicha=document.getElementById('menuFichaAlumno'),buscador=document.getElementById('busquedaFichaAlumno'),lista=document.getElementById('listaFichaAlumno'),cerrar=document.getElementById('btnCerrarFichaAlumno');if(botonFicha.dataset.fichaInicializada==='true')return true;botonFicha.dataset.fichaInicializada='true';botonFicha.addEventListener('click',()=>{document.querySelectorAll('.menu-lateral__opcion').forEach(opcion=>opcion.classList.toggle('activa',opcion===botonFicha));cerrarMenuVisualmente();mostrarFicha();});buscador.addEventListener('input',buscarAlumnoFicha);lista.addEventListener('click',e=>{const boton=e.target.closest('[data-ficha-id]');if(boton)seleccionarAlumnoFicha(boton.dataset.fichaId);});cerrar.addEventListener('click',()=>{ocultarFicha();const vistaEscaner=document.getElementById('vistaEscaner');if(vistaEscaner)vistaEscaner.classList.remove('oculto');});return true;}
   const intervalo=setInterval(()=>{if(inicializarFicha())clearInterval(intervalo);},200);setTimeout(()=>clearInterval(intervalo),10000);

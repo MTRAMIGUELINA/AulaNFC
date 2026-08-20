@@ -4,6 +4,7 @@
   let respaldoAlumnos = null;
   let respaldoAlumnosCargados = false;
   let sesionManualGrupoActiva = false;
+  let versionSesionManual = 0;
 
   const esc = (v) => String(v ?? '')
     .replace(/&/g, '&amp;')
@@ -48,6 +49,7 @@
     if (sesionManualGrupoActiva) return;
     respaldoAlumnos = Array.isArray(alumnos) ? alumnos.slice() : [];
     respaldoAlumnosCargados = !!alumnosCargados;
+    versionSesionManual += 1;
     sesionManualGrupoActiva = true;
   }
 
@@ -58,11 +60,17 @@
     respaldoAlumnos = null;
     respaldoAlumnosCargados = false;
     sesionManualGrupoActiva = false;
+    versionSesionManual += 1;
   }
 
   async function cargarGrupoActivo() {
+    const versionSolicitud = versionSesionManual;
     const respuesta = await solicitarJSONP('obteneralumnosgrupoactivo');
     validarRespuesta(respuesta);
+
+    if (!sesionManualGrupoActiva || versionSolicitud !== versionSesionManual) {
+      return null;
+    }
 
     alumnosGrupoActivo = Array.isArray(respuesta.alumnos)
       ? respuesta.alumnos
@@ -89,6 +97,7 @@
     const guardar = document.getElementById('btnGuardarManual');
 
     respaldarListaGlobal();
+    const versionApertura = versionSesionManual;
 
     panel?.classList.remove('oculto');
     alumnoManualId = '';
@@ -100,6 +109,7 @@
 
     try {
       const respuesta = await cargarGrupoActivo();
+      if (!respuesta || !sesionManualGrupoActiva || versionApertura !== versionSesionManual) return;
       const grado = String(respuesta.grado || '').trim();
       const grupo = String(respuesta.grupo || '').trim();
 
@@ -111,6 +121,7 @@
 
       buscador?.focus();
     } catch (error) {
+      if (!sesionManualGrupoActiva || versionApertura !== versionSesionManual) return;
       if (contador) contador.textContent = error.message || 'No fue posible cargar el grupo configurado.';
       alumnosGrupoActivo = [];
       alumnos = [];
