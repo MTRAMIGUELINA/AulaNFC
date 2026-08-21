@@ -195,6 +195,19 @@ if (
 }
 
 // ======================================
+// API: ELIMINAR RESULTADO DE EXAMEN
+// ======================================
+
+if (
+  accion ===
+  "eliminarresultadosexamen"
+) {
+  return eliminarResultadoExamenWeb_(
+    parametros
+  );
+}
+
+// ======================================
 // API: CREAR ALUMNO
 // ======================================
 

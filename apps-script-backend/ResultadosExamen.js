@@ -260,7 +260,21 @@ if (!cicloEscolar) {
 function guardarResultadosExamen_(
   parametros
 ) {
+  let bloqueo = null;
+
   try {
+    bloqueo =
+      LockService.getScriptLock();
+
+    if (!bloqueo.tryLock(10000)) {
+      return {
+        ok: false,
+        exito: false,
+        mensaje:
+          "Hay otra operación de calificaciones en curso. Intenta nuevamente."
+      };
+    }
+
     const libro =
       SpreadsheetApp.openById(
         ID_HOJA_CALCULO
@@ -630,6 +644,275 @@ try {
           ? error.message
           : String(error)
     };
+  } finally {
+    if (
+      bloqueo &&
+      bloqueo.hasLock()
+    ) {
+      bloqueo.releaseLock();
+    }
+  }
+}
+
+
+// ==========================================
+// ELIMINAR UNA CALIFICACIÓN
+// ==========================================
+
+function eliminarResultadoExamen_(
+  parametros
+) {
+  let bloqueo = null;
+
+  try {
+    parametros =
+      parametros || {};
+
+    const periodo =
+      String(
+        parametros.periodo || ""
+      ).trim();
+
+    const idAlumno =
+      String(
+        parametros.idAlumno || ""
+      ).trim();
+
+    const campoFormativo =
+      String(
+        parametros.campoFormativo || ""
+      ).trim();
+
+    const periodosValidos = [
+      "Primer trimestre",
+      "Segundo trimestre",
+      "Tercer trimestre"
+    ];
+
+    const camposValidos = [
+      "Lenguajes",
+      "Saberes y Pensamiento Científico",
+      "Ética, Naturaleza y Sociedad",
+      "De lo Humano a lo Comunitario"
+    ];
+
+    if (!periodo) {
+      return {
+        ok: false,
+        exito: false,
+        eliminado: false,
+        mensaje:
+          "Debes seleccionar el trimestre."
+      };
+    }
+
+    if (
+      periodosValidos.indexOf(periodo) === -1
+    ) {
+      return {
+        ok: false,
+        exito: false,
+        eliminado: false,
+        mensaje:
+          "El trimestre indicado no es válido."
+      };
+    }
+
+    if (!idAlumno) {
+      return {
+        ok: false,
+        exito: false,
+        eliminado: false,
+        mensaje:
+          "Debes seleccionar un alumno."
+      };
+    }
+
+    if (!campoFormativo) {
+      return {
+        ok: false,
+        exito: false,
+        eliminado: false,
+        mensaje:
+          "Debes indicar el campo formativo."
+      };
+    }
+
+    if (
+      camposValidos.indexOf(
+        campoFormativo
+      ) === -1
+    ) {
+      return {
+        ok: false,
+        exito: false,
+        eliminado: false,
+        mensaje:
+          "El campo formativo indicado no es válido."
+      };
+    }
+
+    bloqueo =
+      LockService.getScriptLock();
+
+    if (!bloqueo.tryLock(10000)) {
+      return {
+        ok: false,
+        exito: false,
+        eliminado: false,
+        mensaje:
+          "Hay otra operación de calificaciones en curso. Intenta nuevamente."
+      };
+    }
+
+    const respuestaConfiguracion =
+      obtenerConfiguracion_();
+
+    const cicloEscolar =
+      respuestaConfiguracion &&
+      respuestaConfiguracion.ok === true
+        ? String(
+            respuestaConfiguracion
+              .configuracion
+              ?.CICLO_ESCOLAR || ""
+          ).trim()
+        : "";
+
+    if (!cicloEscolar) {
+      return {
+        ok: false,
+        exito: false,
+        eliminado: false,
+        mensaje:
+          "No hay un ciclo escolar configurado."
+      };
+    }
+
+    const libro =
+      SpreadsheetApp.openById(
+        ID_HOJA_CALCULO
+      );
+
+    const hoja =
+      libro.getSheetByName(
+        "RESULTADOS EXAMEN"
+      );
+
+    if (!hoja) {
+      return {
+        ok: false,
+        exito: false,
+        eliminado: false,
+        mensaje:
+          "No existe la hoja RESULTADOS EXAMEN."
+      };
+    }
+
+    const ultimaFila =
+      hoja.getLastRow();
+
+    let filasCoincidentes = [];
+
+    if (ultimaFila >= 2) {
+      const datos =
+        hoja
+          .getRange(
+            2,
+            1,
+            ultimaFila - 1,
+            9
+          )
+          .getDisplayValues();
+
+      datos.forEach(
+        function(fila, indice) {
+          const coincide =
+            String(fila[0] || "").trim() === periodo &&
+            String(fila[1] || "").trim() === campoFormativo &&
+            String(fila[2] || "").trim() === idAlumno &&
+            String(fila[8] || "").trim() === cicloEscolar;
+
+          if (coincide) {
+            filasCoincidentes.push(
+              indice + 2
+            );
+          }
+        }
+      );
+    }
+
+    if (
+      filasCoincidentes.length === 0
+    ) {
+      return {
+        ok: true,
+        exito: true,
+        eliminado: false,
+        yaNoExistia: true,
+        mensaje:
+          "La calificación ya no existía.",
+        periodo: periodo,
+        idAlumno: idAlumno,
+        campoFormativo: campoFormativo,
+        cicloEscolar: cicloEscolar
+      };
+    }
+
+    if (
+      filasCoincidentes.length > 1
+    ) {
+      return {
+        ok: false,
+        exito: false,
+        eliminado: false,
+        conflicto: true,
+        mensaje:
+          "Se encontraron registros duplicados. No se eliminó ninguna calificación."
+      };
+    }
+
+    hoja.deleteRow(
+      filasCoincidentes[0]
+    );
+
+    SpreadsheetApp.flush();
+
+    return {
+      ok: true,
+      exito: true,
+      eliminado: true,
+      mensaje:
+        "Calificación eliminada correctamente.",
+      periodo: periodo,
+      idAlumno: idAlumno,
+      campoFormativo: campoFormativo,
+      cicloEscolar: cicloEscolar
+    };
+
+  } catch (error) {
+    console.error(
+      "Error en eliminarResultadoExamen_:",
+      error
+    );
+
+    return {
+      ok: false,
+      exito: false,
+      eliminado: false,
+      mensaje:
+        "No fue posible eliminar la calificación.",
+      error:
+        error && error.message
+          ? error.message
+          : String(error)
+    };
+  } finally {
+    if (
+      bloqueo &&
+      bloqueo.hasLock()
+    ) {
+      bloqueo.releaseLock();
+    }
   }
 }
 
@@ -696,6 +979,36 @@ function guardarResultadosExamenWeb_(
 
       calificaciones:
         calificaciones
+    });
+
+  return responderJSONP_(
+    parametros &&
+    parametros.callback
+      ? parametros.callback
+      : "",
+    respuesta
+  );
+}
+
+
+// ==========================================
+// RESPUESTA WEB:
+// ELIMINAR UNA CALIFICACIÓN
+// ==========================================
+
+function eliminarResultadoExamenWeb_(
+  parametros
+) {
+  const respuesta =
+    eliminarResultadoExamen_({
+      periodo:
+        parametros.periodo,
+
+      idAlumno:
+        parametros.idAlumno,
+
+      campoFormativo:
+        parametros.campoFormativo
     });
 
   return responderJSONP_(
