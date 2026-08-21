@@ -3,6 +3,8 @@
   let alumnosExamen = [];
   let alumnoSeleccionado = null;
   let cargandoAlumnos = false;
+  let operacionResultadosEnCurso = false;
+  const camposPersistidos = new Set();
 
   const CAMPOS = [
     'Lenguajes',
@@ -229,16 +231,91 @@
 
   function renderizarCampos(existentes) {
     const mapa = {};
+    camposPersistidos.clear();
     existentes.forEach((r) => {
-      mapa[String(r.campoFormativo || '').trim()] = String(r.calificacion || '').trim();
+      const campo = String(r.campoFormativo || '').trim();
+      if (!CAMPOS.includes(campo)) return;
+      mapa[campo] = String(r.calificacion || '').trim();
+      camposPersistidos.add(campo);
     });
 
     document.getElementById('camposResultadosExamen').innerHTML = CAMPOS.map((campo, i) => `
-      <label class="resultado-examen-alumno">
+      <div class="resultado-examen-alumno" data-fila-campo="${esc(campo)}">
         <span class="resultado-examen-alumno__numero">${i + 1}</span>
-        <span class="resultado-examen-alumno__datos"><strong>${esc(campo)}</strong></span>
-        <input class="resultado-examen-alumno__calificacion" type="number" inputmode="decimal" min="0" max="10" step="0.1" placeholder="—" value="${esc(mapa[campo] ?? '')}" data-campo="${esc(campo)}" aria-label="Calificación de ${esc(campo)}">
-      </label>`).join('');
+        <label class="resultado-examen-alumno__datos" for="calificacion-examen-${i}"><strong>${esc(campo)}</strong></label>
+        <input id="calificacion-examen-${i}" class="resultado-examen-alumno__calificacion" type="number" inputmode="decimal" min="0" max="10" step="0.1" placeholder="—" value="${esc(mapa[campo] ?? '')}" data-campo="${esc(campo)}" aria-label="Calificación de ${esc(campo)}">
+        <button class="resultado-examen-alumno__eliminar" type="button" data-eliminar-campo="${esc(campo)}" aria-label="Eliminar calificación de ${esc(campo)}" ${camposPersistidos.has(campo) ? '' : 'disabled'}>Eliminar</button>
+      </div>`).join('');
+  }
+
+  function actualizarControlesOperacion() {
+    const bloqueado = operacionResultadosEnCurso;
+    const botonGuardar = document.getElementById('btnGuardarResultadosExamen');
+    const periodo = document.getElementById('periodoResultadosExamen');
+    const busqueda = document.getElementById('busquedaAlumnoResultadosExamen');
+    if (botonGuardar) botonGuardar.disabled = bloqueado;
+    if (periodo) periodo.disabled = bloqueado;
+    if (busqueda) busqueda.disabled = bloqueado;
+    document.querySelectorAll('#camposResultadosExamen .resultado-examen-alumno__calificacion')
+      .forEach((input) => { input.disabled = bloqueado; });
+    document.querySelectorAll('#camposResultadosExamen [data-eliminar-campo]')
+      .forEach((boton) => {
+        boton.disabled = bloqueado || !camposPersistidos.has(String(boton.dataset.eliminarCampo || '').trim());
+      });
+  }
+
+  async function eliminarCalificacion(campoFormativo) {
+    if (operacionResultadosEnCurso) return;
+
+    const periodo = document.getElementById('periodoResultadosExamen')?.value || '';
+    const alumno = alumnoSeleccionado;
+    const idAlumno = String(alumno?.id || '').trim();
+    const estado = document.getElementById('estadoResultadosExamen');
+
+    if (!periodo || !idAlumno || !CAMPOS.includes(campoFormativo)) {
+      estado.textContent = '❌ Selecciona un trimestre, un alumno y una calificación válida.';
+      return;
+    }
+
+    if (!camposPersistidos.has(campoFormativo)) {
+      estado.textContent = '✅ La calificación ya no existe.';
+      return;
+    }
+
+    const confirmado = window.confirm(
+      `¿Eliminar la calificación de “${campoFormativo}” de ${nombreAlumno(alumno)} en “${periodo}”?\n\nLas demás calificaciones no se modificarán.`
+    );
+    if (!confirmado) return;
+
+    operacionResultadosEnCurso = true;
+    actualizarControlesOperacion();
+    estado.textContent = `⏳ Eliminando la calificación de ${campoFormativo}...`;
+
+    try {
+      const r = await solicitarJSONP('eliminarresultadosexamen', {
+        periodo,
+        idAlumno,
+        campoFormativo
+      });
+      if (!r || r.ok === false || r.exito === false) throw new Error(r?.mensaje || 'No fue posible eliminar la calificación.');
+
+      const contextoSinCambios =
+        String(alumnoSeleccionado?.id || '').trim() === idAlumno &&
+        String(document.getElementById('periodoResultadosExamen')?.value || '') === periodo;
+
+      if (contextoSinCambios) {
+        const input = [...document.querySelectorAll('#camposResultadosExamen .resultado-examen-alumno__calificacion')]
+          .find((elemento) => String(elemento.dataset.campo || '').trim() === campoFormativo);
+        if (input) input.value = '';
+        camposPersistidos.delete(campoFormativo);
+        estado.textContent = `✅ ${r.mensaje || 'Calificación eliminada correctamente.'}`;
+      }
+    } catch (e) {
+      estado.textContent = `❌ ${e?.message || 'No fue posible eliminar la calificación.'}`;
+    } finally {
+      operacionResultadosEnCurso = false;
+      actualizarControlesOperacion();
+    }
   }
 
   function cambiarTrimestre() {
@@ -253,9 +330,9 @@
   }
 
   async function guardar() {
+    if (operacionResultadosEnCurso) return;
     const periodo = document.getElementById('periodoResultadosExamen')?.value || '';
     const estado = document.getElementById('estadoResultadosExamen');
-    const boton = document.getElementById('btnGuardarResultadosExamen');
 
     if (!periodo || !alumnoSeleccionado) {
       estado.textContent = '❌ Selecciona el trimestre y un alumno.';
@@ -286,7 +363,8 @@
       return;
     }
 
-    boton.disabled = true;
+    operacionResultadosEnCurso = true;
+    actualizarControlesOperacion();
     estado.textContent = '⏳ Guardando calificaciones...';
     try {
       const r = await solicitarJSONP('guardarresultadosexamen', {
@@ -298,11 +376,13 @@
         calificaciones: JSON.stringify(calificaciones)
       });
       if (!r || r.ok === false || r.exito === false) throw new Error(r?.mensaje || 'No fue posible guardar las calificaciones.');
+      calificaciones.forEach((item) => camposPersistidos.add(item.campoFormativo));
       estado.textContent = `✅ ${r.mensaje || 'Calificaciones guardadas correctamente.'}`;
     } catch (e) {
       estado.textContent = `❌ ${e?.message || 'No fue posible guardar las calificaciones.'}`;
     } finally {
-      boton.disabled = false;
+      operacionResultadosEnCurso = false;
+      actualizarControlesOperacion();
     }
   }
 
@@ -324,6 +404,10 @@
     document.getElementById('periodoResultadosExamen').addEventListener('change', cambiarTrimestre);
     document.getElementById('busquedaAlumnoResultadosExamen').addEventListener('input', buscarAlumnos);
     document.getElementById('btnGuardarResultadosExamen').addEventListener('click', guardar);
+    document.getElementById('camposResultadosExamen').addEventListener('click', (evento) => {
+      const boton = evento.target.closest('[data-eliminar-campo]');
+      if (boton) eliminarCalificacion(String(boton.dataset.eliminarCampo || '').trim());
+    });
 
     ['menuInicio', 'menuHistorial', 'menuResumenEstadistico'].forEach((id) => {
       document.getElementById(id)?.addEventListener('click', ocultarVista);
