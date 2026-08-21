@@ -14,6 +14,7 @@ let lectorNFC = null;
 let controladorNFC = null;
 let lectorActivo = false;
 let envioEnProceso = false;
+let colaLecturasNFC = [];
 let ultimoUID = '';
 let momentoUltimoEscaneo = 0;
 let alumnos = [];
@@ -397,6 +398,7 @@ async function guardarRegistroManual() {
     $('btnGuardarManual').disabled = false;
   } finally {
     envioEnProceso = false;
+    procesarColaNFC();
   }
 }
 
@@ -459,22 +461,35 @@ function procesarTarjeta(evento) {
   if (uid === ultimoUID && ahora - momentoUltimoEscaneo < 3000) return;
   ultimoUID = uid;
   momentoUltimoEscaneo = ahora;
-  enviarRegistroNFC(uid);
+  if (!validarModulo()) return;
+  const parametros = construirParametrosRegistro({ uid });
+  colaLecturasNFC.push({
+    uid,
+    modulo: parametros.modulo,
+    parametros
+  });
+  procesarColaNFC();
 }
 
-async function enviarRegistroNFC(uid) {
-  if (!validarModulo() || envioEnProceso) return;
+function procesarColaNFC() {
+  if (envioEnProceso || colaLecturasNFC.length === 0) return;
+  const lectura = colaLecturasNFC.shift();
+  enviarRegistroNFC(lectura);
+}
+
+async function enviarRegistroNFC(lectura) {
   envioEnProceso = true;
   $('estado').textContent = '⏳ Enviando registro...';
   try {
-    const respuesta = await solicitarJSONP('registrarNFC', construirParametrosRegistro({ uid }));
+    const respuesta = await solicitarJSONP('registrarNFC', lectura.parametros);
     validarRespuesta(respuesta);
-    confirmarRegistro(respuesta.nombre || respuesta.nombreCompleto || 'Alumno', moduloSeleccionado, 'NFC');
+    confirmarRegistro(respuesta.nombre || respuesta.nombreCompleto || 'Alumno', lectura.modulo, 'NFC');
   } catch (error) {
     $('estado').textContent = '❌ No se pudo confirmar el registro.';
     $('resultado').textContent = error.message;
   } finally {
     envioEnProceso = false;
+    procesarColaNFC();
   }
 }
 
