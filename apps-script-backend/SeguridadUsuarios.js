@@ -153,15 +153,6 @@ function asegurarHojaUsuarios_(libroCentral) {
 // RESOLUCIÓN DEL USUARIO ACTUAL - S1-T2-B
 // ==========================================
 
-/**
- * Resuelve la cuenta Google que ejecuta el Web App y valida que exista
- * como usuario ACTIVO con rol válido y base asignada.
- *
- * Por ahora esta función se prueba de forma aislada y NO está conectada
- * con doGet, NFC ni los demás módulos de AulaNFC.
- *
- * @return {Object}
- */
 function obtenerContextoUsuarioActual_() {
   const correo = normalizarCorreoUsuario_(
     Session.getEffectiveUser().getEmail()
@@ -198,6 +189,72 @@ function obtenerContextoUsuarioActual_() {
       estado: usuario.estado,
       idBase: usuario.idBase,
       idCarpetaFotos: usuario.idCarpetaFotos
+    }
+  };
+}
+
+// ==========================================
+// APERTURA DE BASE AUTORIZADA - S1-T2-C
+// ==========================================
+
+/**
+ * Abre exclusivamente la base asignada al usuario actual autorizado.
+ * Por ahora no sustituye ningún acceso existente de AulaNFC.
+ *
+ * @return {{contexto:Object, libro:GoogleAppsScript.Spreadsheet.Spreadsheet}}
+ */
+function obtenerLibroUsuarioActual_() {
+  const contexto = obtenerContextoUsuarioActual_();
+
+  if (!contexto || !contexto.autorizado || !contexto.usuario) {
+    throw new Error(
+      contexto && contexto.mensaje
+        ? contexto.mensaje
+        : "No fue posible autorizar al usuario actual."
+    );
+  }
+
+  const idBase = String(contexto.usuario.idBase || "").trim();
+
+  if (!idBase) {
+    throw new Error("El usuario actual no tiene una base asignada.");
+  }
+
+  const libro = SpreadsheetApp.openById(idBase);
+
+  return {
+    contexto: contexto,
+    libro: libro
+  };
+}
+
+/**
+ * Diagnóstico aislado: abre la base autorizada y devuelve metadatos
+ * suficientes para comprobar que corresponde a la base configurada.
+ * No escribe ni modifica la hoja.
+ *
+ * @return {Object}
+ */
+function diagnosticarLibroUsuarioActual_() {
+  const acceso = obtenerLibroUsuarioActual_();
+  const libro = acceso.libro;
+  const contexto = acceso.contexto;
+
+  return {
+    ok: true,
+    exito: true,
+    autorizado: true,
+    mensaje: "Base del usuario actual abierta correctamente.",
+    usuario: {
+      idUsuario: contexto.usuario.idUsuario,
+      nombre: contexto.usuario.nombre,
+      rol: contexto.usuario.rol
+    },
+    base: {
+      id: libro.getId(),
+      nombre: libro.getName(),
+      coincideConBaseAsignada:
+        libro.getId() === String(contexto.usuario.idBase || "").trim()
     }
   };
 }
@@ -295,9 +352,6 @@ function obtenerUsuarioCentralAutorizadoPorCorreo_(correo) {
 // ALTA / ACTUALIZACIÓN INTERNA DE USUARIOS
 // ==========================================
 
-/**
- * Función interna. No se expone todavía por API.
- */
 function guardarUsuarioCentral_(datosUsuario, hojaUsuarios) {
   const libroCentral = hojaUsuarios
     ? hojaUsuarios.getParent()
@@ -315,131 +369,77 @@ function guardarUsuarioCentral_(datosUsuario, hojaUsuarios) {
     datosUsuario && datosUsuario.idCarpetaFotos || ""
   ).trim();
 
-  if (!correo) {
-    throw new Error("El correo del usuario es obligatorio.");
-  }
-
+  if (!correo) throw new Error("El correo del usuario es obligatorio.");
   if (rol !== AULANFC_ROL_ADMIN && rol !== AULANFC_ROL_DOCENTE) {
     throw new Error("El rol del usuario no es válido.");
   }
-
   if (estado !== AULANFC_ESTADO_ACTIVO && estado !== AULANFC_ESTADO_INACTIVO) {
     throw new Error("El estado del usuario no es válido.");
   }
-
-  if (!idBase) {
-    throw new Error("El usuario debe tener una base de datos asignada.");
-  }
+  if (!idBase) throw new Error("El usuario debe tener una base de datos asignada.");
 
   const existente = buscarUsuarioEnHojaPorCorreo_(hoja, correo);
   const ahora = new Date();
 
   if (existente) {
     hoja.getRange(existente.fila, 2, 1, 6).setValues([[
-      correo,
-      nombre,
-      rol,
-      estado,
-      idBase,
-      idCarpetaFotos
+      correo, nombre, rol, estado, idBase, idCarpetaFotos
     ]]);
-
     SpreadsheetApp.flush();
     return filaAUsuarioCentral_(
-      hoja
-        .getRange(
-          existente.fila,
-          1,
-          1,
-          AULANFC_ENCABEZADOS_USUARIOS.length
-        )
-        .getValues()[0],
+      hoja.getRange(
+        existente.fila, 1, 1, AULANFC_ENCABEZADOS_USUARIOS.length
+      ).getValues()[0],
       existente.fila
     );
   }
 
   const idUsuario = generarSiguienteIdUsuario_(hoja);
-
   hoja.appendRow([
-    idUsuario,
-    correo,
-    nombre,
-    rol,
-    estado,
-    idBase,
-    idCarpetaFotos,
-    ahora,
-    ""
+    idUsuario, correo, nombre, rol, estado, idBase,
+    idCarpetaFotos, ahora, ""
   ]);
-
   SpreadsheetApp.flush();
 
   return {
-    fila: hoja.getLastRow(),
-    idUsuario: idUsuario,
-    correo: correo,
-    nombre: nombre,
-    rol: rol,
-    estado: estado,
-    idBase: idBase,
-    idCarpetaFotos: idCarpetaFotos,
-    fechaAlta: ahora,
-    ultimoAcceso: ""
+    fila: hoja.getLastRow(), idUsuario: idUsuario, correo: correo,
+    nombre: nombre, rol: rol, estado: estado, idBase: idBase,
+    idCarpetaFotos: idCarpetaFotos, fechaAlta: ahora, ultimoAcceso: ""
   };
 }
 
 function buscarUsuarioEnHojaPorCorreo_(hoja, correo) {
   const ultimaFila = hoja.getLastRow();
+  if (ultimaFila < 2) return null;
 
-  if (ultimaFila < 2) {
-    return null;
-  }
-
-  const correos = hoja
-    .getRange(2, 2, ultimaFila - 1, 1)
-    .getDisplayValues()
-    .flat();
+  const correos = hoja.getRange(2, 2, ultimaFila - 1, 1)
+    .getDisplayValues().flat();
 
   for (let indice = 0; indice < correos.length; indice += 1) {
     if (normalizarCorreoUsuario_(correos[indice]) === correo) {
-      return {
-        fila: indice + 2
-      };
+      return { fila: indice + 2 };
     }
   }
-
   return null;
 }
 
 function generarSiguienteIdUsuario_(hoja) {
   const ultimaFila = hoja.getLastRow();
+  if (ultimaFila < 2) return "USR-0001";
 
-  if (ultimaFila < 2) {
-    return "USR-0001";
-  }
-
-  const ids = hoja
-    .getRange(2, 1, ultimaFila - 1, 1)
-    .getDisplayValues()
-    .flat()
-    .map(function(valor) {
-      const coincidencia = String(valor || "")
-        .trim()
-        .toUpperCase()
+  const ids = hoja.getRange(2, 1, ultimaFila - 1, 1)
+    .getDisplayValues().flat().map(function(valor) {
+      const coincidencia = String(valor || "").trim().toUpperCase()
         .match(/^USR-(\d+)$/);
-
       return coincidencia ? Number(coincidencia[1]) : 0;
     });
 
   const siguiente = Math.max.apply(null, ids.concat([0])) + 1;
-
   return "USR-" + String(siguiente).padStart(4, "0");
 }
 
 function normalizarCorreoUsuario_(correo) {
-  return String(correo || "")
-    .trim()
-    .toLowerCase();
+  return String(correo || "").trim().toLowerCase();
 }
 
 function filaAUsuarioCentral_(fila, numeroFila) {
