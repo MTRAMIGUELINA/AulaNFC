@@ -3,27 +3,25 @@
 // S1-T2 - ENTRADAS MANUALES DE PRUEBA
 // ==========================================
 
-/**
- * Punto de entrada publico para ejecutar manualmente la inicializacion
- * desde el editor de Google Apps Script.
- *
- * No se expone por doGet ni modifica el funcionamiento de los modulos.
- *
- * @return {Object}
- */
 function inicializarSeguridadUsuarios() {
   return inicializarSeguridadUsuarios_("Angie");
 }
 
+function probarContextoUsuarioActual() {
+  const resultado = obtenerContextoUsuarioActual_();
+  console.log(JSON.stringify(resultado));
+  return resultado;
+}
+
 /**
- * Prueba aislada de S1-T2-B.
- * Identifica la cuenta actual y comprueba su registro central.
- * No modifica alumnos, NFC ni ningun modulo de AulaNFC.
+ * Prueba aislada de S1-T2-C.
+ * Abre la base asignada al usuario autorizado y solo devuelve metadatos.
+ * No escribe ni modifica registros.
  *
  * @return {Object}
  */
-function probarContextoUsuarioActual() {
-  const resultado = obtenerContextoUsuarioActual_();
+function probarLibroUsuarioActual() {
+  const resultado = diagnosticarLibroUsuarioActual_();
   console.log(JSON.stringify(resultado));
   return resultado;
 }
