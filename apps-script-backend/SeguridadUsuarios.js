@@ -1,6 +1,6 @@
 // ==========================================
 // AULANFC v3.2
-// S1-T2-A - INFRAESTRUCTURA CENTRAL DE USUARIOS
+// S1-T2 - INFRAESTRUCTURA CENTRAL DE USUARIOS
 // ==========================================
 
 const AULANFC_PROP_ID_BASE_CENTRAL = "AULANFC_ID_BASE_CENTRAL";
@@ -147,6 +147,59 @@ function asegurarHojaUsuarios_(libroCentral) {
 
   hoja.setFrozenRows(1);
   return hoja;
+}
+
+// ==========================================
+// RESOLUCIÓN DEL USUARIO ACTUAL - S1-T2-B
+// ==========================================
+
+/**
+ * Resuelve la cuenta Google que ejecuta el Web App y valida que exista
+ * como usuario ACTIVO con rol válido y base asignada.
+ *
+ * Por ahora esta función se prueba de forma aislada y NO está conectada
+ * con doGet, NFC ni los demás módulos de AulaNFC.
+ *
+ * @return {Object}
+ */
+function obtenerContextoUsuarioActual_() {
+  const correo = normalizarCorreoUsuario_(
+    Session.getEffectiveUser().getEmail()
+  );
+
+  if (!correo) {
+    return {
+      ok: false,
+      exito: false,
+      autorizado: false,
+      mensaje: "No fue posible identificar la cuenta Google actual.",
+      usuario: null
+    };
+  }
+
+  const resultado = obtenerUsuarioCentralAutorizadoPorCorreo_(correo);
+
+  if (!resultado.autorizado || !resultado.usuario) {
+    return resultado;
+  }
+
+  const usuario = resultado.usuario;
+
+  return {
+    ok: true,
+    exito: true,
+    autorizado: true,
+    mensaje: "Usuario actual autorizado.",
+    usuario: {
+      idUsuario: usuario.idUsuario,
+      correo: usuario.correo,
+      nombre: usuario.nombre,
+      rol: usuario.rol,
+      estado: usuario.estado,
+      idBase: usuario.idBase,
+      idCarpetaFotos: usuario.idCarpetaFotos
+    }
+  };
 }
 
 // ==========================================
