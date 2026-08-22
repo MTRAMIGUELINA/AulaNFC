@@ -13,7 +13,7 @@
 
   async function obtenerAlumno(id){
     try{
-      const r=await solicitarJSONP('obtenerAlumnos');
+      const r=await solicitarJSONP('obtenerAlumnosGrupoActivo');
       const lista=Array.isArray(r?.alumnos)?r.alumnos:[];
       return lista.find(a=>String(a.id)===String(id))||null;
     }catch(_){return null;}

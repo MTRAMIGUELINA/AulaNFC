@@ -34,7 +34,7 @@
     const numeroSolicitud=++ultimaSolicitudAlumnosIncidencias,idSeleccionado=s?.value||'',mostrarEstado=!folioIncidenciaActual;
     if(mostrarEstado)estado.textContent='⏳ Cargando alumnos...';
     try{
-      const r=await solicitarJSONP('obtenerAlumnos');
+      const r=await solicitarJSONP('obtenerAlumnosGrupoActivo');
       if(!r||(r.ok===false||r.exito===false))throw new Error(r?.mensaje||'No se pudieron cargar los alumnos.');
       if(numeroSolicitud!==ultimaSolicitudAlumnosIncidencias)return;
       alumnosIncidencias=(Array.isArray(r.alumnos)?r.alumnos:[]).filter(a=>a.activo!==false).sort((a,b)=>nombreAlumno(a).localeCompare(nombreAlumno(b),'es',{sensitivity:'base'}));

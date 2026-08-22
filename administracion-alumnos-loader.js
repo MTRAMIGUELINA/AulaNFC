@@ -10,7 +10,7 @@
   function cargarExtensionFoto() {
     if (document.querySelector('script[data-administracion-alumnos-foto]')) return;
     const foto=document.createElement('script');
-    foto.src='administracion-alumnos-foto.js?v=3';
+    foto.src='administracion-alumnos-foto.js?v=4';
     foto.defer=true;
     foto.dataset.administracionAlumnosFoto='true';
     document.body.appendChild(foto);
@@ -18,7 +18,7 @@
 
   if (!document.querySelector('script[data-administracion-alumnos-modulo]')) {
     const script=document.createElement('script');
-    script.src='administracion-alumnos.js?v=3';
+    script.src='administracion-alumnos.js?v=4';
     script.defer=true;
     script.dataset.administracionAlumnosModulo='true';
     script.addEventListener('load', cargarExtensionFoto, { once:true });

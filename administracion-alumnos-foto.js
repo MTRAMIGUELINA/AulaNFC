@@ -3,7 +3,6 @@
   let fotoArchivoSeleccionado = null;
   let fotoOriginal = '';
   let quitarFotoSolicitada = false;
-  let parcheInstalado = false;
   let recuperacionFotografica = null;
 
   function limpiarRecuperacionFotografica() {
@@ -25,7 +24,8 @@
     ...(window.AulaNFCAdministracionAlumnos || {}),
     limpiarRecuperacionFotografica,
     prepararFotografiaAlumno,
-    sincronizarFormularioFotografia: prepararFotoFormulario
+    sincronizarFormularioFotografia: prepararFotoFormulario,
+    guardarAlumnoConFotografia
   };
 
   function esperarFormulario() {
@@ -42,7 +42,6 @@
       observarFormulario(formulario, campoUrl);
     }
 
-    instalarParcheGuardado();
   }
 
   function instalarInterfazFoto(campoUrl) {
@@ -322,20 +321,14 @@
     return [p.nombre,p.apellidoPaterno,p.apellidoMaterno].filter(Boolean).join(' ').replace(/\s+/g,' ').trim();
   }
 
-  function instalarParcheGuardado() {
-    if (parcheInstalado) return;
-    if (typeof window.solicitarJSONP !== 'function') {
-      setTimeout(instalarParcheGuardado,150);
-      return;
-    }
-
-    const original = window.solicitarJSONP;
-
-    window.solicitarJSONP = async function(accion,parametros={}) {
+  async function guardarAlumnoConFotografia(accion,parametros={},transportar) {
+      if (typeof transportar !== 'function') {
+        throw new Error('No se encontró el transporte JSONP de AulaNFC.');
+      }
       const clave = String(accion || '').trim().toLowerCase();
 
       if (clave !== 'crearalumno' && clave !== 'actualizaralumno') {
-        return original(accion,parametros);
+        return transportar(accion,parametros);
       }
 
       const p = {...parametros};
@@ -344,13 +337,13 @@
       // EDITAR SIN TOCAR FOTO: conservar exactamente la referencia existente.
       if (clave === 'actualizaralumno' && !fotoArchivoSeleccionado && !quitarFotoSolicitada) {
         p.foto = fotoOriginal || String(p.foto || '').trim();
-        return original(accion,p);
+        return transportar(accion,p);
       }
 
       // EDITAR Y QUITAR FOTO: limpiar la columna FOTO.
       if (clave === 'actualizaralumno' && quitarFotoSolicitada && !fotoArchivoSeleccionado) {
         p.foto = '';
-        const r = await original(accion,p);
+        const r = await transportar(accion,p);
         if (r && r.ok !== false && r.exito !== false) {
           fotoOriginal = '';
           quitarFotoSolicitada = false;
@@ -371,7 +364,7 @@
           if (esRecuperacion) recuperacionFotografica.idFoto = idFoto;
           p.foto = idFoto;
           document.getElementById('adminFoto').value = idFoto;
-          const r = await original(accion,p);
+          const r = await transportar(accion,p);
           if (r && r.ok !== false && r.exito !== false) {
             fotoOriginal = idFoto;
             limpiarRecuperacionFotografica();
@@ -391,11 +384,11 @@
       // ALUMNO NUEVO SIN FOTO.
       if (clave === 'crearalumno' && !fotoArchivoSeleccionado) {
         p.foto = '';
-        return original(accion,p);
+        return transportar(accion,p);
       }
 
       // ALUMNO NUEVO CON FOTO: crear, obtener ID, subir foto y actualizar.
-      const creado = await original('crearalumno',{...p,foto:''});
+      const creado = await transportar('crearalumno',{...p,foto:''});
       if (!creado || creado.ok === false || creado.exito === false) return creado;
 
       const id = String(creado.idAlumno || creado.id || '').trim();
@@ -414,7 +407,7 @@
         recuperacionFotografica.idFoto = idFoto;
         document.getElementById('adminFoto').value = idFoto;
 
-        actualizado = await original('actualizaralumno',{...p,idAlumno:id,foto:idFoto});
+        actualizado = await transportar('actualizaralumno',{...p,idAlumno:id,foto:idFoto});
         if (!actualizado || actualizado.ok === false || actualizado.exito === false) {
           throw new Error(actualizado?.mensaje || 'No fue posible asociar la fotografía al alumno.');
         }
@@ -430,9 +423,6 @@
         idAlumno:id,
         mensaje:'Alumno y fotografía guardados correctamente.'
       };
-    };
-
-    parcheInstalado = true;
   }
 
   function mostrarEstadoFoto(mensaje) {
