@@ -1,6 +1,6 @@
 // ==========================================
 // AULANFC v3.2
-// S1-T2-A - ENTRADA MANUAL DE INICIALIZACION
+// S1-T2 - ENTRADAS MANUALES DE PRUEBA
 // ==========================================
 
 /**
@@ -13,4 +13,17 @@
  */
 function inicializarSeguridadUsuarios() {
   return inicializarSeguridadUsuarios_("Angie");
+}
+
+/**
+ * Prueba aislada de S1-T2-B.
+ * Identifica la cuenta actual y comprueba su registro central.
+ * No modifica alumnos, NFC ni ningun modulo de AulaNFC.
+ *
+ * @return {Object}
+ */
+function probarContextoUsuarioActual() {
+  const resultado = obtenerContextoUsuarioActual_();
+  console.log(JSON.stringify(resultado));
+  return resultado;
 }
