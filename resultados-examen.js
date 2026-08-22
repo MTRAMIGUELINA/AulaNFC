@@ -152,7 +152,7 @@
     const estado = document.getElementById('estadoResultadosExamen');
     estado.textContent = '⏳ Cargando alumnos...';
     try {
-      const r = await solicitarJSONP('obtenerAlumnos');
+      const r = await solicitarJSONP('obtenerAlumnosGrupoActivo');
       if (!r || r.ok === false || r.exito === false) throw new Error(r?.mensaje || 'No se pudieron cargar los alumnos.');
       alumnosExamen = (Array.isArray(r.alumnos) ? r.alumnos : [])
         .filter((a) => a.activo !== false)
