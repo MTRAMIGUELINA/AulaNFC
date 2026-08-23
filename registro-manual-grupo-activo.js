@@ -76,6 +76,8 @@
       ? respuesta.alumnos
       : [];
 
+    // El flujo actual de guardado manual busca al alumno en la variable global.
+    // Durante el panel manual la sustituimos temporalmente y la restauramos al cerrar.
     alumnos = alumnosGrupoActivo.slice();
 
     return respuesta;
@@ -167,6 +169,8 @@
         if (!alumno) return;
 
         alumnoManualId = id;
+
+        // Una vez seleccionado, ocultamos la lista para dejar el panel limpio.
         lista.classList.add('oculto');
         lista.innerHTML = '';
         const buscador = document.getElementById('campoBusquedaManual');
@@ -195,31 +199,6 @@
     });
   }
 
-  function mejorarMensajeDuplicado() {
-    const estado = document.getElementById('estado');
-    const resultado = document.getElementById('resultado');
-    if (!estado || !resultado) return;
-
-    const revisar = () => {
-      const mensaje = String(resultado.textContent || '').trim();
-      const normalizado = normalizar(mensaje);
-
-      if (
-        normalizado.includes('ya tiene asistencia registrada hoy') ||
-        normalizado.includes('asistencia ya registrada')
-      ) {
-        estado.textContent = '⚠️ ASISTENCIA YA REGISTRADA';
-        resultado.innerHTML = `<div style="font-weight:700;color:#8a6400;">⚠️ ${esc(mensaje)}</div>`;
-      }
-    };
-
-    new MutationObserver(revisar).observe(resultado, {
-      childList: true,
-      subtree: true,
-      characterData: true
-    });
-  }
-
   function inicializar() {
     const boton = document.getElementById('btnBuscarManual');
     const buscador = document.getElementById('campoBusquedaManual');
@@ -230,16 +209,17 @@
 
     boton.dataset.grupoActivoManual = 'true';
 
+    // Captura antes de los listeners originales de script.js.
     boton.addEventListener('click', abrirManualGrupoActivo, true);
     buscador.addEventListener('input', buscarManualGrupoActivo, true);
 
+    // Al cerrarse el panel (botón cerrar o registro exitoso), recuperamos
+    // la lista general para Historial y otras consultas.
     new MutationObserver(() => {
       if (panel.classList.contains('oculto')) {
         restaurarListaGlobal();
       }
     }).observe(panel, { attributes: true, attributeFilter: ['class'] });
-
-    mejorarMensajeDuplicado();
 
     return true;
   }
