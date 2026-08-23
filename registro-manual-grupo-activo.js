@@ -169,10 +169,31 @@
         if (!alumno) return;
 
         alumnoManualId = id;
+
+        // Una vez seleccionado, ocultamos la lista para dejar el panel limpio.
+        lista.classList.add('oculto');
+        lista.innerHTML = '';
+        const buscador = document.getElementById('campoBusquedaManual');
+        if (buscador) buscador.value = '';
+        if (contador) contador.textContent = 'Alumno seleccionado.';
+
         if (seleccionado) {
-          seleccionado.innerHTML = `<strong>Alumno seleccionado:</strong><br>${esc(nombre(alumno))}<br><small>${esc(gradoGrupoLocal(alumno))}</small>`;
+          seleccionado.innerHTML = `<strong>Alumno seleccionado:</strong><br>${esc(nombre(alumno))}<br><small>${esc(gradoGrupoLocal(alumno))}</small><br><button type="button" data-cambiar-alumno-manual="true" style="margin-top:10px;padding:8px 14px;border:1px solid #6aa9e9;border-radius:10px;background:#fff;color:#1769aa;font-weight:700;cursor:pointer;">Cambiar alumno</button>`;
           seleccionado.classList.remove('oculto');
+
+          const cambiar = seleccionado.querySelector('[data-cambiar-alumno-manual]');
+          cambiar?.addEventListener('click', () => {
+            alumnoManualId = '';
+            seleccionado.classList.add('oculto');
+            if (guardar) guardar.disabled = true;
+            if (contador) contador.textContent = 'Escribe un nombre para buscar.';
+            if (buscador) {
+              buscador.value = '';
+              buscador.focus();
+            }
+          });
         }
+
         if (guardar) guardar.disabled = false;
       });
     });
