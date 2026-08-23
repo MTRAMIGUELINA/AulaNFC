@@ -3,7 +3,6 @@
 // CONFIGURACIÓN GENERAL DE ESCUELA / DOCENTE
 // ==========================================
 
-
 // ==========================================
 // OBTENER CONFIGURACIÓN
 // ==========================================
@@ -11,9 +10,7 @@
 function obtenerConfiguracion_() {
   try {
     const libro =
-      SpreadsheetApp.openById(
-        ID_HOJA_CALCULO
-      );
+      obtenerBaseDocenteActual_();
 
     const hoja =
       libro.getSheetByName(
@@ -103,7 +100,6 @@ function obtenerConfiguracion_() {
   }
 }
 
-
 // ==========================================
 // GUARDAR CONFIGURACIÓN
 // ==========================================
@@ -113,9 +109,7 @@ function guardarConfiguracion_(
 ) {
   try {
     const libro =
-      SpreadsheetApp.openById(
-        ID_HOJA_CALCULO
-      );
+      obtenerBaseDocenteActual_();
 
     const hoja =
       libro.getSheetByName(
@@ -275,7 +269,6 @@ function guardarConfiguracion_(
   }
 }
 
-
 // ==========================================
 // RESPUESTA WEB: OBTENER CONFIGURACIÓN
 // ==========================================
@@ -294,7 +287,6 @@ function obtenerConfiguracionWeb_(
     respuesta
   );
 }
-
 
 // ==========================================
 // RESPUESTA WEB: GUARDAR CONFIGURACIÓN
