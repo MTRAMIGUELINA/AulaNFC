@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1976d2">
+  <title>AulaNFC DEV - T2-D2</title>
+  <link rel="stylesheet" href="style.css?v=20">
+  <link rel="stylesheet" href="historial-boton.css?v=1">
+  <link rel="stylesheet" href="confirmacion-flotante.css?v=1">
+</head>
+<body>
+  <main class="contenedor">
+    <header class="encabezado"><h1>📚 AulaNFC DEV</h1><p>Prueba T2-D2 · No es la versión pública estable</p></header>
+    <button id="btnAbrirHistorial" class="boton-historial-principal" type="button" aria-expanded="false" aria-controls="pantallaHistorial">📚 HISTORIAL</button>
+    <section id="pantallaHistorial" class="panel-historial oculto">
+      <div class="titulo-historial"><div><span class="seccion-fija">HISTORIAL</span><h2>Historial del día</h2></div><div class="acciones-historial"><button id="btnAbrirBuscar" class="boton-consulta" type="button">🔎 Buscar alumno</button><button id="btnCerrarHistorial" class="boton-cerrar" type="button" aria-label="Cerrar historial">✕</button></div></div>
+      <section id="vistaBuscar" class="consulta-alumno-superior oculto"><div class="buscar-encabezado-con-boton"><div class="buscar-encabezado"><h2>Buscar alumno</h2><p>Consulta únicamente sus datos básicos.</p></div><button id="btnCerrarBuscar" class="boton-cerrar" type="button">✕</button></div><label class="etiqueta" for="campoBusquedaAlumno">Nombre del alumno</label><input id="campoBusquedaAlumno" class="buscador" type="search" placeholder="Escribe al menos dos letras..." autocomplete="off"><p id="contadorAlumnos" class="contador">Escribe un nombre para buscar.</p><div id="listaAlumnos" class="lista-alumnos oculto"></div><section id="fichaAlumno" class="ficha oculto"><div class="ficha-cabecera"><div id="inicialesAlumno" class="avatar">AL</div><div><h2 id="nombreAlumno">Alumno</h2><p id="gradoGrupoAlumno">—</p></div></div><div class="datos-alumno"><div><span>ID</span><strong id="idAlumno">—</strong></div><div><span>UID NFC</span><strong id="uidAlumno">—</strong></div><div><span>Estado</span><strong id="estadoAlumno">—</strong></div></div></section></section>
+      <div class="controles-historial"><label for="fechaHistorial">Fecha que deseas consultar</label><input id="fechaHistorial" type="date"><button id="btnConsultarFecha" type="button">Ver historial</button><button id="btnHistorialGeneral" class="boton-secundario" type="button">📚 Ver historial general</button></div>
+      <section id="resultadoConsultaHistorial" class="oculto" aria-live="polite"><div id="resumenHistorial" class="resumen-historial"><article><span>🟢 Asistencias</span><strong id="totalAsistencias">0</strong></article><article><span>🟡 Tareas</span><strong id="totalTareas">0</strong></article><article><span>🔵 Participaciones</span><strong id="totalParticipaciones">0</strong></article><article><span>🟣 Conductas</span><strong id="totalConductas">0</strong></article><article><span>🟠 Lecturas</span><strong id="totalLecturas">0</strong></article><article class="total-general"><span>Total</span><strong id="totalRegistrosConsulta">0</strong></article></div><p id="estadoHistorial" class="estado-historial"></p><button id="btnDesplegarLista" class="boton-secundario oculto" type="button">Desplegar lista completa</button><div id="listaHistorialGeneral" class="lista-historial oculto"></div></section>
+    </section>
+    <section id="vistaEscaner">
+      <section class="seccion"><h2>¿Qué deseas registrar?</h2><div class="modulos"><button class="modulo asistencia" data-modulo="asistencia"><span>🟢</span>Asistencia</button><button class="modulo tareas" data-modulo="tareas"><span>🟡</span>Tareas</button><button class="modulo participacion" data-modulo="participacion"><span>🔵</span>Participación</button><button class="modulo conducta" data-modulo="conducta"><span>🟣</span>Conducta</button><button class="modulo lectura" data-modulo="lectura"><span>🟠</span>Lectura</button></div><button id="btnCambiarModulo" class="btn-cambiar-modulo oculto" type="button">← Cambiar módulo</button><span id="moduloActivo" class="oculto" aria-hidden="true">Ninguno</span></section>
+      <section id="opcionesTareas" class="opciones oculto"><h2>Resultado de la tarea</h2><select id="tipoTarea"><option value="">Selecciona una opción</option><option value="Entregó">Entregó</option><option value="Incompleta">Incompleta</option><option value="No entregó">No entregó</option></select></section>
+      <section id="opcionesParticipacion" class="opciones oculto"><h2>Campo formativo</h2><select id="campoFormativo"><option value="">Selecciona un campo</option><option>Lenguajes</option><option>Saberes y Pensamiento Científico</option><option>Ética, Naturaleza y Sociedad</option><option>De lo Humano a lo Comunitario</option></select><h2>Tipo de participación</h2><select id="tipoParticipacion"><option value="">Selecciona una opción</option><option>Participó</option><option>Excelente participación</option><option>Apoyo al equipo</option></select></section>
+      <section id="opcionesConducta" class="opciones oculto"><h2>Tipo de conducta</h2><select id="tipoConducta"><option value="">Selecciona una opción</option><option value="Buena conducta">Buena conducta</option><option value="Llamada de atención">Llamada de atención</option><option value="Tarjeta amarilla">Tarjeta amarilla</option><option value="Tarjeta roja">Tarjeta roja</option></select></section>
+      <section id="opcionesLectura" class="opciones oculto"><h2>Resultado de lectura</h2><select id="tipoLectura"><option value="">Selecciona una opción</option><option value="Requiere apoyo">Requiere apoyo</option><option value="Se acerca al estándar">Se acerca al estándar</option><option value="Estándar">Estándar</option><option value="Avanzado">Avanzado</option></select></section>
+      <section class="lector"><div class="estado-lector-linea"><span>Estado del lector</span><strong id="estado">⚪ APAGADO</strong></div><button id="btnEscanear" disabled>▶ ACTIVAR LECTOR</button><button id="btnBuscarManual" class="boton-manual" disabled type="button">🔎 BUSCAR ALUMNO</button><div id="resultado" aria-live="polite"></div></section>
+      <section id="panelRegistroManual" class="panel-registro-manual oculto"><div class="buscar-encabezado-con-boton"><div class="buscar-encabezado"><h2>Registro manual</h2></div><button id="btnCerrarManual" class="boton-cerrar" type="button">✕</button></div><label class="etiqueta" for="campoBusquedaManual">Buscar por nombre</label><input id="campoBusquedaManual" class="buscador" type="search" placeholder="Escribe el nombre del alumno" autocomplete="off"><p id="contadorManual" class="contador">Escribe un nombre para buscar.</p><div id="listaManual" class="lista-alumnos oculto"></div><div id="alumnoManualSeleccionado" class="seleccion-manual oculto"></div><button id="btnGuardarManual" class="boton-guardar-manual" type="button" disabled>☑ REGISTRAR ALUMNO</button></section>
+      <section class="sesion"><div class="historial-cabecera"><h2>Últimos registros</h2><span>Registros: <strong id="totalSesion">0</strong></span></div><div id="historialSesion" class="lista-historial"><div class="mensaje-lista">Todavía no hay registros en esta sesión.</div></div></section>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/gh/MTRAMIGUELINA/AulaNFC@feat/s1-t2-usuarios/script.js?v=dev1"></script>
+  <script src="pantalla-historial.js?v=1"></script>
+  <script src="confirmacion-flotante.js?v=6"></script>
+  <script src="aulanfc-bootstrap.js?v=1"></script>
+  <script src="ficha-alumno-foto-drive.js?v=3"></script>
+  <script src="https://cdn.jsdelivr.net/gh/MTRAMIGUELINA/AulaNFC@feat/s1-t2-usuarios/registro-manual-grupo-activo.js?v=dev4"></script>
+</body>
+</html>
