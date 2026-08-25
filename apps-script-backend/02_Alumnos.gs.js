@@ -23,9 +23,7 @@
 function obtenerAlumnos_() {
 
   const libro =
-    SpreadsheetApp.openById(
-      ID_HOJA_CALCULO
-    );
+    obtenerBaseDocenteActual_();
 
   const hoja =
     libro.getSheetByName(
@@ -166,19 +164,19 @@ function obtenerAlumnos_() {
             ),
 
           estado:
-  String(
-    fila[8] || "ACTIVO"
-  )
-    .trim()
-    .toUpperCase(),
+            String(
+              fila[8] || "ACTIVO"
+            )
+              .trim()
+              .toUpperCase(),
 
-activo:
-  String(
-    fila[8] || "ACTIVO"
-  )
-    .trim()
-    .toUpperCase() ===
-  "ACTIVO",
+          activo:
+            String(
+              fila[8] || "ACTIVO"
+            )
+              .trim()
+              .toUpperCase() ===
+            "ACTIVO",
 
           foto:
             String(
@@ -267,7 +265,6 @@ function obtenerAlumnosGrupoActivo_() {
       };
     }
 
-
     // --------------------------------------
     // OBTENER CONFIGURACIÓN
     // --------------------------------------
@@ -293,25 +290,23 @@ function obtenerAlumnosGrupoActivo_() {
       respuestaConfiguracion
         .configuracion || {};
 
-
     // --------------------------------------
     // GRADO Y GRUPO CONFIGURADOS
     // --------------------------------------
 
     const gradoConfigurado =
-  String(
-    configuracion.GRADO || ""
-  )
-    .trim()
-    .replace(/[°º]/g, "")
-    .replace(/\s+/g, "")
-    .toUpperCase();
+      String(
+        configuracion.GRADO || ""
+      )
+        .trim()
+        .replace(/[°º]/g, "")
+        .replace(/\s+/g, "")
+        .toUpperCase();
 
     const grupoConfigurado =
       limpiarGrupo_(
         configuracion.GRUPO || ""
       );
-
 
     if (
       !gradoConfigurado ||
@@ -327,7 +322,6 @@ function obtenerAlumnosGrupoActivo_() {
       };
     }
 
-
     // --------------------------------------
     // FILTRAR ALUMNOS
     // --------------------------------------
@@ -337,13 +331,13 @@ function obtenerAlumnosGrupoActivo_() {
         .filter(function(alumno) {
 
           const gradoAlumno =
-  String(
-    alumno.grado || ""
-  )
-    .trim()
-    .replace(/[°º]/g, "")
-    .replace(/\s+/g, "")
-    .toUpperCase();
+            String(
+              alumno.grado || ""
+            )
+              .trim()
+              .replace(/[°º]/g, "")
+              .replace(/\s+/g, "")
+              .toUpperCase();
 
           const grupoAlumno =
             limpiarGrupo_(
@@ -359,7 +353,6 @@ function obtenerAlumnosGrupoActivo_() {
           );
 
         });
-
 
     // --------------------------------------
     // RESPUESTA
@@ -409,7 +402,6 @@ function obtenerAlumnosGrupoActivo_() {
     };
   }
 }
-
 
 // ==========================================
 // RESPUESTA WEB

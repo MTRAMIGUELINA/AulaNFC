@@ -40,9 +40,8 @@ function registrarDesdeEscaner_(parametros) {
 
 const tipoParticipacion = tipoRegistro;
 
-    const libro = SpreadsheetApp.openById(
-      ID_HOJA_CALCULO
-    );
+    const libro =
+      obtenerBaseDocenteActual_();
 
     // --------------------------------------
     // VALIDAR UID
@@ -535,9 +534,7 @@ function registrarManualWeb_(parametros) {
 }
  
     const libro =
-      SpreadsheetApp.openById(
-        ID_HOJA_CALCULO
-      );
+      obtenerBaseDocenteActual_();
 
     // --------------------------------------
     // BUSCAR ALUMNO POR ID
