@@ -6,9 +6,7 @@
 function guardarIncidencia_(parametros) {
   try {
     const libro =
-      SpreadsheetApp.openById(
-        ID_HOJA_CALCULO
-      );
+      obtenerBaseDocenteActual_();
 
     const hoja =
       libro.getSheetByName(
@@ -291,9 +289,7 @@ function obtenerHistorialIncidencias_(
 ) {
   try {
     const libro =
-      SpreadsheetApp.openById(
-        ID_HOJA_CALCULO
-      );
+      obtenerBaseDocenteActual_();
 
     const hoja =
       libro.getSheetByName(
