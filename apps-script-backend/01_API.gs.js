@@ -1,5 +1,5 @@
 // ==========================================
-// AULANFC v3.3
+// AULANFC v3.4
 // API Y PUNTO DE ENTRADA
 // ==========================================
 
@@ -10,7 +10,7 @@ function doGet(e) {
     const accion = String(parametros.accion || "").trim().toLowerCase();
 
     // ======================================
-    // S1-T2: IDENTIDAD / LOGIN
+    // S1-T2: IDENTIDAD / LOGIN PUBLICO
     // ======================================
     if (accion === "obtenerconfiglogin") {
       return obtenerConfiguracionLoginGoogleWeb_(parametros);
@@ -21,7 +21,18 @@ function doGet(e) {
     }
 
     // ======================================
-    // API EXISTENTE
+    // S1-T3: CANDADO CENTRAL DEL API
+    // ======================================
+    if (accion) {
+      const autorizacion = autorizarSolicitudApi_(parametros);
+
+      if (!autorizacion || !autorizacion.autorizado) {
+        return responderAccesoApiDenegado_(parametros, autorizacion);
+      }
+    }
+
+    // ======================================
+    // API PROTEGIDA
     // ======================================
     if (accion === "obteneralumnos") {
       return obtenerAlumnosWeb_(parametros);
@@ -179,6 +190,13 @@ function doPost(e) {
 
   try {
     const accion = String(parametros.accion || "").trim().toLowerCase();
+
+    // S1-T3: todo POST requiere usuario autorizado.
+    const autorizacion = autorizarSolicitudApi_(parametros);
+
+    if (!autorizacion || !autorizacion.autorizado) {
+      return responderPostAccesoApiDenegado_(autorizacion);
+    }
 
     if (accion === "guardarfotoalumno") {
       return ContentService

@@ -59,22 +59,30 @@ function cargarExtra(selector,src,dataset){
   return promise;
 }
 
-cargarExtra('script[data-login-aulanfc]','login-aulanfc.js?v=1',{loginAulanfc:'true'});
-cargarExtra('script[data-menu-aulanfc]','menu-lateral.js?v=2',{menuAulanfc:'true'});
-cargarExtra('script[data-resumen-estadistico-conexion]','resumen-estadistico-conexion.js?v=1',{resumenEstadisticoConexion:'true'});
-cargarExtra('script[data-ficha-alumno-menu]','ficha-alumno-menu.js?v=2',{fichaAlumnoMenu:'true'});
-cargarExtra('script[data-ficha-historial-conexion]','ficha-historial-conexion.js?v=1',{fichaHistorialConexion:'true'});
-cargarExtra('script[data-ficha-pdf]','ficha-pdf.js?v=4',{fichaPdf:'true'});
-cargarExtra('script[data-ficha-pdf-resultados-examen]','ficha-pdf-resultados-examen.js?v=1',{fichaPdfResultadosExamen:'true'});
-cargarExtra('script[data-dashboard-aulanfc]','dashboard.js?v=1',{dashboardAulanfc:'true'});
-cargarExtra('script[data-dashboard-conexion]','dashboard-conexion.js?v=1',{dashboardConexion:'true'});
-cargarExtra('script[data-reporte-incidencias]','reporte-incidencias.js?v=2',{reporteIncidencias:'true'});
-cargarExtra('script[data-reporte-incidencias-acciones]','reporte-incidencias-acciones.js?v=1',{reporteIncidenciasAcciones:'true'});
-cargarExtra('script[data-reporte-incidencias-config]','reporte-incidencias-config.js?v=2',{reporteIncidenciasConfig:'true'});
-cargarExtra('script[data-historial-incidencias]','historial-incidencias.js?v=2',{historialIncidencias:'true'});
-cargarExtra('script[data-participacion-actividad]','participacion-actividad.js?v=2',{participacionActividad:'true'});
-cargarExtra('script[data-tareas-actividad]','tareas-actividad.js?v=2',{tareasActividad:'true'});
-cargarExtra('script[data-resultados-examen-loader]','resultados-examen-loader.js?v=2',{resultadosExamenLoader:'true'});
-cargarExtra('script[data-administracion-alumnos-loader]','administracion-alumnos-loader.js?v=2',{administracionAlumnosLoader:'true'});
-cargarExtra('script[data-configuracion-loader]','configuracion-loader.js?v=1',{configuracionLoader:'true'});
-cargarExtra('script[data-registro-manual-grupo-activo]','registro-manual-grupo-activo.js?v=1',{registroManualGrupoActivo:'true'});
+const cargaAutorizacionApi=cargarExtra(
+  'script[data-api-autorizacion-aulanfc]',
+  'api-autorizacion.js?v=1',
+  {apiAutorizacionAulanfc:'true'}
+);
+
+cargaAutorizacionApi.then(()=>{
+  cargarExtra('script[data-login-aulanfc]','login-aulanfc.js?v=1',{loginAulanfc:'true'});
+  cargarExtra('script[data-menu-aulanfc]','menu-lateral.js?v=2',{menuAulanfc:'true'});
+  cargarExtra('script[data-resumen-estadistico-conexion]','resumen-estadistico-conexion.js?v=1',{resumenEstadisticoConexion:'true'});
+  cargarExtra('script[data-ficha-alumno-menu]','ficha-alumno-menu.js?v=2',{fichaAlumnoMenu:'true'});
+  cargarExtra('script[data-ficha-historial-conexion]','ficha-historial-conexion.js?v=1',{fichaHistorialConexion:'true'});
+  cargarExtra('script[data-ficha-pdf]','ficha-pdf.js?v=4',{fichaPdf:'true'});
+  cargarExtra('script[data-ficha-pdf-resultados-examen]','ficha-pdf-resultados-examen.js?v=1',{fichaPdfResultadosExamen:'true'});
+  cargarExtra('script[data-dashboard-aulanfc]','dashboard.js?v=1',{dashboardAulanfc:'true'});
+  cargarExtra('script[data-dashboard-conexion]','dashboard-conexion.js?v=1',{dashboardConexion:'true'});
+  cargarExtra('script[data-reporte-incidencias]','reporte-incidencias.js?v=2',{reporteIncidencias:'true'});
+  cargarExtra('script[data-reporte-incidencias-acciones]','reporte-incidencias-acciones.js?v=1',{reporteIncidenciasAcciones:'true'});
+  cargarExtra('script[data-reporte-incidencias-config]','reporte-incidencias-config.js?v=2',{reporteIncidenciasConfig:'true'});
+  cargarExtra('script[data-historial-incidencias]','historial-incidencias.js?v=2',{historialIncidencias:'true'});
+  cargarExtra('script[data-participacion-actividad]','participacion-actividad.js?v=2',{participacionActividad:'true'});
+  cargarExtra('script[data-tareas-actividad]','tareas-actividad.js?v=2',{tareasActividad:'true'});
+  cargarExtra('script[data-resultados-examen-loader]','resultados-examen-loader.js?v=2',{resultadosExamenLoader:'true'});
+  cargarExtra('script[data-administracion-alumnos-loader]','administracion-alumnos-loader.js?v=2',{administracionAlumnosLoader:'true'});
+  cargarExtra('script[data-configuracion-loader]','configuracion-loader.js?v=1',{configuracionLoader:'true'});
+  cargarExtra('script[data-registro-manual-grupo-activo]','registro-manual-grupo-activo.js?v=1',{registroManualGrupoActivo:'true'});
+});
