@@ -1,8 +1,21 @@
 // ==========================================
-// AULANFC v3.4
+// AULANFC v3
 // API Y PUNTO DE ENTRADA
 // ==========================================
 
+/**
+ * Atiende las solicitudes realizadas al Web App.
+ *
+ * Solicitudes API:
+ * - ?accion=obtenerAlumnos
+ * - ?accion=registrarNFC
+ * - ?accion=registrarManual
+ * - ?accion=obtenerHistorialAlumno&uid=UID_DEL_ALUMNO
+ *
+ * Vistas:
+ * - Web App principal: Index
+ * - Escáner móvil: ?vista=escaner
+ */
 function doGet(e) {
   const parametros = e && e.parameter ? e.parameter : {};
 
@@ -10,7 +23,7 @@ function doGet(e) {
     const accion = String(parametros.accion || "").trim().toLowerCase();
 
     // ======================================
-    // S1-T2: IDENTIDAD / LOGIN PUBLICO
+    // S1-T2: IDENTIDAD / LOGIN
     // ======================================
     if (accion === "obtenerconfiglogin") {
       return obtenerConfiguracionLoginGoogleWeb_(parametros);
@@ -21,31 +34,60 @@ function doGet(e) {
     }
 
     // ======================================
-    // S1-T3: CANDADO CENTRAL DEL API
+    // S1-T3: AUTORIZACIÓN CENTRAL DEL API
     // ======================================
     if (accion) {
       const autorizacion = autorizarSolicitudApi_(parametros);
+      if (!autorizacion || !autorizacion.autorizado) {
+        return responderAccesoApiDenegado_(parametros, autorizacion);
+      }
+    }
 
+    if (accion) {
+      const autorizacion = autorizarSolicitudApi_(parametros);
       if (!autorizacion || !autorizacion.autorizado) {
         return responderAccesoApiDenegado_(parametros, autorizacion);
       }
     }
 
     // ======================================
-    // API PROTEGIDA
+    // API: OBTENER ALUMNOS
     // ======================================
     if (accion === "obteneralumnos") {
       return obtenerAlumnosWeb_(parametros);
     }
 
+    // ======================================
+    // API: REGISTRAR NFC
+    // ======================================
     if (accion === "registrarnfc") {
       return registrarDesdeEscaner_(parametros);
     }
 
+    // ======================================
+    // API: REGISTRAR MANUAL
+    // ======================================
     if (accion === "registrarmanual") {
       return registrarManualWeb_(parametros);
     }
 
+    // ===============================
+    // API: ACTIVIDADES DE TAREAS
+    // ===============================
+    if (accion === "obteneractividadestareas") {
+      return obtenerActividadesTareasWeb_(parametros);
+    }
+
+    // ======================================
+    // API: ACTIVIDADES DE PARTICIPACIÓN
+    // ======================================
+    if (accion === "obteneractividadesparticipacion") {
+      return obtenerActividadesParticipacionWeb_(parametros);
+    }
+
+    // ======================================
+    // API: OBTENER HISTORIAL DEL ALUMNO
+    // ======================================
     if (accion === "obtenerhistorialalumno") {
       const idAlumno = String(parametros.id || "").trim();
       if (!idAlumno) {
@@ -55,91 +97,141 @@ function doGet(e) {
           mensaje: "Debes proporcionar el ID del alumno."
         });
       }
-
-      return responderJSONP_(
-        parametros.callback,
-        obtenerHistorialAlumno_(parametros)
-      );
+      const respuesta = obtenerHistorialAlumno_(parametros);
+      return responderJSONP_(parametros.callback, respuesta);
     }
 
+    // ======================================
+    // API: OBTENER REPORTE DEL ALUMNO
+    // ======================================
     if (accion === "obtenerreportealumno") {
       return obtenerReporteAlumnoWeb_(parametros);
     }
 
+    // ======================================
+    // API: OBTENER HISTORIAL GENERAL
+    // ======================================
     if (accion === "obtenerhistorialgeneral") {
-      return responderJSONP_(
-        parametros.callback,
-        obtenerHistorialGeneral_(parametros)
-      );
+      const respuesta = obtenerHistorialGeneral_(parametros);
+      return responderJSONP_(parametros.callback, respuesta);
     }
 
+    // ======================================
+    // API: OBTENER RESUMEN ESTADÍSTICO
+    // ======================================
     if (accion === "obtenerresumenestadistico") {
       return obtenerResumenEstadisticoWeb_(parametros);
     }
 
+    // ======================================
+    // API: GUARDAR INCIDENCIA
+    // ======================================
     if (accion === "guardarincidencia") {
       return guardarIncidenciaWeb_(parametros);
     }
 
+    // ======================================
+    // API: OBTENER DASHBOARD DIARIO
+    // ======================================
     if (accion === "obtenerdashboarddiario") {
-      return responderJSONP_(
-        parametros.callback,
-        obtenerDashboardDiario_(parametros)
-      );
+      const respuesta = obtenerDashboardDiario_(parametros);
+      return responderJSONP_(parametros.callback, respuesta);
     }
 
+    // ======================================
+    // API: HISTORIAL DE INCIDENCIAS
+    // ======================================
     if (accion === "obtenerhistorialincidencias") {
       return obtenerHistorialIncidenciasWeb_(parametros);
     }
 
+    // ======================================
+    // API: OBTENER RESULTADOS DE EXAMEN
+    // ======================================
     if (accion === "obtenerresultadosexamen") {
       return obtenerResultadosExamenWeb_(parametros);
     }
 
+    // ======================================
+    // API: GUARDAR RESULTADOS DE EXAMEN
+    // ======================================
     if (accion === "guardarresultadosexamen") {
       return guardarResultadosExamenWeb_(parametros);
     }
 
+    // ======================================
+    // API: ELIMINAR RESULTADO DE EXAMEN
+    // ======================================
     if (accion === "eliminarresultadosexamen") {
       return eliminarResultadoExamenWeb_(parametros);
     }
 
+    // ======================================
+    // API: CREAR ALUMNO
+    // ======================================
     if (accion === "crearalumno") {
       return crearAlumnoWeb_(parametros);
     }
 
+    // ======================================
+    // API: ACTUALIZAR ALUMNO
+    // ======================================
     if (accion === "actualizaralumno") {
       return actualizarAlumnoWeb_(parametros);
     }
 
+    // ======================================
+    // API: CAMBIAR ESTADO DEL ALUMNO
+    // ======================================
     if (accion === "cambiarestadoalumno") {
       return cambiarEstadoAlumnoWeb_(parametros);
     }
 
+    // ======================================
+    // API: ELIMINAR ALUMNO
+    // ======================================
     if (accion === "eliminaralumno") {
       return eliminarAlumnoWeb_(parametros);
     }
 
+    // ======================================
+    // API: OBTENER CONFIGURACIÓN
+    // ======================================
     if (accion === "obtenerconfiguracion") {
       return obtenerConfiguracionWeb_(parametros);
     }
 
+    // ======================================
+    // API: GUARDAR CONFIGURACIÓN
+    // ======================================
     if (accion === "guardarconfiguracion") {
       return guardarConfiguracionWeb_(parametros);
     }
 
+    // ======================================
+    // API: ALUMNOS DEL GRUPO ACTIVO
+    // ======================================
     if (accion === "obteneralumnosgrupoactivo") {
       return obtenerAlumnosGrupoActivoWeb_(parametros);
     }
 
+    // ======================================
+    // API: GUARDAR FOTO DEL ALUMNO
+    // ======================================
     if (accion === "guardarfotoalumno") {
       return guardarFotoAlumnoWeb_(parametros);
     }
 
+    // ======================================
+    // API: OBTENER FOTO DEL ALUMNO
+    // ======================================
     if (accion === "obtenerfotoalumno") {
       return obtenerFotoAlumnoWeb_(parametros);
     }
 
+    // ======================================
+    // ACCIÓN DE API NO RECONOCIDA
+    // ======================================
     if (accion) {
       return responderJSONP_(parametros.callback, {
         ok: false,
@@ -150,7 +242,7 @@ function doGet(e) {
     }
 
     // ======================================
-    // VISTAS HTML DEL WEB APP
+    // VISTAS HTML
     // ======================================
     const vista = String(parametros.vista || "").trim().toLowerCase();
     const archivoHTML = vista === "escaner" ? "Escaner" : "Index";
@@ -190,8 +282,6 @@ function doPost(e) {
 
   try {
     const accion = String(parametros.accion || "").trim().toLowerCase();
-
-    // S1-T3: todo POST requiere usuario autorizado.
     const autorizacion = autorizarSolicitudApi_(parametros);
 
     if (!autorizacion || !autorizacion.autorizado) {
@@ -199,8 +289,9 @@ function doPost(e) {
     }
 
     if (accion === "guardarfotoalumno") {
+      const respuesta = guardarFotoAlumno_(parametros);
       return ContentService
-        .createTextOutput(JSON.stringify(guardarFotoAlumno_(parametros)))
+        .createTextOutput(JSON.stringify(respuesta))
         .setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -229,8 +320,9 @@ function doPost(e) {
 // ==========================================
 function include(nombreArchivo) {
   const nombre = String(nombreArchivo || "").trim();
-  if (!nombre) return "";
-
+  if (!nombre) {
+    return "";
+  }
   return HtmlService
     .createHtmlOutputFromFile(nombre)
     .getContent();
@@ -267,7 +359,6 @@ function cargarVista(nombreVista) {
       .getContent();
   } catch (error) {
     console.error("Error al cargar la vista " + nombre + ":", error);
-
     return (
       "<section class=\"mensaje-error\">" +
       "<h3>No se pudo cargar el módulo</h3>" +
@@ -287,6 +378,6 @@ function escaparHTML_(texto) {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/\"/g, "&quot;")
+    .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
