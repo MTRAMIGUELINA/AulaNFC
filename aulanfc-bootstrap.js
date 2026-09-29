@@ -1,70 +1,8 @@
 const cargasExtra=new Map();
 const atributoEstadoCarga='data-aulanfc-load-state';
-
-function registrarCarga(selector,script){
-  const cargaExistente=cargasExtra.get(selector);
-  if(cargaExistente?.script===script)return cargaExistente.promise;
-
-  let resolver,rechazar;
-  const promise=new Promise((resolve,reject)=>{resolver=resolve;rechazar=reject});
-  const carga={script,estado:'loading',promise};
-  cargasExtra.set(selector,carga);
-  script.setAttribute(atributoEstadoCarga,'loading');
-
-  script.addEventListener('load',()=>{
-    carga.estado='loaded';
-    script.setAttribute(atributoEstadoCarga,'loaded');
-    resolver(script);
-  },{once:true});
-
-  script.addEventListener('error',()=>{
-    carga.estado='failed';
-    script.setAttribute(atributoEstadoCarga,'failed');
-    rechazar(new Error(`No se pudo cargar ${script.src}`));
-  },{once:true});
-
-  promise.catch(()=>{});
-  return promise;
-}
-
-function cargarExtra(selector,src,dataset){
-  const cargaExistente=cargasExtra.get(selector);
-  if(cargaExistente?.estado==='loading'||cargaExistente?.estado==='loaded')return cargaExistente.promise;
-  if(cargaExistente?.estado==='failed'){
-    cargaExistente.script.remove();
-    cargasExtra.delete(selector);
-  }
-
-  let script=document.querySelector(selector);
-  const estado=script?.getAttribute(atributoEstadoCarga);
-
-  if(script&&estado==='failed'){
-    script.remove();
-    script=null;
-  }
-  if(script&&estado==='loading')return registrarCarga(selector,script);
-  if(script){
-    script.setAttribute(atributoEstadoCarga,'loaded');
-    const promise=Promise.resolve(script);
-    cargasExtra.set(selector,{script,estado:'loaded',promise});
-    return promise;
-  }
-
-  script=document.createElement('script');
-  script.src=src;
-  script.defer=true;
-  Object.assign(script.dataset,dataset);
-  const promise=registrarCarga(selector,script);
-  document.body.appendChild(script);
-  return promise;
-}
-
-const cargaAutorizacionApi=cargarExtra(
-  'script[data-api-autorizacion-aulanfc]',
-  'api-autorizacion.js?v=1',
-  {apiAutorizacionAulanfc:'true'}
-);
-
+function registrarCarga(selector,script){const cargaExistente=cargasExtra.get(selector);if(cargaExistente?.script===script)return cargaExistente.promise;let resolver,rechazar;const promise=new Promise((resolve,reject)=>{resolver=resolve;rechazar=reject});const carga={script,estado:'loading',promise};cargasExtra.set(selector,carga);script.setAttribute(atributoEstadoCarga,'loading');script.addEventListener('load',()=>{carga.estado='loaded';script.setAttribute(atributoEstadoCarga,'loaded');resolver(script)},{once:true});script.addEventListener('error',()=>{carga.estado='failed';script.setAttribute(atributoEstadoCarga,'failed');rechazar(new Error(`No se pudo cargar ${script.src}`))},{once:true});promise.catch(()=>{});return promise}
+function cargarExtra(selector,src,dataset){const cargaExistente=cargasExtra.get(selector);if(cargaExistente?.estado==='loading'||cargaExistente?.estado==='loaded')return cargaExistente.promise;if(cargaExistente?.estado==='failed'){cargaExistente.script.remove();cargasExtra.delete(selector)}let script=document.querySelector(selector);const estado=script?.getAttribute(atributoEstadoCarga);if(script&&estado==='failed'){script.remove();script=null}if(script&&estado==='loading')return registrarCarga(selector,script);if(script){script.setAttribute(atributoEstadoCarga,'loaded');const promise=Promise.resolve(script);cargasExtra.set(selector,{script,estado:'loaded',promise});return promise}script=document.createElement('script');script.src=src;script.defer=true;Object.assign(script.dataset,dataset);const promise=registrarCarga(selector,script);document.body.appendChild(script);return promise}
+const cargaAutorizacionApi=cargarExtra('script[data-api-autorizacion-aulanfc]','api-autorizacion.js?v=1',{apiAutorizacionAulanfc:'true'});
 cargaAutorizacionApi.then(()=>{
   cargarExtra('script[data-login-aulanfc]','login-aulanfc.js?v=1',{loginAulanfc:'true'});
   cargarExtra('script[data-menu-aulanfc]','menu-lateral.js?v=2',{menuAulanfc:'true'});
@@ -85,4 +23,5 @@ cargaAutorizacionApi.then(()=>{
   cargarExtra('script[data-administracion-alumnos-loader]','administracion-alumnos-loader.js?v=2',{administracionAlumnosLoader:'true'});
   cargarExtra('script[data-configuracion-loader]','configuracion-loader.js?v=1',{configuracionLoader:'true'});
   cargarExtra('script[data-registro-manual-grupo-activo]','registro-manual-grupo-activo.js?v=1',{registroManualGrupoActivo:'true'});
+  cargarExtra('script[data-listas-maestras-participacion]','listas-maestras-participacion.js?v=1',{listasMaestrasParticipacion:'true'});
 });
