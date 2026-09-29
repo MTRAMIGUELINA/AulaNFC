@@ -46,6 +46,14 @@ function doGet(e) {
       return registrarManualWeb_(parametros);
     }
 
+    if (accion === "obteneractividadesparticipacion") {
+      return obtenerActividadesParticipacionWeb_(parametros);
+    }
+
+    if (accion === "actualizarlistasmaestrasparticipacion") {
+      return actualizarListasMaestrasParticipacionWeb_(parametros);
+    }
+
     if (accion === "obtenerhistorialalumno") {
       const idAlumno = String(parametros.id || "").trim();
       if (!idAlumno) {
