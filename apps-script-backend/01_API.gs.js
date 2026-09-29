@@ -54,6 +54,10 @@ function doGet(e) {
       return actualizarListasMaestrasParticipacionWeb_(parametros);
     }
 
+    if (accion === "obtenerlistamaestrapdf") {
+      return obtenerListaMaestraPDFWeb_(parametros);
+    }
+
     if (accion === "obtenerhistorialalumno") {
       const idAlumno = String(parametros.id || "").trim();
       if (!idAlumno) {
