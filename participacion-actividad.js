@@ -14,6 +14,10 @@
     return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : String(fecha || '');
   }
 
+  function claveActividad(actividad) {
+    return `${String(actividad?.titulo || '').trim()}\u0000${String(actividad?.fechaActividad || '').trim()}`;
+  }
+
   function insertarCampos() {
     if (document.getElementById('actividadParticipacion')) return true;
     const campo = document.getElementById('campoFormativo');
@@ -47,21 +51,32 @@
     return true;
   }
 
-  function renderizarCatalogo() {
+  function renderizarCatalogo(seleccion) {
     const selector = document.getElementById('actividadParticipacion');
     const campo = document.getElementById('campoFormativo');
     if (!selector || !campo) return;
+    const valorAnterior = seleccion ?? selector.value;
     selector.innerHTML = '';
     selector.appendChild(new Option(campo.value ? 'Selecciona una actividad' : 'Primero selecciona un campo formativo', ''));
     actividades.forEach((actividad, indice) => {
-      selector.appendChild(new Option(`${actividad.titulo} · ${fechaVisible(actividad.fechaActividad)}`, String(indice)));
+      const opcion = new Option(`${actividad.titulo} · ${fechaVisible(actividad.fechaActividad)}`, String(indice));
+      opcion.dataset.claveActividad = claveActividad(actividad);
+      selector.appendChild(opcion);
     });
     selector.appendChild(new Option('+ Nueva actividad', VALOR_NUEVA));
     selector.disabled = !campo.value;
+
+    if (valorAnterior && valorAnterior !== VALOR_NUEVA) {
+      const porClave = Array.from(selector.options).find((opcion) => opcion.dataset.claveActividad === valorAnterior);
+      if (porClave) selector.value = porClave.value;
+      else if (selector.querySelector(`option[value="${CSS.escape(String(valorAnterior))}"]`)) selector.value = String(valorAnterior);
+    } else if (valorAnterior === VALOR_NUEVA) {
+      selector.value = VALOR_NUEVA;
+    }
     actualizarModoActividad();
   }
 
-  async function cargarCatalogo() {
+  async function cargarCatalogo(seleccion) {
     const campo = String(document.getElementById('campoFormativo')?.value || '').trim();
     actividades = [];
     renderizarCatalogo();
@@ -73,7 +88,7 @@
       const respuesta = await window.solicitarJSONP('obtenerActividadesParticipacion', { campoFormativo: campo });
       if (typeof window.validarRespuesta === 'function') window.validarRespuesta(respuesta);
       actividades = Array.isArray(respuesta.actividades) ? respuesta.actividades : [];
-      renderizarCatalogo();
+      renderizarCatalogo(seleccion);
     } catch (error) {
       renderizarCatalogo();
       selector.options[0].textContent = 'No se pudo cargar el catálogo';
@@ -143,8 +158,17 @@
     if (window.__actividadParticipacionActualizacion || typeof window.confirmarRegistro !== 'function') return !!window.__actividadParticipacionActualizacion;
     const original = window.confirmarRegistro;
     window.confirmarRegistro = function(nombre, modulo, metodo) {
+      const datosAntes = modulo === 'participacion' ? datosActividad() : null;
       const resultado = original.apply(this, arguments);
-      if (modulo === 'participacion') cargarCatalogo();
+      if (modulo === 'participacion' && datosAntes?.actividad && datosAntes?.fechaActividad) {
+        const clave = claveActividad({ titulo: datosAntes.actividad, fechaActividad: datosAntes.fechaActividad });
+        const yaExiste = actividades.some((item) => claveActividad(item) === clave);
+        if (!yaExiste) actividades.unshift({ titulo: datosAntes.actividad, fechaActividad: datosAntes.fechaActividad });
+        const indice = actividades.findIndex((item) => claveActividad(item) === clave);
+        renderizarCatalogo(String(indice));
+        document.getElementById('tituloActividadParticipacion').value = '';
+        document.getElementById('fechaActividadParticipacion').value = fechaLocalActual();
+      }
       return resultado;
     };
     window.__actividadParticipacionActualizacion = true;
