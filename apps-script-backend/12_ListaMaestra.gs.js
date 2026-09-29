@@ -1,11 +1,23 @@
 // AULANFC v3
-// LISTAS MAESTRAS
-// Fuente sincronizada desde Apps Script + listas maestras de Participación.
+// LISTAS MAESTRAS DE PARTICIPACIÓN
+
+function actualizarListasMaestrasParticipacionWeb_(parametros) {
+  try {
+    const ciclo = String(parametros && parametros.cicloEscolar || "").trim();
+    const resultado = generarListasMaestrasParticipacion_(ciclo);
+    return responderJSONP_(parametros && parametros.callback, resultado);
+  } catch (error) {
+    return responderJSONP_(parametros && parametros.callback, {
+      ok: false,
+      exito: false,
+      mensaje: error && error.message ? error.message : String(error)
+    });
+  }
+}
 
 function generarListasMaestrasParticipacion_(cicloEscolar) {
   const ciclo = String(cicloEscolar || "").trim();
   if (!ciclo) throw new Error("Debes indicar el ciclo escolar.");
-
   const libro = obtenerBaseDocenteActual_();
   const hojaAlumnos = libro.getSheetByName(NOMBRE_HOJA_ALUMNOS);
   const hojaParticipaciones = libro.getSheetByName("PARTICIPACIONES");
@@ -25,7 +37,6 @@ function generarListasMaestrasParticipacion_(cicloEscolar) {
     { clave: "ÉTICA, NATURALEZA Y SOCIEDADES", hoja: "LISTA PARTICIPACIÓN - ÉTICA" },
     { clave: "DE LO HUMANO Y LO COMUNITARIO", hoja: "LISTA PARTICIPACIÓN - HUMANO" }
   ];
-
   const resultados = [];
   campos.forEach(function(campo) {
     const datos = obtenerDatosListaMaestraParticipacion_(hojaParticipaciones, ciclo, campo.clave);
@@ -44,22 +55,18 @@ function generarListasMaestrasParticipacion_(cicloEscolar) {
     aplicarFormatoListaMaestraParticipacion_(hoja, matriz.length, matriz[0].length);
     resultados.push({ hoja: campo.hoja, actividades: datos.actividades.length, advertencias: datos.advertencias });
   });
-
   return { ok: true, exito: true, mensaje: "Listas maestras de participación generadas correctamente.", alumnos: alumnos.length, hojas: resultados };
 }
 
 function normalizarEncabezadoListaParticipacion_(valor) {
   return String(valor || "").trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
-
 function normalizarCampoListaParticipacion_(valor) {
   return normalizarEncabezadoListaParticipacion_(valor).replace(/\s+/g, " ");
 }
-
 function obtenerDatosListaMaestraParticipacion_(hoja, ciclo, campoFormativo) {
   const resultado = { actividades: [], registros: {}, advertencias: 0 };
   if (hoja.getLastRow() < 2) return resultado;
-
   const valores = hoja.getDataRange().getValues();
   const visibles = hoja.getDataRange().getDisplayValues();
   const encabezados = visibles[0].map(normalizarEncabezadoListaParticipacion_);
@@ -70,7 +77,6 @@ function obtenerDatosListaMaestraParticipacion_(hoja, ciclo, campoFormativo) {
     }
     return -1;
   }
-
   const iFecha = idx("FECHA");
   const iHora = idx("HORA");
   const iId = idx("ID ALUMNO", "ID");
@@ -79,9 +85,7 @@ function obtenerDatosListaMaestraParticipacion_(hoja, ciclo, campoFormativo) {
   const iTipo = idx("TIPO DE PARTICIPACION", "TIPO DE PARTICIPACIÓN");
   const iCiclo = idx("CICLO ESCOLAR");
   const iFechaActividad = idx("FECHA ACTIVIDAD");
-  if ([iId, iCampo, iActividad, iTipo, iCiclo].some(function(x) { return x === -1; })) {
-    throw new Error("La hoja PARTICIPACIONES no contiene los encabezados necesarios.");
-  }
+  if ([iId, iCampo, iActividad, iTipo, iCiclo].some(function(x) { return x === -1; })) throw new Error("La hoja PARTICIPACIONES no contiene los encabezados necesarios.");
 
   const zona = Session.getScriptTimeZone();
   const actividades = {};
@@ -92,26 +96,20 @@ function obtenerDatosListaMaestraParticipacion_(hoja, ciclo, campoFormativo) {
     if (!cicloRegistro) { resultado.advertencias++; continue; }
     if (cicloRegistro.toUpperCase() !== ciclo.toUpperCase()) continue;
     if (normalizarCampoListaParticipacion_(fila[iCampo]) !== normalizarCampoListaParticipacion_(campoFormativo)) continue;
-
     const id = String(fila[iId] || "").trim();
     const actividad = String(fila[iActividad] || "").trim();
     const tipo = String(fila[iTipo] || "").trim();
     let fechaActividad = iFechaActividad !== -1 ? normalizarFechaListaMaestra_(valores[r][iFechaActividad], zona) : "";
     if (!fechaActividad && iFecha !== -1) fechaActividad = normalizarFechaListaMaestra_(valores[r][iFecha], zona);
     if (!id || !actividad || !fechaActividad) continue;
-
     const claveActividad = actividad.toLowerCase() + "|" + fechaActividad;
     if (!actividades[claveActividad]) actividades[claveActividad] = { clave: claveActividad, actividad: actividad, fecha: fechaActividad };
-
-    let fechaRegistro = iFecha !== -1 ? normalizarFechaListaMaestra_(valores[r][iFecha], zona) : "";
+    const fechaRegistro = iFecha !== -1 ? normalizarFechaListaMaestra_(valores[r][iFecha], zona) : "";
     const hora = iHora !== -1 ? String(fila[iHora] || "").trim() : "";
     const orden = (fechaRegistro || "0000-00-00") + "T" + (hora || "00:00:00") + "|" + String(r).padStart(8, "0");
     const claveRegistro = id + "|" + claveActividad;
-    if (!elegidos[claveRegistro] || orden >= elegidos[claveRegistro].orden) {
-      elegidos[claveRegistro] = { orden: orden, tipo: tipo };
-    }
+    if (!elegidos[claveRegistro] || orden >= elegidos[claveRegistro].orden) elegidos[claveRegistro] = { orden: orden, tipo: tipo };
   }
-
   Object.keys(elegidos).forEach(function(clave) { resultado.registros[clave] = elegidos[clave].tipo; });
   resultado.actividades = Object.keys(actividades).map(function(k) { return actividades[k]; }).sort(function(a, b) {
     return a.fecha.localeCompare(b.fecha) || a.actividad.localeCompare(b.actividad, "es", { sensitivity: "base" });
