@@ -1,4 +1,4 @@
-/* AulaNFC - Actualización de Listas Maestras de Participación. */
+/* AulaNFC - Actualización general de Listas Maestras. */
 (() => {
   let actualizando = false;
 
@@ -52,15 +52,15 @@
     const boton = document.getElementById('menuListasMaestras');
     if (boton) boton.disabled = true;
     cerrarMenu();
-    mostrarEstado('⏳ Actualizando Listas Maestras de Participación...');
+    mostrarEstado('⏳ Actualizando Asistencia, Tareas y Participación...');
 
     try {
       const cicloEscolar = await obtenerCicloEscolar();
-      const respuesta = await window.solicitarJSONP('actualizarlistasmaestrasparticipacion', { cicloEscolar });
+      const respuesta = await window.solicitarJSONP('actualizartodaslistasmaestras', { cicloEscolar });
       if (!respuesta || respuesta.ok === false || respuesta.exito === false) {
         throw new Error(respuesta?.mensaje || 'No fue posible actualizar las Listas Maestras.');
       }
-      mostrarEstado(`✅ ${respuesta.mensaje || 'Listas Maestras de Participación actualizadas correctamente.'}`);
+      mostrarEstado(`✅ ${respuesta.mensaje || 'Listas Maestras actualizadas correctamente.'}`);
     } catch (error) {
       mostrarEstado(`❌ ${error?.message || 'No fue posible actualizar las Listas Maestras.'}`);
     } finally {
