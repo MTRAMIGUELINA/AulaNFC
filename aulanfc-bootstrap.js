@@ -84,5 +84,7 @@ cargaAutorizacionApi.then(()=>{
   cargarExtra('script[data-resultados-examen-loader]','resultados-examen-loader.js?v=2',{resultadosExamenLoader:'true'});
   cargarExtra('script[data-administracion-alumnos-loader]','administracion-alumnos-loader.js?v=2',{administracionAlumnosLoader:'true'});
   cargarExtra('script[data-configuracion-loader]','configuracion-loader.js?v=1',{configuracionLoader:'true'});
+  cargarExtra('script[data-listas-maestras-participacion]','listas-maestras-participacion.js?v=1',{listasMaestrasParticipacion:'true'});
+  cargarExtra('script[data-listas-maestras-pdf]','listas-maestras-pdf.js?v=1',{listasMaestrasPdf:'true'});
   cargarExtra('script[data-registro-manual-grupo-activo]','registro-manual-grupo-activo.js?v=1',{registroManualGrupoActivo:'true'});
 });

@@ -47,7 +47,7 @@
     return true;
   }
 
-  function renderizarCatalogo() {
+  function renderizarCatalogo(seleccionActividad) {
     const selector = document.getElementById('actividadParticipacion');
     const campo = document.getElementById('campoFormativo');
     if (!selector || !campo) return;
@@ -58,10 +58,19 @@
     });
     selector.appendChild(new Option('+ Nueva actividad', VALOR_NUEVA));
     selector.disabled = !campo.value;
+
+    if (seleccionActividad?.actividad && seleccionActividad?.fechaActividad) {
+      const indice = actividades.findIndex((actividad) =>
+        actividad.titulo === seleccionActividad.actividad &&
+        actividad.fechaActividad === seleccionActividad.fechaActividad
+      );
+      if (indice !== -1) selector.value = String(indice);
+    }
+
     actualizarModoActividad();
   }
 
-  async function cargarCatalogo() {
+  async function cargarCatalogo(seleccionActividad) {
     const campo = String(document.getElementById('campoFormativo')?.value || '').trim();
     actividades = [];
     renderizarCatalogo();
@@ -73,7 +82,7 @@
       const respuesta = await window.solicitarJSONP('obtenerActividadesParticipacion', { campoFormativo: campo });
       if (typeof window.validarRespuesta === 'function') window.validarRespuesta(respuesta);
       actividades = Array.isArray(respuesta.actividades) ? respuesta.actividades : [];
-      renderizarCatalogo();
+      renderizarCatalogo(seleccionActividad);
     } catch (error) {
       renderizarCatalogo();
       selector.options[0].textContent = 'No se pudo cargar el catálogo';
@@ -143,8 +152,9 @@
     if (window.__actividadParticipacionActualizacion || typeof window.confirmarRegistro !== 'function') return !!window.__actividadParticipacionActualizacion;
     const original = window.confirmarRegistro;
     window.confirmarRegistro = function(nombre, modulo, metodo) {
+      const actividadActual = modulo === 'participacion' ? datosActividad() : null;
       const resultado = original.apply(this, arguments);
-      if (modulo === 'participacion') cargarCatalogo();
+      if (modulo === 'participacion') cargarCatalogo(actividadActual);
       return resultado;
     };
     window.__actividadParticipacionActualizacion = true;
