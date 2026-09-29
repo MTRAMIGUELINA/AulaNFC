@@ -151,7 +151,7 @@ function aplicarFormatoListaMaestraParticipacion_(hoja, filas, columnas) {
   if (filas > 6 && columnas > 4) hoja.getRange(7, 5, filas - 6, columnas - 4).setHorizontalAlignment("center").setWrap(true);
   hoja.getRange(6, 1, Math.max(1, filas - 5), columnas).setBorder(true, true, true, true, true, true);
   hoja.setFrozenRows(6);
-  hoja.setFrozenColumns(4);
+  hoja.setFrozenColumns(0);
   hoja.setColumnWidth(1, 85);
   hoja.setColumnWidth(2, 250);
   hoja.setColumnWidth(3, 65);
