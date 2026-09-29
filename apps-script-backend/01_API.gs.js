@@ -54,6 +54,10 @@ function doGet(e) {
       return actualizarListasMaestrasParticipacionWeb_(parametros);
     }
 
+    if (accion === "actualizartodaslistasmaestras") {
+      return actualizarTodasListasMaestrasWeb_(parametros);
+    }
+
     if (accion === "obtenerlistamaestrapdf") {
       return obtenerListaMaestraPDFWeb_(parametros);
     }
