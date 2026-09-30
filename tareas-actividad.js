@@ -103,8 +103,13 @@
       const parametros = construirOriginal(base);
       if (typeof moduloSeleccionado !== 'undefined' && moduloSeleccionado === 'tareas') {
         const actividad = datosActividad();
+        const tipoTarea = String(elemento('tipoTarea')?.value || '').trim();
         parametros.actividad = actividad.titulo || '';
         parametros.fechaActividad = actividad.fechaActividad || '';
+        parametros.tipoRegistro = tipoTarea;
+        parametros.tipoParticipacion = tipoTarea;
+        parametros.tipoTarea = tipoTarea;
+        parametros.resultadoTarea = tipoTarea;
       }
       return parametros;
     };
@@ -120,11 +125,18 @@
           (actividad.nueva ? elemento('tituloActividadTarea') : elemento('actividadTarea')).focus();
           return false;
         }
+        const tipoTarea = String(elemento('tipoTarea')?.value || '').trim();
+        if (!tipoTarea) {
+          elemento('estado').textContent = '❌ Selecciona el resultado de la tarea.';
+          elemento('tipoTarea')?.focus();
+          return false;
+        }
       }
       return validarOriginal();
     };
 
     const confirmarOriginal = window.confirmarRegistro;
+    window.confirmirmarRegistro = window.confirmarRegistro;
     window.confirmarRegistro = function(nombre, modulo, metodo) {
       confirmarOriginal(nombre, modulo, metodo);
       if (modulo === 'tareas') {
