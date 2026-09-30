@@ -136,7 +136,6 @@
     };
 
     const confirmarOriginal = window.confirmarRegistro;
-    window.confirmirmarRegistro = window.confirmarRegistro;
     window.confirmarRegistro = function(nombre, modulo, metodo) {
       confirmarOriginal(nombre, modulo, metodo);
       if (modulo === 'tareas') {
