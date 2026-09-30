@@ -103,8 +103,13 @@
       const parametros = construirOriginal(base);
       if (typeof moduloSeleccionado !== 'undefined' && moduloSeleccionado === 'tareas') {
         const actividad = datosActividad();
+        const tipoTarea = String(elemento('tipoTarea')?.value || '').trim();
         parametros.actividad = actividad.titulo || '';
         parametros.fechaActividad = actividad.fechaActividad || '';
+        parametros.tipoRegistro = tipoTarea;
+        parametros.tipoParticipacion = tipoTarea;
+        parametros.tipoTarea = tipoTarea;
+        parametros.resultadoTarea = tipoTarea;
       }
       return parametros;
     };
@@ -118,6 +123,12 @@
             ? '❌ Escribe el título y la fecha de la actividad.'
             : '❌ Selecciona una actividad o crea una nueva.';
           (actividad.nueva ? elemento('tituloActividadTarea') : elemento('actividadTarea')).focus();
+          return false;
+        }
+        const tipoTarea = String(elemento('tipoTarea')?.value || '').trim();
+        if (!tipoTarea) {
+          elemento('estado').textContent = '❌ Selecciona el resultado de la tarea.';
+          elemento('tipoTarea')?.focus();
           return false;
         }
       }
