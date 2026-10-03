@@ -54,7 +54,18 @@ function normalizarEncabezadoListaParticipacion_(valor) {
 }
 
 function normalizarCampoListaParticipacion_(valor) {
-  return normalizarEncabezadoListaParticipacion_(valor).replace(/\s+/g, " ");
+  const campo = normalizarEncabezadoListaParticipacion_(valor).replace(/\s+/g, " ");
+
+  // Compatibilidad con los nombres usados históricamente por AulaNFC.
+  if (campo === "ETICA, NATURALEZA Y SOCIEDAD") {
+    return "ETICA, NATURALEZA Y SOCIEDADES";
+  }
+
+  if (campo === "DE LO HUMANO A LO COMUNITARIO") {
+    return "DE LO HUMANO Y LO COMUNITARIO";
+  }
+
+  return campo;
 }
 
 function obtenerDatosListaMaestraParticipacion_(hoja, ciclo, campoFormativo) {
