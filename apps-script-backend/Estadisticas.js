@@ -629,14 +629,16 @@ function calcularParticipacionesEstadisticas_(
       saberes++;
 
     } else if (
-      campo ===
-      "etica naturaleza y sociedad"
+      (campo === "etica naturaleza y sociedad" ||
+       campo === "etica, naturaleza y sociedad" ||
+       campo === "etica naturaleza y sociedades" ||
+       campo === "etica, naturaleza y sociedades")
     ) {
       etica++;
 
     } else if (
-      campo ===
-      "de lo humano a lo comunitario"
+      (campo === "de lo humano a lo comunitario" ||
+       campo === "de lo humano y lo comunitario")
     ) {
       comunitario++;
     }
