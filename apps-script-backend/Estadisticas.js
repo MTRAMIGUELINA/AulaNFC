@@ -607,7 +607,7 @@ function calcularParticipacionesEstadisticas_(
 
   registros.forEach(function(item) {
     const campo =
-      normalizarEncabezadoHistorial_(
+      normalizarCampoEstadistico_(
         item.campoFormativo
       );
 
@@ -619,27 +619,13 @@ function calcularParticipacionesEstadisticas_(
     // --------------------------------------
     // CLASIFICAR CAMPO FORMATIVO
     // --------------------------------------
-    if (campo === "lenguajes") {
+    if (campo === "LENGUAJES") {
       lenguajes++;
-
-    } else if (
-      campo ===
-      "saberes y pensamiento cientifico"
-    ) {
+    } else if (campo === "SABERES") {
       saberes++;
-
-    } else if (
-      (campo === "etica naturaleza y sociedad" ||
-       campo === "etica, naturaleza y sociedad" ||
-       campo === "etica naturaleza y sociedades" ||
-       campo === "etica, naturaleza y sociedades")
-    ) {
+    } else if (campo === "ETICA") {
       etica++;
-
-    } else if (
-      (campo === "de lo humano a lo comunitario" ||
-       campo === "de lo humano y lo comunitario")
-    ) {
+    } else if (campo === "HUMANO") {
       comunitario++;
     }
 
@@ -753,6 +739,20 @@ function calcularParticipacionesEstadisticas_(
     tipoPredominante:
       tipoPredominante
   };
+}
+
+function normalizarCampoEstadistico_(valor) {
+  const campo = normalizarEncabezadoHistorial_(valor)
+    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (campo === "lenguajes") return "LENGUAJES";
+  if (campo.indexOf("saberes") !== -1 && campo.indexOf("pensamiento cientifico") !== -1) return "SABERES";
+  if (campo.indexOf("etica") !== -1 && campo.indexOf("naturaleza") !== -1 && campo.indexOf("sociedad") !== -1) return "ETICA";
+  if (campo.indexOf("de lo humano") !== -1 && campo.indexOf("comunitario") !== -1) return "HUMANO";
+
+  return "";
 }
 
 // ==========================================
