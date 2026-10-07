@@ -1,6 +1,7 @@
 /* AulaNFC v3.4 - S1-T3 Autorizacion del API */
 (() => {
   const CLAVE_CREDENCIAL = 'aulanfc_google_credential';
+  const AULANFC_MODO_SIN_LOGIN = true;
   const ACCIONES_PUBLICAS = new Set([
     'obtenerconfiglogin',
     'validarlogingoogle'
@@ -22,7 +23,7 @@
   window.solicitarJSONP = function(accion, parametros = {}) {
     const accionNormalizada = String(accion || '').trim().toLowerCase();
 
-    if (ACCIONES_PUBLICAS.has(accionNormalizada)) {
+    if (AULANFC_MODO_SIN_LOGIN || ACCIONES_PUBLICAS.has(accionNormalizada)) {
       return solicitarJSONPOriginal(accion, parametros);
     }
 
@@ -63,6 +64,7 @@
     const cuerpo = opciones && opciones.body;
 
     if (
+      !AULANFC_MODO_SIN_LOGIN &&
       esApiAulaNFC &&
       metodo === 'POST' &&
       cuerpo instanceof URLSearchParams
