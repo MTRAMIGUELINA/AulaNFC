@@ -18,7 +18,7 @@
     <div id="paseAlumnos" style="max-height:55vh;overflow:auto"></div>
     <button type="button" id="paseGuardar" style="margin-top:12px" disabled>Guardar asistencia</button>`;
   panel.appendChild(bloque);
-  const originales = ['campoBusquedaManual','listaManual','alumnoManualSeleccionado','btnGuardarManual'];
+  const originales = ['contadorManual','campoBusquedaManual','listaManual','alumnoManualSeleccionado','btnGuardarManual'];
   function modoLista(activo) {
     bloque.hidden = !activo;
     originales.forEach(id => { const e=$(id); if(e) e.style.display=activo?'none':''; });
@@ -61,6 +61,7 @@
     if(!ids.length)return;
     ocupado=true;actualizar();
     let guardados=0;const errores=[];
+    // Los fallos permanecen seleccionados para reintentar solamente esos alumnos.
     for(const id of ids){
       const alumno=lista.find(a=>String(a.id)===String(id));
       if(!alumno)continue;
