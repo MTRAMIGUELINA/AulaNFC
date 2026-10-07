@@ -60,7 +60,7 @@
     const ids=seleccionados().map(e=>e.dataset.id);
     if(!ids.length)return;
     ocupado=true;actualizar();
-    let guardados=0;const errores=[];
+    let guardados=0, yaRegistrados=0;const errores=[];
     // Los fallos permanecen seleccionados para reintentar solamente esos alumnos.
     for(const id of ids){
       const alumno=lista.find(a=>String(a.id)===String(id));
@@ -68,14 +68,22 @@
       $('paseEstado').textContent='Registrando '+(guardados+errores.length+1)+' de '+ids.length+'...';
       try{
         const r=await solicitarJSONP('registrarManual',{id,alumnoId:id,idAlumno:id,uid:alumno.uid||'',modulo:'asistencia'});
-        validarRespuesta(r);
-        guardados++;
+        if (!r || (r.exito !== true && r.ok !== true)) {
+          const mensaje = String(r?.mensaje || 'No se confirmó el registro.');
+          if (/ya tiene asistencia registrada hoy/i.test(mensaje)) {
+            yaRegistrados++;
+          } else {
+            throw new Error(mensaje);
+          }
+        } else {
+          guardados++;
+        }
         const casilla=[...bloque.querySelectorAll('input[data-id]')].find(e=>e.dataset.id===id);
         if(casilla){casilla.checked=false;casilla.disabled=true;casilla.closest('label').style.opacity='.55';}
       }catch(err){errores.push(nombre(alumno)+': '+err.message);}
     }
     ocupado=false;actualizar();
-    $('paseEstado').textContent='Guardados: '+guardados+'. '+(errores.length?'Sin confirmar ('+errores.length+'): '+errores.join('; '):'Registro terminado.');
+    $('paseEstado').textContent='Nuevos: '+guardados+'. Ya registrados: '+yaRegistrados+'. '+(errores.length?'Sin confirmar ('+errores.length+'): '+errores.join('; '):'Registro terminado.');
     if(guardados) $('estado').textContent='✅ Asistencia guardada para '+guardados+' alumnos.';
   });
   $('btnCerrarManual')?.addEventListener('click',()=>modoLista(false));
