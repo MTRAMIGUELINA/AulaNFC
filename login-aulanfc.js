@@ -2,6 +2,7 @@
 (() => {
   const CLAVE_CREDENCIAL = 'aulanfc_google_credential';
   const CLAVE_USUARIO = 'aulanfc_usuario';
+  const AULANFC_MODO_SIN_LOGIN = true;
   let app = null;
   let pantalla = null;
   let mensaje = null;
@@ -176,6 +177,21 @@
   }
 
   async function iniciar() {
+    if (AULANFC_MODO_SIN_LOGIN) {
+  app = document.querySelector('main.contenedor');
+
+  if (app) {
+    app.style.display = '';
+  }
+
+  document.body.classList.remove('aulanfc-sin-acceso');
+
+  window.dispatchEvent(
+    new CustomEvent('aulanfc:autorizado', { detail: null })
+  );
+
+  return;
+}
     crearEstilos();
     crearPantalla();
 
