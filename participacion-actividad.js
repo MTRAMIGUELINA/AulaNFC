@@ -152,10 +152,9 @@
     if (window.__actividadParticipacionActualizacion || typeof window.confirmarRegistro !== 'function') return !!window.__actividadParticipacionActualizacion;
     const original = window.confirmarRegistro;
     window.confirmarRegistro = function(nombre, modulo, metodo) {
-      const actividadActual = modulo === 'participacion' ? datosActividad() : null;
-      const resultado = original.apply(this, arguments);
-      if (modulo === 'participacion') cargarCatalogo(actividadActual);
-      return resultado;
+      // Mantener la actividad seleccionada al registrar varios alumnos.
+      // El catálogo solo se vuelve a consultar al cambiar de campo formativo.
+      return original.apply(this, arguments);
     };
     window.__actividadParticipacionActualizacion = true;
     return true;
