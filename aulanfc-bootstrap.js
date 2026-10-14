@@ -75,6 +75,9 @@ cargaAutorizacionApi.then(()=>{
   cargarExtra('script[data-ficha-pdf-resultados-examen]','ficha-pdf-resultados-examen.js?v=1',{fichaPdfResultadosExamen:'true'});
   cargarExtra('script[data-dashboard-aulanfc]','dashboard.js?v=1',{dashboardAulanfc:'true'});
   cargarExtra('script[data-dashboard-conexion]','dashboard-conexion.js?v=1',{dashboardConexion:'true'});
+  cargarExtra('script[data-bitacora-diaria]','bitacora-diaria.js?v=1',{bitacoraDiaria:'true'}).then(() => {
+    cargarExtra('script[data-bitacora-diaria-menu]','bitacora-diaria-menu.js?v=1',{bitacoraDiariaMenu:'true'});
+  });
   cargarExtra('script[data-reporte-incidencias]','reporte-incidencias.js?v=2',{reporteIncidencias:'true'});
   cargarExtra('script[data-reporte-incidencias-acciones]','reporte-incidencias-acciones.js?v=1',{reporteIncidenciasAcciones:'true'});
   cargarExtra('script[data-reporte-incidencias-config]','reporte-incidencias-config.js?v=2',{reporteIncidenciasConfig:'true'});

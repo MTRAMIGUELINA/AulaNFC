@@ -93,6 +93,15 @@ function doGet(e) {
       return obtenerResumenEstadisticoWeb_(parametros);
     }
 
+    // Bitácora narrativa del docente (independiente del registro NFC).
+    // Esta acción pasa por el candado central de autorización existente.
+    if (accion === "guardarbitacoradiaria") {
+      return responderJSONP_(
+        parametros.callback,
+        guardarBitacoraDiaria_(parametros)
+      );
+    }
+
     if (accion === "guardarincidencia") {
       return guardarIncidenciaWeb_(parametros);
     }
