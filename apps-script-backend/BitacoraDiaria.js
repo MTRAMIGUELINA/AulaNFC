@@ -57,7 +57,7 @@ function generarFolioBitacoraDiaria_(hoja, anio) {
     const texto = String(valor || "");
     if (!texto.startsWith(prefijo)) return;
     const resto = texto.slice(prefijo.length);
-    if (!/^\\d+$/.test(resto)) return;
+    if (!/^\d+$/.test(resto)) return;
     maximo = Math.max(maximo, Number(resto));
   });
   return prefijo + String(maximo + 1).padStart(4, "0");
