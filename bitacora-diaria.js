@@ -1,6 +1,5 @@
-/* AulaNFC - Bitácora Diaria. Etapa 2: pantalla de captura.
- * Vista preliminar sin conexión al servidor. No incluir en index.html
- * hasta incorporar autenticación docente y endpoint seguro.
+/* AulaNFC - Bitácora Diaria. Etapa 3: formulario con guardado por API.
+ * Requiere cargar solicitarJSONP y publicar la API actualizada.
  */
 (() => {
   if (window.AulaNFCBitacoraDiariaVista) return;
@@ -55,11 +54,11 @@
           required></textarea>
         <p class="bitacora-diaria__nota">Puedes registrar varios acontecimientos durante el día.</p>
         <div class="bitacora-diaria__acciones">
-          <button type="submit" disabled title="Disponible cuando conectemos el módulo con Apps Script">Guardar registro (próximamente)</button>
+          <button type="submit">Guardar registro</button>
           <button type="reset" class="bitacora-diaria__secundario">Limpiar</button>
         </div>
         <p id="bitacoraMensaje" role="status" aria-live="polite">
-          Vista preliminar: todavía no se guardan datos.
+          Completa los campos y guarda el acontecimiento.
         </p>
       </form>
     `;
@@ -69,7 +68,43 @@
       vista.querySelector('#bitacoraHora').textContent = horaLocal();
     };
     actualizarHora();
-    vista.querySelector('form').addEventListener('submit', e => e.preventDefault());
+    const formulario = vista.querySelector('form');
+    const boton = formulario.querySelector('button[type="submit"]');
+    const mensaje = vista.querySelector('#bitacoraMensaje');
+    formulario.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (boton.disabled) return;
+      const categoria = vista.querySelector('#bitacoraCategoria').value.trim();
+      const descripcion = vista.querySelector('#bitacoraDescripcion').value.trim();
+      if (!categoria || !descripcion) {
+        mensaje.textContent = 'Selecciona una categoría y escribe la descripción.';
+        return;
+      }
+      if (typeof window.solicitarJSONP !== 'function') {
+        mensaje.textContent = 'No está disponible la conexión con AulaNFC.';
+        return;
+      }
+      boton.disabled = true;
+      boton.textContent = 'Guardando...';
+      mensaje.textContent = 'Enviando registro...';
+      try {
+        const respuesta = await window.solicitarJSONP('guardarbitacoradiaria', {
+          categoria, descripcion
+        });
+        if (!respuesta || !respuesta.ok) {
+          throw new Error(respuesta?.mensaje || 'No se pudo guardar el registro.');
+        }
+        mensaje.textContent = 'Registro guardado: ' + respuesta.folio
+          + ' (' + respuesta.fecha + ' ' + respuesta.hora + ').';
+        formulario.reset();
+        actualizarHora();
+      } catch (error) {
+        mensaje.textContent = error?.message || 'Error al guardar el registro.';
+      } finally {
+        boton.disabled = false;
+        boton.textContent = 'Guardar registro';
+      }
+    });
     return { vista, actualizarHora };
   }
 
