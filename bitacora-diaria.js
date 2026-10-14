@@ -26,6 +26,13 @@
   }
 
   function montar(contenedor) {
+    if (!document.getElementById('estilosBitacoraDiaria')) {
+      const estilo = document.createElement('link');
+      estilo.id = 'estilosBitacoraDiaria';
+      estilo.rel = 'stylesheet';
+      estilo.href = 'bitacora-diaria.css?v=1';
+      document.head.appendChild(estilo);
+    }
     if (!contenedor || contenedor.querySelector('#formBitacoraDiaria')) return;
     const vista = document.createElement('section');
     vista.className = 'bitacora-diaria';
