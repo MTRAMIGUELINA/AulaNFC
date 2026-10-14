@@ -1,0 +1,20 @@
+/* AulaNFC - Estilos aislados de Bitácora Diaria */
+.bitacora-diaria{margin-top:8px;padding:20px;border:2px solid #dbe7f3;border-radius:20px;background:#fff;color:#263238}
+.bitacora-diaria__encabezado h2{margin:0;color:#1f2937;font-size:26px}
+.bitacora-diaria__encabezado p{color:#607d8b;font-size:14px}
+.bitacora-diaria__formulario{display:grid;gap:12px}
+.bitacora-diaria__datos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}
+.bitacora-diaria__datos>div{background:#f1f7fd;border-radius:12px;padding:12px;display:grid;gap:5px}
+.bitacora-diaria__datos span{font-size:12px;color:#607d8b}
+.bitacora-diaria__datos strong{font-size:14px}
+.bitacora-diaria label{font-weight:700;font-size:14px}
+.bitacora-diaria select,.bitacora-diaria textarea{width:100%;box-sizing:border-box;padding:12px;border:2px solid #cbd5e1;border-radius:11px;font:inherit;background:#fff}
+.bitacora-diaria textarea{resize:vertical;min-height:140px}
+.bitacora-diaria select:focus,.bitacora-diaria textarea:focus{outline:2px solid #1976d2;outline-offset:1px}
+.bitacora-diaria__nota{margin:0;color:#607d8b;font-size:13px}
+.bitacora-diaria__acciones{display:flex;gap:10px;flex-wrap:wrap}
+.bitacora-diaria__acciones button{border:0;border-radius:12px;padding:12px 18px;font-weight:700;background:#1976d2;color:white;cursor:pointer}
+.bitacora-diaria__acciones button:disabled{opacity:.55;cursor:not-allowed}
+.bitacora-diaria__acciones .bitacora-diaria__secundario{background:#eceff1;color:#455a64}
+#bitacoraMensaje{font-size:13px;color:#607d8b}
+@media(max-width:600px){.bitacora-diaria{padding:14px}.bitacora-diaria__datos{grid-template-columns:1fr}.bitacora-diaria__encabezado h2{font-size:22px}}
