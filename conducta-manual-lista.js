@@ -82,6 +82,7 @@
     ocupado = true;
     actualizar();
     let guardados = 0, errores = 0;
+    const nombresGuardados = [];
     for (const id of ids) {
       const alumno = lista.find(a => String(a.id) === id);
       if (!alumno) { errores++; continue; }
@@ -96,6 +97,7 @@
         const respuesta = await solicitarJSONP('registrarManual', parametros);
         validarRespuesta(respuesta);
         guardados++;
+        nombresGuardados.push(nombre(alumno));
         const casilla = [...bloque.querySelectorAll('input[data-id]')].find(e => e.dataset.id === id);
         if (casilla) {
           casilla.checked = false;
@@ -108,7 +110,8 @@
     ocupado = false;
     actualizar();
     $('conductaEstado').textContent = 'Guardados: ' + guardados + '. Sin confirmar: ' + errores +
-      (errores ? '. Verifica en el historial antes de reintentar.' : '.');
+      (errores ? '. Verifica en el historial antes de reintentar.' : '.') +
+      (nombresGuardados.length ? ' Confirmados: ' + nombresGuardados.join(', ') + '.' : '');
     if (guardados && $('estado')) $('estado').textContent = 'Conducta registrada para ' + guardados + ' alumnos.';
   });
   $('btnCerrarManual')?.addEventListener('click', () => mostrar(false));
