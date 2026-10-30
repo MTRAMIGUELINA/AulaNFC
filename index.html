@@ -23,7 +23,45 @@
       <section class="seccion"><h2>¿Qué deseas registrar?</h2><div class="modulos"><button class="modulo asistencia" data-modulo="asistencia"><span>🟢</span>Asistencia</button><button class="modulo tareas" data-modulo="tareas"><span>🟡</span>Tareas</button><button class="modulo participacion" data-modulo="participacion"><span>🔵</span>Participación</button><button class="modulo conducta" data-modulo="conducta"><span>🟣</span>Conducta</button><button class="modulo lectura" data-modulo="lectura"><span>🟠</span>Lectura</button></div><button id="btnCambiarModulo" class="btn-cambiar-modulo oculto" type="button">← Cambiar módulo</button><span id="moduloActivo" class="oculto" aria-hidden="true">Ninguno</span></section>
       <section id="opcionesTareas" class="opciones opciones-tareas oculto"><div class="grupo-tarea"><h2>Actividad revisada</h2><label class="solo-lectores" for="actividadTarea">Selecciona una actividad</label><select id="actividadTarea"><option value="">Selecciona una actividad</option></select><button id="btnNuevaActividadTarea" class="boton-nueva-actividad" type="button" aria-expanded="false" aria-controls="camposNuevaActividad">+ Nueva actividad</button><div id="camposNuevaActividad" class="campos-nueva-actividad oculto"><label for="tituloActividadTarea">Título de la actividad</label><input id="tituloActividadTarea" type="text" maxlength="180" autocomplete="off" placeholder="Ej. Problemas de multiplicación"><label for="fechaActividadTarea">Fecha de la actividad</label><input id="fechaActividadTarea" type="date"></div><p id="estadoActividadesTarea" class="estado-actividades" aria-live="polite"></p></div><div class="grupo-tarea grupo-resultado-tarea"><h2>Resultado de la tarea</h2><select id="tipoTarea"><option value="">Selecciona una opción</option><option value="Entregó">Entregó</option><option value="Incompleta">Incompleta</option><option value="No entregó">No entregó</option></select></div></section>
       <section id="opcionesParticipacion" class="opciones oculto"><h2>Campo formativo</h2><select id="campoFormativo"><option value="">Selecciona un campo</option><option>Lenguajes</option><option>Saberes y Pensamiento Científico</option><option>Ética, Naturaleza y Sociedad</option><option>De lo Humano a lo Comunitario</option></select><h2>Tipo de participación</h2><select id="tipoParticipacion"><option value="">Selecciona una opción</option><option>Participó</option><option>Excelente participación</option><option>Apoyo al equipo</option></select></section>
-      <section id="opcionesConducta" class="opciones oculto"><h2>Tipo de conducta</h2><select id="tipoConducta"><option value="">Selecciona una opción</option><option value="Buena conducta">Buena conducta</option><option value="Llamada de atención">Llamada de atención</option><option value="Tarjeta amarilla">Tarjeta amarilla</option><option value="Tarjeta roja">Tarjeta roja</option></select></section>
+      <section id="opcionesConducta" class="opciones oculto">
+        <h2>Registro de conducta</h2>
+        <label for="tipoConducta">Conducta observada</label>
+        <select id="tipoConducta">
+          <option value="">Selecciona una conducta</option>
+          <optgroup label="Conductas que favorecen el aprendizaje y la convivencia">
+            <option>Respeta los acuerdos del aula</option>
+            <option>Sigue las indicaciones de trabajo</option>
+            <option>Realiza sus actividades con autonomía</option>
+            <option>Concluye las actividades propuestas</option>
+            <option>Se relaciona respetuosamente con sus compañeros</option>
+            <option>Participa respetando los turnos</option>
+            <option>Utiliza y cuida adecuadamente los materiales</option>
+            <option>Resuelve desacuerdos mediante el diálogo</option>
+            <option>Colabora con sus compañeros</option>
+            <option>Muestra disposición para aprender</option>
+          </optgroup>
+          <optgroup label="Conductas que requieren acompañamiento y seguimiento">
+            <option>Requiere fortalecer el respeto de los turnos de participación</option>
+            <option>Requiere acompañamiento para permanecer en su espacio durante las actividades</option>
+            <option>Presenta dificultad para atender y seguir las indicaciones de trabajo</option>
+            <option>Requiere apoyo para iniciar y desarrollar las actividades escolares</option>
+            <option>Requiere fortalecer las habilidades de convivencia y el respeto hacia sus compañeros</option>
+            <option>Requiere fortalecer la escucha activa y el respeto de los turnos de palabra</option>
+            <option>Requiere orientación para utilizar adecuadamente los materiales escolares</option>
+            <option>Recurre a empujones o golpes durante desacuerdos con sus compañeros</option>
+            <option>Muestra resistencia para incorporarse a las actividades propuestas</option>
+            <option>Requiere acompañamiento para reconocer y regular sus emociones</option>
+            <option>Requiere apoyo frecuente para desarrollar sus actividades con autonomía</option>
+            <option>Requiere fortalecer la organización y conclusión de sus actividades</option>
+            <option>Presenta dificultad para mantener la atención durante las actividades escolares</option>
+            <option>Requiere reforzar el cumplimiento de los acuerdos de convivencia</option>
+            <option>Requiere fortalecer la disposición para compartir materiales y espacios</option>
+            <option>Requiere acompañamiento para aceptar orientaciones y retroalimentación</option>
+            <option>Requiere fortalecer la autorregulación durante los tiempos de espera</option>
+            <option>Requiere fortalecer la resolución pacífica de conflictos durante el juego</option>
+          </optgroup>
+        </select>
+      </section>
       <section id="opcionesLectura" class="opciones oculto"><h2>Resultado de lectura</h2><select id="tipoLectura"><option value="">Selecciona una opción</option><option value="Requiere apoyo">Requiere apoyo</option><option value="Se acerca al estándar">Se acerca al estándar</option><option value="Estándar">Estándar</option><option value="Avanzado">Avanzado</option></select></section>
       <section class="lector"><div class="estado-lector-linea"><span>Estado del lector</span><strong id="estado">⚪ APAGADO</strong></div><button id="btnEscanear" disabled>▶ ACTIVAR LECTOR</button><button id="btnBuscarManual" class="boton-manual" disabled type="button">🔎 BUSCAR ALUMNO</button><div id="resultado" aria-live="polite"></div></section>
       <section id="panelRegistroManual" class="panel-registro-manual oculto"><div class="buscar-encabezado-con-boton"><div class="buscar-encabezado"><h2>Registro manual</h2></div><button id="btnCerrarManual" class="boton-cerrar" type="button">✕</button></div><label class="etiqueta" for="campoBusquedaManual">Buscar por nombre</label><input id="campoBusquedaManual" class="buscador" type="search" placeholder="Escribe el nombre del alumno" autocomplete="off"><p id="contadorManual" class="contador">Escribe un nombre para buscar.</p><div id="listaManual" class="lista-alumnos oculto"></div><div id="alumnoManualSeleccionado" class="seleccion-manual oculto"></div><button id="btnGuardarManual" class="boton-guardar-manual" type="button" disabled>☑ REGISTRAR ALUMNO</button></section>
