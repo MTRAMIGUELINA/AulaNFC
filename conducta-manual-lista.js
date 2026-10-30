@@ -12,7 +12,9 @@
   bloque.id = 'listaManualConducta';
   bloque.hidden = true;
   bloque.innerHTML = `
-    <p>Selecciona a los alumnos que presentaron la conducta elegida.</p>
+    <p><strong>1. Selecciona las conductas observadas</strong></p>
+    <div id="conductaOpcionesMultiples" style="max-height:32vh;overflow:auto;border:1px solid #ddd;border-radius:10px;padding:8px"></div>
+    <p><strong>2. Selecciona los alumnos</strong></p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
       <button type="button" id="conductaMarcarTodos">Seleccionar todos</button>
       <button type="button" id="conductaDesmarcarTodos">Desmarcar todos</button>
@@ -28,12 +30,29 @@
     const etiqueta = panel.querySelector('label[for="campoBusquedaManual"]');
     if (etiqueta) etiqueta.style.display = activo ? 'none' : '';
   }
+  const conductasSeleccionadas = () => [...bloque.querySelectorAll('input[data-conducta]:checked')].map(e => e.value);
+  function dibujarConductas() {
+    const selector = $('tipoConducta');
+    const contenedor = $('conductaOpcionesMultiples');
+    if (!selector || !contenedor) return;
+    const grupos = [...selector.querySelectorAll('optgroup')];
+    contenedor.innerHTML = grupos.map(grupo =>
+      '<div style="margin-bottom:12px"><strong>' + escapar(grupo.label) + '</strong>' +
+      [...grupo.querySelectorAll('option')].map(op =>
+        '<label style="display:flex;gap:10px;align-items:flex-start;padding:7px 2px;cursor:pointer">' +
+        '<input type="checkbox" data-conducta value="' + escapar(op.value) + '" style="margin-top:4px;width:19px;height:19px">' +
+        '<span>' + escapar(op.textContent) + '</span></label>'
+      ).join('') + '</div>'
+    ).join('');
+    contenedor.querySelectorAll('input').forEach(e => e.addEventListener('change', actualizar));
+  }
   const seleccionados = () => [...bloque.querySelectorAll('input[data-id]:checked:not(:disabled)')];
   function actualizar() {
     const n = seleccionados().length;
-    $('conductaGuardar').disabled = ocupado || !n;
-    $('conductaGuardar').textContent = ocupado ? 'Guardando...' : 'Guardar conducta (' + n + ')';
-    if (!ocupado) $('conductaEstado').textContent = n + ' de ' + lista.length + ' alumnos seleccionados.';
+    const totalConductas = conductasSeleccionadas().length;
+    $('conductaGuardar').disabled = ocupado || !n || !totalConductas;
+    $('conductaGuardar').textContent = ocupado ? 'Guardando...' : 'Guardar (' + n + ' alumnos · ' + totalConductas + ' conductas)';
+    if (!ocupado) $('conductaEstado').textContent = n + ' de ' + lista.length + ' alumnos y ' + totalConductas + ' conductas seleccionadas.';
   }
   function dibujar() {
     $('conductaAlumnos').innerHTML = lista.map(a =>
@@ -50,7 +69,8 @@
     }
     evento.preventDefault();
     evento.stopImmediatePropagation();
-    if (!validarModulo() || ocupado) return;
+    if (ocupado) return;
+    dibujarConductas();
     mostrar(true);
     panel.classList.remove('oculto');
     $('conductaEstado').textContent = 'Cargando alumnos del grupo...';
@@ -75,10 +95,13 @@
     actualizar();
   });
   $('conductaGuardar').addEventListener('click', async () => {
-    if (ocupado || !validarModulo()) return;
+    if (ocupado) return;
     const ids = seleccionados().map(e => e.dataset.id);
     if (!ids.length) return;
-    const tipo = String($('tipoConducta')?.value || '').trim();
+    const conductas = conductasSeleccionadas();
+    if (!conductas.length) { $('conductaEstado').textContent = 'Selecciona al menos una conducta.'; return; }
+    // Un registro por alumno: todas las conductas quedan en el mismo campo de detalle.
+    const tipo = conductas.join(' | ');
     ocupado = true;
     actualizar();
     let guardados = 0, errores = 0;
@@ -112,7 +135,7 @@
     $('conductaEstado').textContent = 'Guardados: ' + guardados + '. Sin confirmar: ' + errores +
       (errores ? '. Verifica en el historial antes de reintentar.' : '.') +
       (nombresGuardados.length ? ' Confirmados: ' + nombresGuardados.join(', ') + '.' : '');
-    if (guardados && $('estado')) $('estado').textContent = 'Conducta registrada para ' + guardados + ' alumnos.';
+    if (guardados && $('estado')) $('estado').textContent = conductas.length + ' conductas registradas para ' + guardados + ' alumnos.';
   });
   $('btnCerrarManual')?.addEventListener('click', () => mostrar(false));
   document.querySelectorAll('[data-modulo]').forEach(b => b.addEventListener('click', () => mostrar(false)));
