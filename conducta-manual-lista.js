@@ -43,7 +43,7 @@
     const etiqueta = panel.querySelector('label[for="campoBusquedaManual"]');
     if (etiqueta) etiqueta.style.display = activo ? 'none' : '';
   }
-  const conductasSeleccionadas = () => [...bloque.querySelectorAll('input[data-conducta]:checked')].map(e => e.value);
+  const conductasSeleccionadas = () => [...contenedorConductas.querySelectorAll('input[data-conducta]:checked')].map(e => e.value);
   function dibujarConductas() {
     const selector = $('tipoConducta');
     const contenedor = $('conductaOpcionesMultiples');
