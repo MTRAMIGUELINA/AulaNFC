@@ -85,7 +85,7 @@
 
   async function abrirManualGrupoActivo(evento) {
     // El pase de lista de Asistencia tiene su propio controlador.
-    if (moduloSeleccionado === 'asistencia') return;
+    if (moduloSeleccionado === 'asistencia' || moduloSeleccionado === 'conducta') return;
     evento.preventDefault();
     evento.stopImmediatePropagation();
 
