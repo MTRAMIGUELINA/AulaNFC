@@ -12,9 +12,7 @@
   bloque.id = 'listaManualConducta';
   bloque.hidden = true;
   bloque.innerHTML = `
-    <p><strong>1. Selecciona las conductas observadas</strong></p>
-    <div id="conductaOpcionesMultiples" style="max-height:32vh;overflow:auto;border:1px solid #ddd;border-radius:10px;padding:8px"></div>
-    <p><strong>2. Selecciona los alumnos</strong></p>
+    <p><strong>Selecciona los alumnos</strong> a quienes se aplicarán las conductas marcadas arriba.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
       <button type="button" id="conductaMarcarTodos">Seleccionar todos</button>
       <button type="button" id="conductaDesmarcarTodos">Desmarcar todos</button>
@@ -23,6 +21,21 @@
     <div id="conductaAlumnos" style="max-height:55vh;overflow:auto"></div>
     <button type="button" id="conductaGuardar" disabled style="margin-top:12px">Guardar conducta</button>`;
   panel.appendChild(bloque);
+  const contenedorConductas = document.createElement('div');
+  contenedorConductas.id = 'conductaOpcionesMultiples';
+  contenedorConductas.style.cssText = 'max-height:45vh;overflow:auto;border:1px solid #ddd;border-radius:10px;padding:8px;margin-top:10px';
+  const seccionConducta = $('opcionesConducta');
+  const selectorOriginal = $('tipoConducta');
+  if (seccionConducta && selectorOriginal) {
+    const titulo = document.createElement('p');
+    titulo.textContent = 'Marca una o varias conductas:';
+    seccionConducta.insertBefore(titulo, selectorOriginal);
+    seccionConducta.insertBefore(contenedorConductas, selectorOriginal);
+    // El desplegable se conserva para el registro individual NFC.
+    const etiquetaNFC = document.createElement('p');
+    etiquetaNFC.textContent = 'Para registrar con NFC, selecciona una conducta aquí:';
+    seccionConducta.insertBefore(etiquetaNFC, selectorOriginal);
+  }
   const originales = ['contadorManual','campoBusquedaManual','listaManual','alumnoManualSeleccionado','btnGuardarManual'];
   function mostrar(activo) {
     bloque.hidden = !activo;
@@ -70,7 +83,6 @@
     evento.preventDefault();
     evento.stopImmediatePropagation();
     if (ocupado) return;
-    dibujarConductas();
     mostrar(true);
     panel.classList.remove('oculto');
     $('conductaEstado').textContent = 'Cargando alumnos del grupo...';
@@ -137,6 +149,7 @@
       (nombresGuardados.length ? ' Confirmados: ' + nombresGuardados.join(', ') + '.' : '');
     if (guardados && $('estado')) $('estado').textContent = conductas.length + ' conductas registradas para ' + guardados + ' alumnos.';
   });
+  dibujarConductas();
   $('btnCerrarManual')?.addEventListener('click', () => mostrar(false));
   document.querySelectorAll('[data-modulo]').forEach(b => b.addEventListener('click', () => mostrar(false)));
 })();
