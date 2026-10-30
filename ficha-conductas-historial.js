@@ -31,6 +31,8 @@
     });
     const frecuentes = [...frecuencias.values()].filter(v => v.cantidad > 1).sort((a,b) => b.cantidad-a.cantidad);
     $('fichaConductasEstado').textContent = conductas.length + ' registros de conducta encontrados.';
+    const indicador = $('fichaConducta');
+    if (indicador) indicador.textContent = conductas.length ? conductas.length + ' registros · ' + frecuencias.size + ' conductas observadas' : 'Sin registros';
     $('fichaConductasFrecuentes').innerHTML = frecuentes.length
       ? '<h4>Conductas recurrentes</h4><ul>' + frecuentes.map(v => '<li>' + esc(v.texto) + ' <strong>(' + v.cantidad + ' registros)</strong></li>').join('') + '</ul>'
       : '<p>No se identifican conductas repetidas en los registros consultados.</p>';
@@ -47,6 +49,7 @@
     const actual = ++version;
     if (!id || id === '—') {
       $('fichaConductasEstado').textContent = 'Selecciona un alumno.';
+      if ($('fichaConducta')) $('fichaConducta').textContent = '—';
       $('fichaConductasFrecuentes').replaceChildren();
       $('fichaConductasLista').replaceChildren();
       return;
