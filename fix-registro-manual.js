@@ -108,16 +108,42 @@
         });
       }
 
-      const respuesta = await solicitarJSONP('registrarManual', parametros);
-      validarRespuesta(respuesta);
-
-      confirmarRegistro(
-        respuesta.nombre || respuesta.nombreCompleto || nombreCompleto(alumno),
-        moduloActual,
-        'Manual'
-      );
-
-      cerrarRegistroManual();
+      if (moduloActual === 'participacion' && typeof window.obtenerActividadesParticipacionSeleccionadas === 'function') {
+        const seleccionadas = window.obtenerActividadesParticipacionSeleccionadas();
+        let guardadas = 0;
+        const fallidas = [];
+        for (const actividad of seleccionadas) {
+          try {
+            document.getElementById('estado').textContent =
+              '⏳ Guardando actividad ' + (guardadas + fallidas.length + 1) + ' de ' + seleccionadas.length + '...';
+            const datos = { ...parametros, ...actividad };
+            delete datos.actividadesSeleccionadas;
+            const respuesta = await solicitarJSONP('registrarManual', datos);
+            validarRespuesta(respuesta);
+            guardadas++;
+          } catch (error) {
+            fallidas.push(actividad.actividad + ': ' + (error.message || 'Error de conexión'));
+          }
+        }
+        if (fallidas.length) {
+          document.getElementById('estado').textContent =
+            '⚠️ Se guardaron ' + guardadas + ' de ' + seleccionadas.length + ' actividades. No vuelvas a guardar todas: revisa las pendientes.';
+          document.getElementById('resultado').textContent = 'Pendientes: ' + fallidas.join('; ');
+          botonNuevo.disabled = false;
+        } else {
+          confirmarRegistro(nombreCompleto(alumno), moduloActual, 'Manual · ' + guardadas + ' actividades');
+          cerrarRegistroManual();
+        }
+      } else {
+        const respuesta = await solicitarJSONP('registrarManual', parametros);
+        validarRespuesta(respuesta);
+        confirmarRegistro(
+          respuesta.nombre || respuesta.nombreCompleto || nombreCompleto(alumno),
+          moduloActual,
+          'Manual'
+        );
+        cerrarRegistroManual();
+      }
     } catch (error) {
       document.getElementById('estado').textContent = '❌ No se pudo guardar el registro manual.';
       document.getElementById('resultado').textContent = error.message || 'Error de registro.';
