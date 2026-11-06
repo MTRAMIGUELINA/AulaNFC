@@ -26,6 +26,8 @@ function registrarDesdeEscaner_(parametros) {
     parametros.actividad || ""
   ).trim();
 
+    const fechaActividad = String(parametros.fechaActividad || "").trim();
+
     const tipoRegistro = String(
   parametros.tipoRegistro ||
   parametros.tipoParticipacion ||
@@ -330,7 +332,8 @@ if (
     campoFormativo,
     actividad,
     tipoRegistro,
-    "nfc"
+    "nfc",
+    fechaActividad
   );
 
     // --------------------------------------
@@ -456,6 +459,8 @@ function registrarManualWeb_(parametros) {
      String(
        parametros.actividad || ""
       ).trim();
+
+    const fechaActividad = String(parametros.fechaActividad || "").trim();
 
     const tipoRegistro =
   String(
@@ -691,7 +696,8 @@ function registrarManualWeb_(parametros) {
         campoFormativo,
         actividad,
         tipoRegistro,
-        "manual"
+        "manual",
+    fechaActividad
       );
 
     SpreadsheetApp.flush();
