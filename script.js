@@ -395,7 +395,7 @@ async function guardarRegistroManual() {
       const errores = [];
       for (const actividad of seleccionadas) {
         try {
-          $('estado').textContent = '⏳ Guardando actividad ' + (guardadas + errores.length + 1) + ' de ' + seleccionadas.length + '...';
+          $('estado').textContent = '⏳ Guardando actividad ' + (guardadas + omitidas + errores.length + 1) + ' de ' + seleccionadas.length + '...';
           const datos = { ...parametros, ...actividad };
           delete datos.actividadesSeleccionadas;
           const respuesta = await solicitarJSONP('registrarManual', datos);
@@ -407,7 +407,7 @@ async function guardarRegistroManual() {
         }
       }
       if (errores.length) {
-        $('estado').textContent = '⚠️ Guardadas ' + guardadas + ' de ' + seleccionadas.length + '. Verifica las pendientes antes de repetir el envío.';
+        $('estado').textContent = '⚠️ Guardadas ' + guardadas + ', ya existentes ' + omitidas + ', de ' + seleccionadas.length + '. Verifica las pendientes antes de repetir el envío.';
         $('resultado').textContent = 'No guardadas: ' + errores.join('; ');
         $('btnGuardarManual').disabled = true;
       } else {
@@ -517,7 +517,7 @@ async function enviarRegistroNFC(lectura) {
       let nombre = 'Alumno';
       for (const actividad of actividades) {
         try {
-          $('estado').textContent = '⏳ Registrando actividad ' + (guardadas + errores.length + 1) + ' de ' + actividades.length + '...';
+          $('estado').textContent = '⏳ Registrando actividad ' + (guardadas + omitidas + errores.length + 1) + ' de ' + actividades.length + '...';
           const parametros = { ...lectura.parametros, ...actividad };
           delete parametros.actividadesSeleccionadas;
           const respuesta = await solicitarJSONP('registrarNFC', parametros);
@@ -530,7 +530,7 @@ async function enviarRegistroNFC(lectura) {
         }
       }
       if (errores.length) {
-        $('estado').textContent = '⚠️ ' + guardadas + ' de ' + actividades.length + ' actividades guardadas.';
+        $('estado').textContent = '⚠️ ' + guardadas + ' guardadas, ' + omitidas + ' ya existentes, de ' + actividades.length + '.';
         $('resultado').textContent = 'Pendientes: ' + errores.join('; ');
       } else {
         confirmarRegistro(nombre, lectura.modulo, 'NFC · ' + guardadas + ' nuevas, ' + omitidas + ' existentes');
