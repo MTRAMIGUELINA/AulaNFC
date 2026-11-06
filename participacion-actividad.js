@@ -27,6 +27,18 @@
     selector.id = 'actividadParticipacion';
     selector.disabled = true;
     selector.setAttribute('aria-label', 'Actividad revisada');
+    selector.hidden = true;
+
+    const lista = document.createElement('div');
+    lista.id = 'listaActividadesParticipacion';
+    lista.setAttribute('role', 'group');
+    lista.setAttribute('aria-label', 'Selecciona las actividades revisadas');
+    lista.style.cssText = 'display:grid;gap:8px;max-height:270px;overflow:auto;padding:10px;border:1px solid #b7cbe1;border-radius:12px;background:#fff';
+    const botonNueva = document.createElement('button');
+    botonNueva.type = 'button';
+    botonNueva.id = 'btnNuevaActividadParticipacion';
+    botonNueva.textContent = '+ Nueva actividad';
+    botonNueva.style.cssText = 'margin-top:10px;padding:10px;border-radius:10px;border:1px solid #8bb5e5;background:#fff;color:#1769aa;font-weight:700';
 
     const nuevos = document.createElement('div');
     nuevos.id = 'nuevaActividadParticipacion';
@@ -40,8 +52,13 @@
 
     campo.insertAdjacentElement('afterend', selector);
     selector.insertAdjacentElement('beforebegin', titulo);
-    selector.insertAdjacentElement('afterend', nuevos);
-    selector.addEventListener('change', actualizarModoActividad);
+    selector.insertAdjacentElement('afterend', lista);
+    lista.insertAdjacentElement('afterend', botonNueva);
+    botonNueva.insertAdjacentElement('afterend', nuevos);
+    botonNueva.addEventListener('click', () => {
+      selector.value = selector.value === VALOR_NUEVA ? '' : VALOR_NUEVA;
+      actualizarModoActividad();
+    });
     campo.addEventListener('change', cargarCatalogo);
     renderizarCatalogo();
     return true;
@@ -58,13 +75,39 @@
     });
     selector.appendChild(new Option('+ Nueva actividad', VALOR_NUEVA));
     selector.disabled = !campo.value;
+    const lista = document.getElementById('listaActividadesParticipacion');
+    if (lista) {
+      lista.replaceChildren();
+      if (!campo.value || !actividades.length) {
+        const aviso = document.createElement('span');
+        aviso.textContent = campo.value ? 'No hay actividades anteriores en este campo.' : 'Primero selecciona un campo formativo.';
+        lista.appendChild(aviso);
+      }
+      actividades.forEach((actividad, indice) => {
+        const etiqueta = document.createElement('label');
+        etiqueta.style.cssText = 'display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;padding:5px';
+        const casilla = document.createElement('input');
+        casilla.type = 'checkbox';
+        casilla.value = String(indice);
+        casilla.name = 'actividadParticipacionMultiple';
+        casilla.style.cssText = 'width:19px;height:19px;flex-shrink:0;accent-color:#1976d2';
+        const texto = document.createElement('span');
+        texto.textContent = actividad.titulo + ' · ' + fechaVisible(actividad.fechaActividad);
+        etiqueta.append(casilla, texto);
+        lista.appendChild(etiqueta);
+      });
+    }
 
     if (seleccionActividad?.actividad && seleccionActividad?.fechaActividad) {
       const indice = actividades.findIndex((actividad) =>
         actividad.titulo === seleccionActividad.actividad &&
         actividad.fechaActividad === seleccionActividad.fechaActividad
       );
-      if (indice !== -1) selector.value = String(indice);
+      if (indice !== -1) {
+        selector.value = String(indice);
+        const casilla = lista?.querySelector(`input[value="${indice}"]`);
+        if (casilla) casilla.checked = true;
+      }
     }
 
     actualizarModoActividad();
@@ -97,23 +140,34 @@
     if (!selector || !nuevos) return;
     const esNueva = selector.value === VALOR_NUEVA;
     nuevos.hidden = !esNueva;
+    const lista = document.getElementById('listaActividadesParticipacion');
+    if (lista) lista.style.display = esNueva ? 'none' : 'grid';
+    const botonNueva = document.getElementById('btnNuevaActividadParticipacion');
+    if (botonNueva) botonNueva.textContent = esNueva ? 'Cancelar nueva actividad' : '+ Nueva actividad';
     if (esNueva && !document.getElementById('fechaActividadParticipacion').value) {
       document.getElementById('fechaActividadParticipacion').value = fechaLocalActual();
     }
   }
 
-  function datosActividad() {
+  function datosActividades() {
     const selector = document.getElementById('actividadParticipacion');
-    if (!selector || !selector.value) return { actividad: '', fechaActividad: '' };
-    if (selector.value === VALOR_NUEVA) {
-      return {
-        actividad: String(document.getElementById('tituloActividadParticipacion')?.value || '').trim(),
-        fechaActividad: String(document.getElementById('fechaActividadParticipacion')?.value || '').trim()
-      };
+    if (selector?.value === VALOR_NUEVA) {
+      const actividad = String(document.getElementById('tituloActividadParticipacion')?.value || '').trim();
+      const fechaActividad = String(document.getElementById('fechaActividadParticipacion')?.value || '').trim();
+      return actividad && fechaActividad ? [{ actividad, fechaActividad }] : [];
     }
-    const elegida = actividades[Number(selector.value)];
-    return elegida ? { actividad: elegida.titulo, fechaActividad: elegida.fechaActividad } : { actividad: '', fechaActividad: '' };
+    return Array.from(document.querySelectorAll('input[name="actividadParticipacionMultiple"]:checked'))
+      .map((casilla) => actividades[Number(casilla.value)])
+      .filter(Boolean)
+      .map((a) => ({ actividad: a.titulo, fechaActividad: a.fechaActividad }));
   }
+
+  function datosActividad() {
+    return datosActividades()[0] || { actividad: '', fechaActividad: '' };
+  }
+
+  // Se lee una copia de la selección al iniciar el guardado, no durante cada petición.
+  window.obtenerActividadesParticipacionSeleccionadas = datosActividades;
 
   function conectarParametros() {
     if (window.__actividadParticipacionParametros || typeof window.construirParametrosRegistro !== 'function') return !!window.__actividadParticipacionParametros;
@@ -121,7 +175,9 @@
     window.construirParametrosRegistro = function(base) {
       const parametros = original(base);
       if (typeof moduloSeleccionado !== 'undefined' && moduloSeleccionado === 'participacion') {
-        Object.assign(parametros, datosActividad());
+        const seleccionadas = datosActividades();
+        Object.assign(parametros, seleccionadas[0] || { actividad: '', fechaActividad: '' });
+        parametros.actividadesSeleccionadas = JSON.stringify(seleccionadas);
       }
       return parametros;
     };
@@ -135,10 +191,11 @@
     window.validarModulo = function() {
       if (typeof moduloSeleccionado !== 'undefined' && moduloSeleccionado === 'participacion') {
         const datos = datosActividad();
+        const nueva = document.getElementById('actividadParticipacion')?.value === VALOR_NUEVA;
         if (!datos.actividad || !datos.fechaActividad) {
           const estado = document.getElementById('estado');
           if (estado) estado.textContent = '❌ Selecciona una actividad o captura su título y fecha.';
-          document.getElementById(datos.actividad ? 'fechaActividadParticipacion' : 'actividadParticipacion')?.focus();
+          (nueva ? document.getElementById(datos.actividad ? 'fechaActividadParticipacion' : 'tituloActividadParticipacion') : document.querySelector('input[name="actividadParticipacionMultiple"]'))?.focus();
           return false;
         }
       }

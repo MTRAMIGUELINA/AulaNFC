@@ -388,10 +388,38 @@ async function guardarRegistroManual() {
       });
     }
 
-    const respuesta = await solicitarJSONP('registrarManual', parametros);
-    validarRespuesta(respuesta);
-    confirmarRegistro(respuesta.nombre || respuesta.nombreCompleto || nombreCompleto(alumno), moduloActual, 'Manual');
-    cerrarRegistroManual();
+    if (moduloActual === 'participacion' && parametros.actividadesSeleccionadas) {
+      const seleccionadas = JSON.parse(parametros.actividadesSeleccionadas);
+      let guardadas = 0;
+      let omitidas = 0;
+      const errores = [];
+      for (const actividad of seleccionadas) {
+        try {
+          $('estado').textContent = '⏳ Guardando actividad ' + (guardadas + omitidas + errores.length + 1) + ' de ' + seleccionadas.length + '...';
+          const datos = { ...parametros, ...actividad };
+          delete datos.actividadesSeleccionadas;
+          const respuesta = await solicitarJSONP('registrarManual', datos);
+          validarRespuesta(respuesta);
+          if (respuesta.omitido) omitidas++;
+          else guardadas++;
+        } catch (error) {
+          errores.push(actividad.actividad + ': ' + (error.message || 'Error'));
+        }
+      }
+      if (errores.length) {
+        $('estado').textContent = '⚠️ Guardadas ' + guardadas + ', ya existentes ' + omitidas + ', de ' + seleccionadas.length + '. Verifica las pendientes antes de repetir el envío.';
+        $('resultado').textContent = 'No guardadas: ' + errores.join('; ');
+        $('btnGuardarManual').disabled = true;
+      } else {
+        confirmarRegistro(nombreCompleto(alumno), moduloActual, 'Manual · ' + guardadas + ' nuevas, ' + omitidas + ' existentes');
+        cerrarRegistroManual();
+      }
+    } else {
+      const respuesta = await solicitarJSONP('registrarManual', parametros);
+      validarRespuesta(respuesta);
+      confirmarRegistro(respuesta.nombre || respuesta.nombreCompleto || nombreCompleto(alumno), moduloActual, 'Manual');
+      cerrarRegistroManual();
+    }
   } catch (error) {
     $('estado').textContent = '❌ No se pudo guardar el registro manual.';
     $('resultado').textContent = error.message;
@@ -481,9 +509,37 @@ async function enviarRegistroNFC(lectura) {
   envioEnProceso = true;
   $('estado').textContent = '⏳ Enviando registro...';
   try {
-    const respuesta = await solicitarJSONP('registrarNFC', lectura.parametros);
-    validarRespuesta(respuesta);
-    confirmarRegistro(respuesta.nombre || respuesta.nombreCompleto || 'Alumno', lectura.modulo, 'NFC');
+    if (lectura.modulo === 'participacion' && lectura.parametros.actividadesSeleccionadas) {
+      const actividades = JSON.parse(lectura.parametros.actividadesSeleccionadas);
+      let guardadas = 0;
+      let omitidas = 0;
+      const errores = [];
+      let nombre = 'Alumno';
+      for (const actividad of actividades) {
+        try {
+          $('estado').textContent = '⏳ Registrando actividad ' + (guardadas + omitidas + errores.length + 1) + ' de ' + actividades.length + '...';
+          const parametros = { ...lectura.parametros, ...actividad };
+          delete parametros.actividadesSeleccionadas;
+          const respuesta = await solicitarJSONP('registrarNFC', parametros);
+          validarRespuesta(respuesta);
+          nombre = respuesta.nombre || respuesta.nombreCompleto || nombre;
+          if (respuesta.omitido) omitidas++;
+          else guardadas++;
+        } catch (error) {
+          errores.push(actividad.actividad + ': ' + (error.message || 'Error'));
+        }
+      }
+      if (errores.length) {
+        $('estado').textContent = '⚠️ ' + guardadas + ' guardadas, ' + omitidas + ' ya existentes, de ' + actividades.length + '.';
+        $('resultado').textContent = 'Pendientes: ' + errores.join('; ');
+      } else {
+        confirmarRegistro(nombre, lectura.modulo, 'NFC · ' + guardadas + ' nuevas, ' + omitidas + ' existentes');
+      }
+    } else {
+      const respuesta = await solicitarJSONP('registrarNFC', lectura.parametros);
+      validarRespuesta(respuesta);
+      confirmarRegistro(respuesta.nombre || respuesta.nombreCompleto || 'Alumno', lectura.modulo, 'NFC');
+    }
   } catch (error) {
     $('estado').textContent = '❌ No se pudo confirmar el registro.';
     $('resultado').textContent = error.message;

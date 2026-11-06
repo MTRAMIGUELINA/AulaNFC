@@ -12,7 +12,8 @@ function registrarFilaModulo_(
   libro,
   nombreHoja,
   encabezados,
-  valores
+  valores,
+  camposAdicionales
 ) {
 
   // --------------------------------------
@@ -200,6 +201,22 @@ function registrarFilaModulo_(
       .setValue(
         cicloEscolar
       );
+
+    // Datos opcionales del registro (p. ej. fecha original de la actividad).
+    // Se localizan por encabezado para mantener el orden histórico de columnas.
+    if (camposAdicionales && typeof camposAdicionales === "object") {
+      Object.keys(camposAdicionales).forEach(function(nombreCampo) {
+        const encabezadosHoja = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getDisplayValues()[0];
+        let indice = encabezadosHoja.findIndex(function(valor) {
+          return String(valor || "").trim().toUpperCase() === String(nombreCampo).trim().toUpperCase();
+        });
+        if (indice === -1) {
+          indice = hoja.getLastColumn();
+          hoja.getRange(1, indice + 1).setValue(nombreCampo).setFontWeight("bold");
+        }
+        hoja.getRange(nuevaFila, indice + 1).setValue(camposAdicionales[nombreCampo]);
+      });
+    }
 
     SpreadsheetApp.flush();
 

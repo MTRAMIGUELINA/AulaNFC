@@ -26,6 +26,8 @@ function registrarDesdeEscaner_(parametros) {
     parametros.actividad || ""
   ).trim();
 
+    const fechaActividad = String(parametros.fechaActividad || "").trim();
+
     const tipoRegistro = String(
   parametros.tipoRegistro ||
   parametros.tipoParticipacion ||
@@ -330,12 +332,14 @@ if (
     campoFormativo,
     actividad,
     tipoRegistro,
-    "nfc"
+    "nfc",
+    fechaActividad
   );
 
     // --------------------------------------
     // GUARDAR BITÁCORA
     // --------------------------------------
+    if (!resultadoRegistro.omitido) {
     guardarEnBitacoraNFC_(
       libro,
       uid,
@@ -344,7 +348,8 @@ if (
       tipoParticipacion,
       resultadoRegistro.mensaje,
       alumno
-    );
+    ); 
+    }
 
     SpreadsheetApp.flush();
 
@@ -371,6 +376,8 @@ if (
 
         ok:
           resultadoRegistro.exito,
+
+        omitido: resultadoRegistro.omitido === true,
 
         mensaje:
           resultadoRegistro.mensaje,
@@ -456,6 +463,8 @@ function registrarManualWeb_(parametros) {
      String(
        parametros.actividad || ""
       ).trim();
+
+    const fechaActividad = String(parametros.fechaActividad || "").trim();
 
     const tipoRegistro =
   String(
@@ -691,7 +700,8 @@ function registrarManualWeb_(parametros) {
         campoFormativo,
         actividad,
         tipoRegistro,
-        "manual"
+        "manual",
+    fechaActividad
       );
 
     SpreadsheetApp.flush();
@@ -720,6 +730,8 @@ function registrarManualWeb_(parametros) {
 
         ok:
           resultadoRegistro.exito,
+
+        omitido: resultadoRegistro.omitido === true,
 
         mensaje:
           resultadoRegistro.mensaje,
