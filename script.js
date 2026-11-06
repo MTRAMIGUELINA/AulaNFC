@@ -481,9 +481,35 @@ async function enviarRegistroNFC(lectura) {
   envioEnProceso = true;
   $('estado').textContent = '⏳ Enviando registro...';
   try {
-    const respuesta = await solicitarJSONP('registrarNFC', lectura.parametros);
-    validarRespuesta(respuesta);
-    confirmarRegistro(respuesta.nombre || respuesta.nombreCompleto || 'Alumno', lectura.modulo, 'NFC');
+    if (lectura.modulo === 'participacion' && lectura.parametros.actividadesSeleccionadas) {
+      const actividades = JSON.parse(lectura.parametros.actividadesSeleccionadas);
+      let guardadas = 0;
+      const errores = [];
+      let nombre = 'Alumno';
+      for (const actividad of actividades) {
+        try {
+          $('estado').textContent = '⏳ Registrando actividad ' + (guardadas + errores.length + 1) + ' de ' + actividades.length + '...';
+          const parametros = { ...lectura.parametros, ...actividad };
+          delete parametros.actividadesSeleccionadas;
+          const respuesta = await solicitarJSONP('registrarNFC', parametros);
+          validarRespuesta(respuesta);
+          nombre = respuesta.nombre || respuesta.nombreCompleto || nombre;
+          guardadas++;
+        } catch (error) {
+          errores.push(actividad.actividad + ': ' + (error.message || 'Error'));
+        }
+      }
+      if (errores.length) {
+        $('estado').textContent = '⚠️ ' + guardadas + ' de ' + actividades.length + ' actividades guardadas.';
+        $('resultado').textContent = 'Pendientes: ' + errores.join('; ');
+      } else {
+        confirmarRegistro(nombre, lectura.modulo, 'NFC · ' + guardadas + ' actividades');
+      }
+    } else {
+      const respuesta = await solicitarJSONP('registrarNFC', lectura.parametros);
+      validarRespuesta(respuesta);
+      confirmarRegistro(respuesta.nombre || respuesta.nombreCompleto || 'Alumno', lectura.modulo, 'NFC');
+    }
   } catch (error) {
     $('estado').textContent = '❌ No se pudo confirmar el registro.';
     $('resultado').textContent = error.message;
