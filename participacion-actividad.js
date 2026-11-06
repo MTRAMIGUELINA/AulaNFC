@@ -141,7 +141,7 @@
     const esNueva = selector.value === VALOR_NUEVA;
     nuevos.hidden = !esNueva;
     const lista = document.getElementById('listaActividadesParticipacion');
-    if (lista) lista.hidden = esNueva;
+    if (lista) lista.style.display = esNueva ? 'none' : 'grid';
     const botonNueva = document.getElementById('btnNuevaActividadParticipacion');
     if (botonNueva) botonNueva.textContent = esNueva ? 'Cancelar nueva actividad' : '+ Nueva actividad';
     if (esNueva && !document.getElementById('fechaActividadParticipacion').value) {
