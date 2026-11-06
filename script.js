@@ -388,10 +388,36 @@ async function guardarRegistroManual() {
       });
     }
 
-    const respuesta = await solicitarJSONP('registrarManual', parametros);
-    validarRespuesta(respuesta);
-    confirmarRegistro(respuesta.nombre || respuesta.nombreCompleto || nombreCompleto(alumno), moduloActual, 'Manual');
-    cerrarRegistroManual();
+    if (moduloActual === 'participacion' && parametros.actividadesSeleccionadas) {
+      const seleccionadas = JSON.parse(parametros.actividadesSeleccionadas);
+      let guardadas = 0;
+      const errores = [];
+      for (const actividad of seleccionadas) {
+        try {
+          $('estado').textContent = '⏳ Guardando actividad ' + (guardadas + errores.length + 1) + ' de ' + seleccionadas.length + '...';
+          const datos = { ...parametros, ...actividad };
+          delete datos.actividadesSeleccionadas;
+          const respuesta = await solicitarJSONP('registrarManual', datos);
+          validarRespuesta(respuesta);
+          guardadas++;
+        } catch (error) {
+          errores.push(actividad.actividad + ': ' + (error.message || 'Error'));
+        }
+      }
+      if (errores.length) {
+        $('estado').textContent = '⚠️ Guardadas ' + guardadas + ' de ' + seleccionadas.length + '. Verifica las pendientes antes de repetir el envío.';
+        $('resultado').textContent = 'No guardadas: ' + errores.join('; ');
+        $('btnGuardarManual').disabled = true;
+      } else {
+        confirmarRegistro(nombreCompleto(alumno), moduloActual, 'Manual · ' + guardadas + ' actividades');
+        cerrarRegistroManual();
+      }
+    } else {
+      const respuesta = await solicitarJSONP('registrarManual', parametros);
+      validarRespuesta(respuesta);
+      confirmarRegistro(respuesta.nombre || respuesta.nombreCompleto || nombreCompleto(alumno), moduloActual, 'Manual');
+      cerrarRegistroManual();
+    }
   } catch (error) {
     $('estado').textContent = '❌ No se pudo guardar el registro manual.';
     $('resultado').textContent = error.message;
