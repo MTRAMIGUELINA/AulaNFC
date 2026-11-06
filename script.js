@@ -391,6 +391,7 @@ async function guardarRegistroManual() {
     if (moduloActual === 'participacion' && parametros.actividadesSeleccionadas) {
       const seleccionadas = JSON.parse(parametros.actividadesSeleccionadas);
       let guardadas = 0;
+      let omitidas = 0;
       const errores = [];
       for (const actividad of seleccionadas) {
         try {
@@ -399,7 +400,8 @@ async function guardarRegistroManual() {
           delete datos.actividadesSeleccionadas;
           const respuesta = await solicitarJSONP('registrarManual', datos);
           validarRespuesta(respuesta);
-          guardadas++;
+          if (respuesta.omitido) omitidas++;
+          else guardadas++;
         } catch (error) {
           errores.push(actividad.actividad + ': ' + (error.message || 'Error'));
         }
@@ -409,7 +411,7 @@ async function guardarRegistroManual() {
         $('resultado').textContent = 'No guardadas: ' + errores.join('; ');
         $('btnGuardarManual').disabled = true;
       } else {
-        confirmarRegistro(nombreCompleto(alumno), moduloActual, 'Manual · ' + guardadas + ' actividades');
+        confirmarRegistro(nombreCompleto(alumno), moduloActual, 'Manual · ' + guardadas + ' nuevas, ' + omitidas + ' existentes');
         cerrarRegistroManual();
       }
     } else {
@@ -510,6 +512,7 @@ async function enviarRegistroNFC(lectura) {
     if (lectura.modulo === 'participacion' && lectura.parametros.actividadesSeleccionadas) {
       const actividades = JSON.parse(lectura.parametros.actividadesSeleccionadas);
       let guardadas = 0;
+      let omitidas = 0;
       const errores = [];
       let nombre = 'Alumno';
       for (const actividad of actividades) {
@@ -520,7 +523,8 @@ async function enviarRegistroNFC(lectura) {
           const respuesta = await solicitarJSONP('registrarNFC', parametros);
           validarRespuesta(respuesta);
           nombre = respuesta.nombre || respuesta.nombreCompleto || nombre;
-          guardadas++;
+          if (respuesta.omitido) omitidas++;
+          else guardadas++;
         } catch (error) {
           errores.push(actividad.actividad + ': ' + (error.message || 'Error'));
         }
@@ -529,7 +533,7 @@ async function enviarRegistroNFC(lectura) {
         $('estado').textContent = '⚠️ ' + guardadas + ' de ' + actividades.length + ' actividades guardadas.';
         $('resultado').textContent = 'Pendientes: ' + errores.join('; ');
       } else {
-        confirmarRegistro(nombre, lectura.modulo, 'NFC · ' + guardadas + ' actividades');
+        confirmarRegistro(nombre, lectura.modulo, 'NFC · ' + guardadas + ' nuevas, ' + omitidas + ' existentes');
       }
     } else {
       const respuesta = await solicitarJSONP('registrarNFC', lectura.parametros);
