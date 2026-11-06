@@ -375,6 +375,8 @@ if (
         ok:
           resultadoRegistro.exito,
 
+        omitido: resultadoRegistro.omitido === true,
+
         mensaje:
           resultadoRegistro.mensaje,
 
@@ -726,6 +728,8 @@ function registrarManualWeb_(parametros) {
 
         ok:
           resultadoRegistro.exito,
+
+        omitido: resultadoRegistro.omitido === true,
 
         mensaje:
           resultadoRegistro.mensaje,
