@@ -14,7 +14,8 @@ function registrarEnModulo_(
   campoFormativo,
   actividad,
   tipoParticipacion,
-  origenRegistro
+  origenRegistro,
+  fechaActividad
 ) {
   const ahora = new Date();
 
@@ -52,7 +53,8 @@ function registrarEnModulo_(
         ahora,
         campoFormativo,
         actividad,
-        tipoParticipacion
+        tipoParticipacion,
+        fechaActividad
       );
 
     case "conducta":
@@ -312,7 +314,8 @@ function registrarParticipacion_(
   ahora,
   campoFormativo,
   actividad,
-  tipoParticipacion
+  tipoParticipacion,
+  fechaActividad
 ) {
   registrarFilaModulo_(
     libro,
@@ -340,7 +343,8 @@ function registrarParticipacion_(
       campoFormativo,
       actividad,
       tipoParticipacion
-    ]
+    ],
+    { "FECHA ACTIVIDAD": fechaActividad || "" }
   );
 
   return {
