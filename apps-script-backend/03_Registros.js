@@ -339,6 +339,7 @@ if (
     // --------------------------------------
     // GUARDAR BITÁCORA
     // --------------------------------------
+    if (!resultadoRegistro.omitido) {
     guardarEnBitacoraNFC_(
       libro,
       uid,
@@ -347,7 +348,8 @@ if (
       tipoParticipacion,
       resultadoRegistro.mensaje,
       alumno
-    );
+    ); 
+    }
 
     SpreadsheetApp.flush();
 
