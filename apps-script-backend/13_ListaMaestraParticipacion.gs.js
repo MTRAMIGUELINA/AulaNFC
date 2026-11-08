@@ -151,13 +151,10 @@ function construirMatrizListaMaestraParticipacion_(alumnos, actividades, registr
     actividades.forEach(function(actividad) {
       const registro = registros[alumno.id + "|" + actividad.clave];
       if (!registro) { fila.push(""); return; }
-      const tipo = typeof registro === "string" ? registro : registro.tipo;
       const fechaRevision = typeof registro === "string" ? "" : registro.fechaRegistro;
       const posterior = fechaRevision && fechaRevision > actividad.fecha;
-      const visible = posterior
-        ? fechaRevision.slice(8, 10) + "/" + fechaRevision.slice(5, 7) + "/" + fechaRevision.slice(0, 4)
-        : "";
-      fila.push(posterior ? tipo + "\nRegistrado: " + visible : tipo);
+      // T indica registro posterior, no necesariamente entrega tardía.
+      fila.push(posterior ? "✓ T" : "✓");
     });
     matriz.push(fila);
   });
