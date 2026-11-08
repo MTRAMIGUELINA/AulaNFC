@@ -125,10 +125,10 @@ function obtenerDatosListaMaestraParticipacion_(hoja, ciclo, campoFormativo) {
     const hora = iHora !== -1 ? String(fila[iHora] || "").trim() : "";
     const orden = (fechaRegistro || "0000-00-00") + "T" + (hora || "00:00:00") + "|" + String(filaNumero).padStart(8, "0");
     const claveRegistro = id + "|" + claveActividad;
-    if (!elegidos[claveRegistro] || orden >= elegidos[claveRegistro].orden) elegidos[claveRegistro] = { orden: orden, tipo: tipo };
+    if (!elegidos[claveRegistro] || orden >= elegidos[claveRegistro].orden) elegidos[claveRegistro] = { orden: orden, tipo: tipo, fechaRegistro: fechaRegistro, fechaActividad: fechaActividad };
   }
 
-  Object.keys(elegidos).forEach(function(clave) { resultado.registros[clave] = elegidos[clave].tipo; });
+  Object.keys(elegidos).forEach(function(clave) { resultado.registros[clave] = elegidos[clave]; });
   resultado.actividades = Object.keys(actividades).map(function(clave) { return actividades[clave]; }).sort(function(a, b) {
     return a.fecha.localeCompare(b.fecha) || a.actividad.localeCompare(b.actividad, "es", { sensitivity: "base" });
   });
@@ -148,7 +148,17 @@ function construirMatrizListaMaestraParticipacion_(alumnos, actividades, registr
   alumnos.forEach(function(alumno) {
     const nombre = [alumno.nombre, alumno.apellidoPaterno, alumno.apellidoMaterno].filter(Boolean).join(" ");
     const fila = [alumno.id, nombre, grado, grupo];
-    actividades.forEach(function(actividad) { fila.push(registros[alumno.id + "|" + actividad.clave] || ""); });
+    actividades.forEach(function(actividad) {
+      const registro = registros[alumno.id + "|" + actividad.clave];
+      if (!registro) { fila.push(""); return; }
+      const tipo = typeof registro === "string" ? registro : registro.tipo;
+      const fechaRevision = typeof registro === "string" ? "" : registro.fechaRegistro;
+      const posterior = fechaRevision && fechaRevision > actividad.fecha;
+      const visible = posterior
+        ? fechaRevision.slice(8, 10) + "/" + fechaRevision.slice(5, 7) + "/" + fechaRevision.slice(0, 4)
+        : "";
+      fila.push(posterior ? tipo + "\nRegistrado: " + visible : tipo);
+    });
     matriz.push(fila);
   });
   return matriz;
