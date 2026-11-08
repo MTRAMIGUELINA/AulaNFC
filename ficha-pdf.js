@@ -4,6 +4,22 @@ let exportando=false;
 function esperar(){const b=document.getElementById('btnFichaPDF'),id=document.getElementById('idFichaAlumno');if(!b||!id||typeof solicitarJSONP!=='function'){setTimeout(esperar,120);return}if(b.dataset.pdfFichaInicializado==='true')return;b.dataset.pdfFichaInicializado='true';const estado=()=>{const v=String(id.textContent||'').trim();b.disabled=!v||v==='—'||exportando};new MutationObserver(estado).observe(id,{childList:true,characterData:true,subtree:true});estado();b.addEventListener('click',generar)}
 const txt=(id,r='')=>String(document.getElementById(id)?.textContent||r).trim();const num=v=>Number.isFinite(Number(v))?Number(v):0;const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
 function fecha(){return new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}function foto(){return document.querySelector('#fotoFichaAlumno img')?.src||''}function iniciales(){return String(document.getElementById('fotoFichaAlumno')?.textContent||'AL').trim()}function validar(r,m){if(!r||(r.ok!==true&&r.exito!==true))throw new Error(r?.mensaje||m)}
+function fechaComparablePDF(valor){
+  const v=String(valor||'').trim();
+  let m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m)return m[1]+'-'+m[2]+'-'+m[3];
+  m=v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  return m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):'';
+}
+function fechaRevisionHistorial(x){
+  const original=String(x.fechaActividad||'').trim();
+  const revisada=String(x.fecha||'').trim();
+  const originalISO=fechaComparablePDF(original);
+  const revisadaISO=fechaComparablePDF(revisada);
+  if(!originalISO||!revisadaISO||originalISO===revisadaISO)return '';
+  const nota=revisadaISO>originalISO?' (registrada posteriormente)':' (registrada en otra fecha)';
+  return 'Actividad del '+original+' · Registro: '+revisada+nota;
+}
 function detalleHistorial(x){
   const modulo=String(x.modulo||'').toLowerCase();
   const registro=String(x.registro||x.detalle||'').trim();
@@ -18,7 +34,7 @@ function detalleHistorial(x){
       modulo.includes('particip')&&!contieneCampo?campo:'',
       !contieneActividad?actividad:'',
       registro
-    ].filter(Boolean).join(' · ') || 'Sin detalle de actividad';
+    ].concat(fechaRevisionHistorial(x)).filter(Boolean).join(' · ') || 'Sin detalle de actividad';
   }
   return registro||[campo,actividad].filter(Boolean).join(' · ');
 }

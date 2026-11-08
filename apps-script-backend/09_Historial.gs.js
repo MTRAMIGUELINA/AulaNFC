@@ -680,6 +680,10 @@ const cicloEscolarActivo =
     ]
   );
 
+  const indiceFechaActividad = buscarIndiceHistorial_(
+    encabezados, ["fecha actividad"]
+  );
+
   const registros = [];
 
   for (
@@ -815,7 +819,10 @@ detalle =
       registro: detalle,
       detalle: detalle,
       actividad: actividad,
-campoFormativo: campoFormativo,
+      campoFormativo: campoFormativo,
+      fechaActividad: indiceFechaActividad !== -1 && registroFila[indiceFechaActividad]
+        ? formatearFechaHistorial_(registroFila[indiceFechaActividad])
+        : "",
 
       idAlumno:
         indiceIdAlumno !== -1
